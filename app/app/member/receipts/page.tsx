@@ -1,0 +1,11 @@
+﻿"use client";
+
+import { ChangeEvent, useState } from "react";
+import MemberLayout from "../../components/member-layout";
+
+export default function ReceiptsPage() {
+  const [fileName, setFileName] = useState("");
+  const [sent, setSent] = useState(false);
+  function chooseFile(event: ChangeEvent<HTMLInputElement>) { setFileName(event.target.files?.[0]?.name ?? ""); setSent(false); }
+  return <MemberLayout active="receipts"><main className="member-content section-page"><div className="section-heading"><div><p className="eyebrow form-eyebrow">Proof of payment</p><h1>Upload receipt</h1><p>Send a payment receipt for review by the WAFA team.</p></div></div><div className="receipt-grid"><section className="member-card page-card"><h2>New receipt</h2><p className="card-intro">Upload a clear image or PDF of your payment confirmation.</p><label className="receipt-label">Payment type<select defaultValue="Monthly deposit"><option>Monthly deposit</option><option>Share contribution</option><option>Loan payment</option><option>Other</option></select></label><label className="receipt-label">Amount<input type="number" placeholder="0.00" /></label><label className="receipt-label">Payment date<input type="date" defaultValue="2026-09-14" /></label><label className="upload-zone"><input type="file" accept="image/*,.pdf" onChange={chooseFile} /><span>＋</span><strong>{fileName || "Choose a file to upload"}</strong><small>PNG, JPG or PDF · Max 10 MB</small></label>{sent && <p className="sa-form-success">Receipt submitted successfully for review.</p>}<button className="primary-action receipt-submit" disabled={!fileName} onClick={() => setSent(true)}>Submit receipt <span>→</span></button></section><section className="member-card page-card"><h2>Recent receipts</h2><p className="card-intro">Track the status of your submissions.</p><div className="receipt-history"><div><span className="receipt-file">PDF</span><p><strong>monthly-deposit-aug.pdf</strong><small>Rs. 5,000 · Aug 10</small></p><b className="payment-status paid">Approved</b></div><div><span className="receipt-file">JPG</span><p><strong>share-contribution.jpg</strong><small>Rs. 2,500 · Jul 12</small></p><b className="payment-status due">Pending</b></div></div></section></div></main></MemberLayout>;
+}

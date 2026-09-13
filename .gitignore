@@ -61,3 +61,6 @@ docs/*.temp
 
 # Preserved nested repository metadata during repository consolidation
 **/.git-nested-backup/
+
+
+.agents/*
