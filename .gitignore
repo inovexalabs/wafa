@@ -1,0 +1,63 @@
+# Dependencies
+**/node_modules/
+
+# Build and generated output
+**/.next/
+**/out/
+**/dist/
+**/build/
+**/.cache/
+**/.turbo/
+**/*.tsbuildinfo
+
+# Tests and coverage
+**/coverage/
+**/.nyc_output/
+
+# Environment and secrets
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+
+# Logs and runtime files
+**/*.log
+**/logs/
+**/pids/
+**/*.pid
+**/*.pid.lock
+**/*.seed
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+**/.idea/
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+!**/.vscode/extensions.json
+**/*.swp
+**/*.swo
+
+# Package-manager state
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Deployment tooling
+**/.vercel/
+
+# Documentation workspace files (keep source documents tracked)
+docs/.DS_Store
+docs/~$*
+docs/.~lock.*
+docs/*.tmp
+docs/*.temp
+
+# Preserved nested repository metadata during repository consolidation
+**/.git-nested-backup/
