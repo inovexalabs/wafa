@@ -1,15 +1,17 @@
 ﻿import {
   Body,
   Controller,
-  Headers,
   HttpCode,
   Post,
   Req,
   Res,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { AuthGuard } from './auth.guard';
+import { CurrentAccessToken } from './current-access-token.decorator';
+import { Roles } from './roles.decorator';
 
 const accessCookie = 'wafa_access_token';
 const refreshCookie = 'wafa_refresh_token';
@@ -60,12 +62,6 @@ export class AuthController {
     return match ? decodeURIComponent(match.trim().slice(name.length + 1)) : undefined;
   }
 
-  private getAccessToken(request: Request, authorization?: string) {
-    return authorization?.startsWith('Bearer ')
-      ? authorization.slice('Bearer '.length)
-      : this.getCookie(request, accessCookie);
-  }
-
   @Post('login')
   @HttpCode(200)
   async login(
@@ -93,24 +89,22 @@ export class AuthController {
   }
 
   @Post('superadmin/users')
+  @UseGuards(AuthGuard)
+  @Roles('superadmin')
   createUserAsSuperadmin(
-    @Req() request: Request,
-    @Headers('authorization') authorization: string | undefined,
+    @CurrentAccessToken() accessToken: string,
     @Body() body: CreateUserBody,
   ) {
-    const accessToken = this.getAccessToken(request, authorization);
-    if (!accessToken) throw new UnauthorizedException('Authentication is required.');
     return this.authService.createUser(accessToken, body, 'superadmin');
   }
 
   @Post('admin/users')
+  @UseGuards(AuthGuard)
+  @Roles('admin')
   createUserAsAdmin(
-    @Req() request: Request,
-    @Headers('authorization') authorization: string | undefined,
+    @CurrentAccessToken() accessToken: string,
     @Body() body: Omit<CreateUserBody, 'role'> & { role: 'member' | 'accountant' },
   ) {
-    const accessToken = this.getAccessToken(request, authorization);
-    if (!accessToken) throw new UnauthorizedException('Authentication is required.');
     return this.authService.createUser(accessToken, body, 'admin');
   }
 }

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { FormEvent, useState } from "react";
-import MemberLayout from "../../components/member-layout";
+import MemberLayout from "../../../components/member-layout";
 
 export default function ProfilePage() {
   const [saved, setSaved] = useState(false);

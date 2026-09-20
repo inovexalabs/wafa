@@ -1,4 +1,4 @@
-﻿import MemberLayout from "../../components/member-layout";
+﻿import MemberLayout from "../../../components/member-layout";
 
 const payments = [
   { label: "Monthly deposit", period: "September 2026", amount: "Rs. 5,000", status: "Due Sep 10", state: "due" },

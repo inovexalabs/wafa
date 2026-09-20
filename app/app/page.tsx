@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { dashboardFor, restoreSession, saveSession, signIn } from "./lib/auth";
+import { dashboardFor, restoreSession, saveSession, signIn } from "../lib/auth";
 
 export default function Home() {
   const router = useRouter();
@@ -51,7 +51,10 @@ export default function Home() {
   return (
     <main className="login-page">
       <section className="brand-panel">
-        <div className="brand-mark">W</div>
+        <div>
+          <img className="brand-mark" src="/logo.jpeg" alt="WAFA Group logo" />
+          <p className="brand-tagline">We Are For All</p>
+        </div>
         <div className="brand-copy">
           <p className="eyebrow">WAFA workspace</p>
           <h1>Welcome back.</h1>
@@ -62,7 +65,7 @@ export default function Home() {
       <section className="form-panel">
         <div></div>
         <div className="form-wrap">
-          <div className="mobile-logo">W</div>
+          <img className="mobile-logo" src="/logo.jpeg" alt="WAFA Group logo" />
           <p className="eyebrow form-eyebrow">Team access</p>
           <h2>Sign in to WAFA</h2>
           <p className="form-intro">Use the user ID and password provided by your administrator.</p>

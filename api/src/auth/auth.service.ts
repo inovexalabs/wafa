@@ -46,6 +46,17 @@ export class AuthService {
     return { accessToken, refreshToken, user: { id: profile.id, userId: profile.user_id, role: profile.role } };
   }
 
+  async authenticate(accessToken: string) {
+    if (!accessToken) throw new UnauthorizedException('Authentication is required.');
+    const client = this.supabase.getAdminClient();
+    const { data: { user }, error: userError } = await client.auth.getUser(accessToken);
+    if (userError || !user) throw new UnauthorizedException('Invalid or expired access token.');
+    const { data: profile, error: profileError } = await client.from('profiles')
+      .select('id, user_id, email, role').eq('id', user.id).maybeSingle();
+    if (profileError) throw new InternalServerErrorException('Unable to verify your role.');
+    if (!profile) throw new UnauthorizedException('User profile not found.');
+    return { user, profile };
+  }
   async login(userId: string, password: string) {
     if (!userId || !password) throw new BadRequestException('User ID and password are required.');
     const profile = await this.getProfile(userId);
@@ -127,3 +138,4 @@ export class AuthService {
     return { id: created.user.id, userId, role: input.role };
   }
 }
+

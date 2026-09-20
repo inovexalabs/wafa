@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { ChangeEvent, useState } from "react";
-import MemberLayout from "../../components/member-layout";
+import MemberLayout from "../../../components/member-layout";
 
 export default function ReceiptsPage() {
   const [fileName, setFileName] = useState("");
