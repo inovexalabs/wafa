@@ -104,45 +104,45 @@ function MembersPageContent() {
 
   return (
     <AdminLayout active="meeting">
-      <main className="member-content section-page">
-        <div className="section-heading">
+      <main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 max-[650px]:px-4 max-[650px]:pt-[68px] max-[650px]:pb-2 min-h-[calc(100vh-76px)]">
+        <div className="flex justify-between items-end gap-5 mb-4 max-[780px]:items-start max-[780px]:flex-col">
           <div>
-            <p className="eyebrow form-eyebrow">{meetingId ? "Manage sharing" : "New meeting"}</p>
-            <h1>{meetingId ? "Share with more members." : "Select members to share with."}</h1>
-            <p>{meetingId ? "Add members who missed the original invite." : "Leave everyone unselected to share this meeting with all members."}</p>
+            <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">{meetingId ? "Manage sharing" : "New meeting"}</p>
+            <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">{meetingId ? "Share with more members." : "Select members to share with."}</h1>
+            <p className="mt-[9px] text-muted text-sm">{meetingId ? "Add members who missed the original invite." : "Leave everyone unselected to share this meeting with all members."}</p>
           </div>
-          <button type="button" className="text-action" onClick={() => router.push("/admin/meeting")}>← Back to meetings</button>
+          <button type="button" className="border-0 text-[#286c54] bg-transparent cursor-pointer text-[11px] font-bold" onClick={() => router.push("/admin/meeting")}>← Back to meetings</button>
         </div>
-        <section className="member-card page-card">
+        <section className="p-4 border border-[#e1e9e4] rounded-[10px] bg-white">
           {isLoading ? (
-            <div className="sa-empty"><span>◌</span><p>Loading members...</p></div>
+            <div className="grid place-items-center py-6 text-[#a0aaa5] text-center"><span className="text-[28px]">◌</span><p className="text-[11px] leading-[1.6]">Loading members...</p></div>
           ) : (
             <>
               {meetingId && (
-                <p className="sa-meeting-panel-label">
+                <p className="m-0 mb-2 text-muted text-[11px]">
                   {alreadyShared.length ? `Currently shared with ${alreadyShared.length} member${alreadyShared.length === 1 ? "" : "s"}.` : "Currently shared with everyone (no members selected)."}
                 </p>
               )}
-              <div className="sa-member-picker" style={{ maxHeight: "none" }}>
+              <div className="overflow-y-auto border border-line rounded-md px-1 py-[6px] mt-[7px]" style={{ maxHeight: "none" }}>
                 {selectableMembers.length === 0 ? (
-                  <p className="sa-member-empty">{meetingId ? "Everyone already has access." : "No active members yet."}</p>
+                  <p className="px-[7px] py-2 text-[#9aa8a1] text-[11px]">{meetingId ? "Everyone already has access." : "No active members yet."}</p>
                 ) : (
                   selectableMembers.map((member) => (
-                    <label className="sa-member-option" key={member.id}>
-                      <input type="checkbox" checked={selection.includes(member.id)} onChange={() => toggleMember(member.id)} />
-                      <span>{member.full_name} <small>{member.member_number}</small></span>
+                    <label className="flex items-center gap-[9px] px-[7px] py-2 rounded-md text-xs text-[#2d4037] cursor-pointer hover:bg-[#f2f7f3]" key={member.id}>
+                      <input className="w-auto h-auto m-0" type="checkbox" checked={selection.includes(member.id)} onChange={() => toggleMember(member.id)} />
+                      <span>{member.full_name} <small className="text-[#8b9992] text-[10px]">{member.member_number}</small></span>
                     </label>
                   ))
                 )}
               </div>
-              {error && <p className="sa-form-error" role="alert">{error}</p>}
-              {message && <p className="sa-form-success" role="status">{message}</p>}
+              {error && <p className="m-0 text-[11px] text-[#ae4d44]" role="alert">{error}</p>}
+              {message && <p className="m-0 text-[11px] text-[#38805d]" role="status">{message}</p>}
               {meetingId ? (
-                <button type="button" className="sa-submit sa-meeting-share-btn" disabled={isSaving || !selection.length} onClick={() => void shareExistingMeeting()}>
+                <button type="button" className="flex justify-center gap-3 border-0 rounded-md p-[13px] text-white bg-brand cursor-pointer text-xs font-bold disabled:opacity-65 disabled:cursor-wait w-auto mt-3 px-4 py-[10px]" disabled={isSaving || !selection.length} onClick={() => void shareExistingMeeting()}>
                   {isSaving ? "Sharing..." : "Share with selected"}
                 </button>
               ) : (
-                <button type="button" className="sa-submit sa-meeting-share-btn" onClick={() => void saveForNewMeeting()}>
+                <button type="button" className="flex justify-center gap-3 border-0 rounded-md p-[13px] text-white bg-brand cursor-pointer text-xs font-bold w-auto mt-3 px-4 py-[10px]" onClick={() => void saveForNewMeeting()}>
                   Save selection
                 </button>
               )}
@@ -156,7 +156,7 @@ function MembersPageContent() {
 
 export default function AdminMeetingMembersPage() {
   return (
-    <Suspense fallback={<main className="member-content section-page"><p>Loading...</p></main>}>
+    <Suspense fallback={<main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 min-h-[calc(100vh-76px)]"><p>Loading...</p></main>}>
       <MembersPageContent />
     </Suspense>
   );

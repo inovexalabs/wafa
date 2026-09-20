@@ -242,6 +242,148 @@ export async function cancelMeeting(role: "admin" | "superadmin", meetingId: str
   return body as { id: string; status: string };
 }
 
+export interface MemberProfile {
+  id: string;
+  memberNumber: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  joinedAt: string;
+  address: string | null;
+  occupation: string | null;
+  dateOfBirth: string | null;
+  emergencyContact: string | null;
+}
+
+export interface UpdateMemberProfileRequest {
+  fullName?: string;
+  phone?: string;
+  address?: string;
+  occupation?: string;
+}
+
+export async function getMemberProfile(): Promise<MemberProfile> {
+  const response = await apiFetch(`${apiUrl}/api/member/profile`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your profile.");
+  return body as MemberProfile;
+}
+
+export async function updateMemberProfile(input: UpdateMemberProfileRequest): Promise<MemberProfile> {
+  const response = await apiFetch(`${apiUrl}/api/member/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to save your profile.");
+  return body as MemberProfile;
+}
+
+export type StaffRole = "admin" | "superadmin" | "accountant";
+
+export interface StaffProfile {
+  id: string;
+  userId: string;
+  email: string;
+  role: StaffRole;
+  fullName: string | null;
+  phone: string | null;
+  joinedAt: string;
+}
+
+export interface UpdateStaffProfileRequest {
+  fullName?: string;
+  phone?: string;
+}
+
+export async function getStaffProfile(role: StaffRole): Promise<StaffProfile> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/profile`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your profile.");
+  return body as StaffProfile;
+}
+
+export async function updateStaffProfile(role: StaffRole, input: UpdateStaffProfileRequest): Promise<StaffProfile> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to save your profile.");
+  return body as StaffProfile;
+}
+
+export type ReceiptPaymentType = "monthly_deposit" | "share_contribution" | "loan_payment" | "other";
+export type ReceiptStatus = "pending" | "approved" | "rejected";
+
+export interface Receipt {
+  id: string;
+  receiptNumber: string;
+  amount: number;
+  paymentType: ReceiptPaymentType;
+  paymentDate: string;
+  status: ReceiptStatus;
+  submittedAt: string;
+  rejectionReason: string | null;
+  fileName: string;
+  fileUrl: string | null;
+}
+
+export interface SubmitReceiptRequest {
+  amount: number;
+  paymentType: ReceiptPaymentType;
+  paymentDate: string;
+  file: File;
+}
+
+export async function listReceipts(): Promise<Receipt[]> {
+  const response = await apiFetch(`${apiUrl}/api/member/receipts`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your receipts.");
+  return body as Receipt[];
+}
+
+export async function submitReceipt(input: SubmitReceiptRequest): Promise<Receipt> {
+  const formData = new FormData();
+  formData.append("amount", String(input.amount));
+  formData.append("paymentType", input.paymentType);
+  formData.append("paymentDate", input.paymentDate);
+  formData.append("file", input.file);
+
+  const response = await apiFetch(`${apiUrl}/api/member/receipts`, { method: "POST", body: formData });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to submit this receipt.");
+  return body as Receipt;
+}
+
+export type PaymentEntryState = "due" | "overdue" | "paid";
+
+export interface PaymentEntry {
+  id: string;
+  label: string;
+  period: string;
+  amount: number;
+  date: string;
+  state: PaymentEntryState;
+}
+
+export interface PaymentsOverview {
+  currentBalance: number;
+  totalContributions: number;
+  duePaymentsCount: number;
+  history: PaymentEntry[];
+}
+
+export async function getPaymentsOverview(): Promise<PaymentsOverview> {
+  const response = await apiFetch(`${apiUrl}/api/member/payments`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your payments.");
+  return body as PaymentsOverview;
+}
+
 
 
 

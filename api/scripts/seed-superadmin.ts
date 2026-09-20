@@ -65,6 +65,7 @@ async function seed() {
     user_id: userId,
     email,
     role: 'superadmin',
+    full_name: userId,
   });
 
   if (insertError) {

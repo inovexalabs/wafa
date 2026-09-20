@@ -112,6 +112,7 @@ export class AuthService {
 
     const { error: profileError } = await client.from('profiles').insert({
       id: created.user.id, user_id: userId, email, role: input.role, created_by: requester.id,
+      full_name: input.fullName?.trim() || userId, phone: input.phone?.trim() || null,
     });
     if (profileError) {
       await client.auth.admin.deleteUser(created.user.id);

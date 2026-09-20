@@ -1,11 +1,101 @@
-﻿import MemberLayout from "../../../components/member-layout";
+"use client";
 
-const payments = [
-  { label: "Monthly deposit", period: "September 2026", amount: "Rs. 5,000", status: "Due Sep 10", state: "due" },
-  { label: "Share contribution", period: "Additional share", amount: "Rs. 2,500", status: "Paid Aug 12", state: "paid" },
-  { label: "Monthly deposit", period: "August 2026", amount: "Rs. 5,000", status: "Paid Aug 10", state: "paid" },
-];
+import { useEffect, useState } from "react";
+import MemberLayout from "../../../components/member-layout";
+import { getPaymentsOverview, PaymentEntry, PaymentsOverview } from "../../../lib/auth";
+
+const stateLabel: Record<PaymentEntry["state"], string> = {
+  paid: "Paid",
+  due: "Due",
+  overdue: "Overdue",
+};
+
+const stateStyle: Record<PaymentEntry["state"], string> = {
+  paid: "text-[#3f835b] bg-[#e4f2e6]",
+  due: "text-[#a26e36] bg-[#faecd9]",
+  overdue: "text-[#b0473f] bg-[#fae3e1]",
+};
+
+function formatAmount(amount: number) {
+  return `Rs. ${amount.toLocaleString()}`;
+}
+
+function formatDate(isoString: string) {
+  return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 export default function PaymentsPage() {
-  return <MemberLayout active="payments"><main className="member-content section-page"><div className="section-heading"><div><p className="eyebrow form-eyebrow">Financial overview</p><h1>Payments</h1><p>Track your contributions and payment schedule.</p></div><button className="primary-action">＋ Make a payment</button></div><div className="payment-summary"><article><small>Current balance</small><strong>Rs. 5,000</strong><span>Due this month</span></article><article><small>Total contributions</small><strong>Rs. 48,500</strong><span>Since joining</span></article><article><small>Payment status</small><strong className="paid-text">Up to date</strong><span>1 payment due</span></article></div><section className="member-card page-card"><div className="card-heading"><div><h2>Payment history</h2><p>Your recent contributions.</p></div><button className="text-action">Download statement ↓</button></div><div className="payment-list">{payments.map((payment) => <article className="payment-row" key={payment.label + payment.period}><span className="payment-icon">◈</span><div><strong>{payment.label}</strong><p>{payment.period}</p></div><b>{payment.amount}</b><span className={"payment-status " + payment.state}>{payment.status}</span></article>)}</div></section></main></MemberLayout>;
+  const [overview, setOverview] = useState<PaymentsOverview | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getPaymentsOverview()
+      .then(setOverview)
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "Unable to load your payments."))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  return (
+    <MemberLayout active="payments">
+      <main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 max-[650px]:px-4 max-[650px]:pt-[68px] max-[650px]:pb-2 min-h-[calc(100vh-76px)]">
+        <div className="flex justify-between items-end gap-5 mb-[30px] max-[780px]:items-start max-[780px]:flex-col">
+          <div>
+            <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Financial overview</p>
+            <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">Payments</h1>
+            <p className="mt-[9px] text-muted text-sm">Track your contributions and payment schedule.</p>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="p-5 rounded-[10px] border border-[#f3d6d3] bg-[#fdf3f2] text-[#ae4d44] text-sm" role="alert">{error}</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-4 max-[780px]:grid-cols-1">
+              <article className="p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
+                <small className="block text-[#7c8a83] text-[11px]">Current balance</small>
+                <strong className="block my-[7px] text-2xl">{isLoading ? "…" : formatAmount(overview?.currentBalance ?? 0)}</strong>
+                <span className="block text-[#9aa69f] text-[10px]">Due this month</span>
+              </article>
+              <article className="p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
+                <small className="block text-[#7c8a83] text-[11px]">Total contributions</small>
+                <strong className="block my-[7px] text-2xl">{isLoading ? "…" : formatAmount(overview?.totalContributions ?? 0)}</strong>
+                <span className="block text-[#9aa69f] text-[10px]">Since joining</span>
+              </article>
+              <article className="p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
+                <small className="block text-[#7c8a83] text-[11px]">Payment status</small>
+                <strong className={"block my-[7px] text-2xl " + (!isLoading && (overview?.duePaymentsCount ?? 0) > 0 ? "text-[#a26e36]" : "text-[#3f8b61]")}>
+                  {isLoading ? "…" : (overview?.duePaymentsCount ?? 0) > 0 ? "Payment due" : "Up to date"}
+                </strong>
+                <span className="block text-[#9aa69f] text-[10px]">{isLoading ? "" : `${overview?.duePaymentsCount ?? 0} payment${(overview?.duePaymentsCount ?? 0) === 1 ? "" : "s"} due`}</span>
+              </article>
+            </div>
+            <section className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white mt-5 max-[500px]:px-4 max-[500px]:py-[19px]">
+              <div className="flex justify-between">
+                <div><h2 className="m-0 font-display font-bold text-[23px]">Payment history</h2><p className="my-[6px] text-[#8a9892] text-[11px]">Your recent contributions.</p></div>
+              </div>
+              <div className="mt-[23px]">
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((i) => <div key={i} className="h-[54px] rounded-md bg-[#edf1ee] animate-pulse" />)}
+                  </div>
+                ) : (overview?.history.length ?? 0) === 0 ? (
+                  <p className="m-0 text-[11px] text-[#9ba7a1]">No payment activity yet.</p>
+                ) : (
+                  overview?.history.map((payment) => (
+                    <article className="flex items-center gap-4 py-[17px] border-t border-[#edf1ee] first:border-t-0" key={payment.id}>
+                      <span className="grid place-items-center w-[33px] h-[33px] rounded-lg text-[#286d54] bg-[#e4f2e5]">◈</span>
+                      <div className="flex-1"><strong className="text-xs">{payment.label}</strong><p className="my-[5px] text-[#909e97] text-[10px]">{payment.period}</p></div>
+                      <b className="text-xs">{formatAmount(payment.amount)}</b>
+                      <span className={"inline-block px-2 py-[5px] rounded text-[9px] font-bold " + stateStyle[payment.state]}>{stateLabel[payment.state]} {formatDate(payment.date)}</span>
+                    </article>
+                  ))
+                )}
+              </div>
+            </section>
+          </>
+        )}
+      </main>
+    </MemberLayout>
+  );
 }

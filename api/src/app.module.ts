@@ -10,7 +10,16 @@ import { MemberMeetingsController } from './meetings/member-meetings.controller'
 import { MeetingsService } from './meetings/meetings.service';
 import { AdminMembersController } from './members/admin-members.controller';
 import { SuperadminMembersController } from './members/superadmin-members.controller';
+import { MemberProfileController } from './members/member-profile.controller';
 import { MembersService } from './members/members.service';
+import { AdminProfileController } from './profiles/admin-profile.controller';
+import { SuperadminProfileController } from './profiles/superadmin-profile.controller';
+import { AccountantProfileController } from './profiles/accountant-profile.controller';
+import { ProfilesService } from './profiles/profiles.service';
+import { MemberReceiptsController } from './receipts/member-receipts.controller';
+import { ReceiptsService } from './receipts/receipts.service';
+import { MemberPaymentsController } from './payments/member-payments.controller';
+import { PaymentsService } from './payments/payments.service';
 import { ZoomController } from './zoom/zoom.controller';
 import { ZoomService } from './zoom/zoom.service';
 
@@ -24,8 +33,14 @@ import { ZoomService } from './zoom/zoom.service';
     MemberMeetingsController,
     AdminMembersController,
     SuperadminMembersController,
+    MemberProfileController,
+    AdminProfileController,
+    SuperadminProfileController,
+    AccountantProfileController,
+    MemberReceiptsController,
+    MemberPaymentsController,
     ZoomController,
   ],
-  providers: [AuthService, SupabaseService, MeetingsService, MembersService, ZoomService],
+  providers: [AuthService, SupabaseService, MeetingsService, MembersService, ProfilesService, ReceiptsService, PaymentsService, ZoomService],
 })
 export class AppModule {}

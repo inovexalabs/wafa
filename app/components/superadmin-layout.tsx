@@ -4,12 +4,12 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarClock, ChevronDown, HelpCircle, Home, LogOut, Receipt, UserCircle, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
-import { getMemberProfile, signOut } from "../lib/auth";
+import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "receipts" | "profile"; children: ReactNode };
+type SuperadminLayoutProps = { active: "overview" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -18,14 +18,11 @@ function initialsFor(fullName: string) {
 }
 
 const links = [
-  ["overview", "Overview", "/member", Home],
-  ["meetings", "Meetings", "/member/meetings", CalendarClock],
-  ["payments", "Payments", "/member/payments", Wallet],
-  ["receipts", "Receipts", "/member/receipts", Receipt],
-  ["profile", "My profile", "/member/profile", UserCircle],
+  ["overview", "Control center", "/superadmin", LayoutDashboard],
+  ["profile", "My profile", "/superadmin/profile", UserCircle],
 ] as const;
 
-export default function MemberLayout({ active, children }: MemberLayoutProps) {
+export default function SuperadminLayout({ active, children }: SuperadminLayoutProps) {
   const router = useRouter();
   const { collapsed, toggle } = useSidebarCollapsed();
   const [fullName, setFullName] = useState("");
@@ -34,8 +31,8 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
 
   useEffect(() => {
     let cancelled = false;
-    getMemberProfile()
-      .then((profile) => { if (!cancelled) setFullName(profile.fullName); })
+    getStaffProfile("superadmin")
+      .then((profile) => { if (!cancelled) setFullName(profile.fullName ?? profile.userId); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
@@ -51,8 +48,8 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
 
   const initials = fullName ? initialsFor(fullName) : "";
   return (
-    <Dashboard role="member" fullPage>
-      <div className="min-h-dvh bg-cream">
+    <Dashboard role="superadmin" fullPage>
+      <div className="min-h-screen bg-cream">
         <aside
           className={
             "flex flex-col fixed top-0 left-0 z-10 h-dvh py-7 overflow-y-auto overflow-x-hidden text-[#d9e9df] bg-[#164b3c] transition-[width] duration-[180ms] ease-linear max-[650px]:hidden " +
@@ -61,9 +58,9 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
         >
           <div className={"flex items-center gap-[10px] mb-[22px] pb-[15px] px-[13px] border-b border-white/[.15] text-white font-bold tracking-[.12em] " + (collapsed ? "justify-center px-0" : "")}>
             <Image className="block w-[31px] h-[31px] object-contain border border-[#b5d6c1] rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} />
-            {!collapsed && <span>WAFA</span>}
+            {!collapsed && <span>WAFA CONTROL</span>}
           </div>
-          <nav className="grid gap-[6px] mt-[12px]" aria-label="Member navigation">
+          <nav className="grid gap-[6px] mt-[12px]" aria-label="Superadmin navigation">
             {links.map(([key, label, href, Icon]) => (
               <Link
                 key={key}
@@ -81,39 +78,28 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
             ))}
           </nav>
           <div className="mt-auto">
-            <a
-              className={
-                "flex items-center gap-[13px] px-[13px] py-3 rounded-lg text-[13px] no-underline text-[#b5cfc1] hover:text-white hover:bg-white/[.12] " +
-                (collapsed ? "justify-center" : "")
-              }
-              href="#help"
-              title="Help center"
-            >
-              <span className="inline-flex items-center justify-center flex-none"><HelpCircle size={18} /></span>
-              {!collapsed && <span>Help center</span>}
-            </a>
             <div className={"flex items-center gap-[9px] mt-[22px] pt-[15px] border-t border-white/[.15] text-xs " + (collapsed ? "justify-center" : "")}>
               <span className="grid place-items-center flex-none w-8 h-8 rounded-full text-[#245d4a] bg-[#cde8d3] text-[10px] font-bold">{initials}</span>
               {!collapsed && (
                 <span>
                   <strong className="block">{fullName || "Loading…"}</strong>
-                  <small className="block mt-[3px] text-[#91b7a3] text-[10px]">Member</small>
+                  <small className="block mt-[3px] text-[#91b7a3] text-[10px]">Superadmin</small>
                 </span>
               )}
             </div>
           </div>
         </aside>
-        <section className={"min-w-0 transition-[margin-left] duration-[180ms] ease-linear max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[228px] max-[900px]:ml-[205px]")}>
+        <section className={"min-w-0 transition-[margin-left] duration-[180ms] ease-linear max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
           <header
             className={
               "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-200 max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
               (collapsed ? "left-[72px]" : "left-[238px] max-[900px]:left-[205px]")
             }
           >
-            <div className="flex items-center">
+            <div className="flex items-center gap-[14px]">
               <button type="button" className="grid place-items-center w-9 h-9 border-0 rounded-lg text-[#3f5a4e] bg-transparent cursor-pointer text-base hover:bg-[#eef5f0]" onClick={toggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}</button>
               <div className="hidden max-[650px]:flex items-center gap-2 text-brand text-sm font-bold">
-                <Image className="block w-[27px] h-[27px] object-contain border border-brand rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} /> WAFA
+                <Image className="block w-[27px] h-[27px] object-contain border border-brand rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} /> WAFA CONTROL
               </div>
             </div>
             <div className="relative" ref={menuRef}>
@@ -132,7 +118,7 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
                 <div role="menu" className="absolute right-0 top-[calc(100%+8px)] w-[190px] rounded-lg border border-[#e4ebe6] bg-white shadow-[0_12px_28px_-12px_rgba(22,75,60,0.25)] overflow-hidden">
                   <Link
                     role="menuitem"
-                    href="/member/profile"
+                    href="/superadmin/profile"
                     className="flex items-center gap-[10px] px-4 py-3 text-[#2d4037] text-xs no-underline hover:bg-[#f0f7f0]"
                     onClick={() => setMenuOpen(false)}
                   >
