@@ -565,6 +565,34 @@ export interface AuditLogFilters {
   offset?: number;
 }
 
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  content: string;
+  createdAt: string;
+}
+
+export async function listChatMessages(after?: string): Promise<ChatMessage[]> {
+  const query = after ? `?after=${encodeURIComponent(after)}` : "";
+  const response = await apiFetch(`${apiUrl}/api/chat${query}`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load chat messages.");
+  return body as ChatMessage[];
+}
+
+export async function sendChatMessage(content: string): Promise<ChatMessage> {
+  const response = await apiFetch(`${apiUrl}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to send this message.");
+  return body as ChatMessage;
+}
+
 export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ items: AuditLogEntry[]; total: number }> {
   const params = new URLSearchParams();
   if (filters.actorId) params.set("actorId", filters.actorId);

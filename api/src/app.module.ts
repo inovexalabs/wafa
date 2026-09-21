@@ -36,6 +36,8 @@ import { NotificationsService } from './notifications/notifications.service';
 import { ResendService } from './notifications/resend.service';
 import { SuperadminAuditController } from './audit/superadmin-audit.controller';
 import { AuditService } from './audit/audit.service';
+import { ChatController } from './chat/chat.controller';
+import { ChatService } from './chat/chat.service';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -64,6 +66,7 @@ import { AuditService } from './audit/audit.service';
     AccountantNotificationsController,
     MemberNotificationsController,
     SuperadminAuditController,
+    ChatController,
   ],
   providers: [
     AuthService,
@@ -78,6 +81,7 @@ import { AuditService } from './audit/audit.service';
     NotificationsService,
     ResendService,
     AuditService,
+    ChatService,
   ],
 })
 export class AppModule {}

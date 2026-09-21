@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Award, ArrowLeft, ArrowRight, CalendarClock, ChevronDown, HelpCircle, Home, LogOut, Receipt, UserCircle, Wallet } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, CalendarClock, ChevronDown, ChevronRight, HelpCircle, Home, LogOut, MessageCircle, Receipt, UserCircle, Wallet } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getMemberProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "receipts" | "certificates" | "profile"; children: ReactNode };
+type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "receipts" | "certificates" | "chat" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -31,6 +31,7 @@ const links = [
   ["payments", "Payments", "/member/payments", Wallet],
   ["receipts", "Receipts", "/member/receipts", Receipt],
   ["certificates", "Certificates", "/member/certificates", Award],
+  ["chat", "Chat", "/member/chat", MessageCircle],
   ["profile", "My profile", "/member/profile", UserCircle],
 ] as const;
 
@@ -59,6 +60,7 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
   }, [menuOpen]);
 
   const initials = fullName ? initialsFor(fullName) : "";
+  const currentLink = links.find(([key]) => key === active);
   return (
     <Dashboard role="member" fullPage>
       <div className="min-h-dvh bg-cream">
@@ -106,6 +108,18 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
               <span className="inline-flex items-center justify-center flex-none w-[18px]"><HelpCircle size={18} /></span>
               <span className={labelClass(collapsed)}>Help center</span>
             </a>
+            <button
+              type="button"
+              className={
+                "flex items-center w-full mb-[6px] rounded-lg border-0 text-[13px] text-[#b5cfc1] bg-transparent cursor-pointer transition-[gap,padding,background-color,color] duration-300 ease-in-out hover:text-white hover:bg-white/[.12] " +
+                (collapsed ? "gap-0 px-[11px] py-3" : "gap-[13px] px-[13px] py-3")
+              }
+              onClick={toggle}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className="inline-flex items-center justify-center flex-none w-[18px]">{collapsed ? <ArrowRight size={18} /> : <ArrowLeft size={18} />}</span>
+              <span className={labelClass(collapsed)}>Collapse</span>
+            </button>
             <div className="flex items-center gap-[9px] mt-[22px] pt-[15px] border-t border-white/[.15] text-xs">
               <span className="grid place-items-center flex-none w-8 h-8 rounded-full text-[#245d4a] bg-[#cde8d3] text-[10px] font-bold">{initials}</span>
               <span className={labelClass(collapsed)}>
@@ -115,15 +129,25 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
             </div>
           </div>
         </aside>
-        <section className={"min-w-0 transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[228px] max-[900px]:ml-[205px]")}>
+        <section className={"min-w-0 transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
           <header
             className={
               "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-300 ease-in-out max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
               (collapsed ? "left-[72px]" : "left-[238px] max-[900px]:left-[205px]")
             }
           >
-            <div className="flex items-center">
-              <button type="button" className="grid place-items-center w-9 h-9 border-0 rounded-lg text-[#3f5a4e] bg-transparent cursor-pointer text-base hover:bg-[#eef5f0]" onClick={toggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}</button>
+            <div className="flex items-center gap-[14px]">
+              <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[13px] max-[650px]:hidden">
+                <Link href="/member" className={"no-underline transition-colors duration-200 " + (active === "overview" ? "text-ink font-semibold" : "text-muted hover:text-brand")}>
+                  Member
+                </Link>
+                {active !== "overview" && currentLink && (
+                  <span key={active} className="flex items-center gap-2 animate-[breadcrumb-in_250ms_ease-out]">
+                    <ChevronRight size={14} className="text-muted" />
+                    <span className="text-ink font-semibold">{currentLink[1]}</span>
+                  </span>
+                )}
+              </nav>
               <div className="hidden max-[650px]:flex items-center gap-2 text-brand text-sm font-bold">
                 <Image className="block w-[27px] h-[27px] object-contain border border-brand rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} /> WAFA
               </div>

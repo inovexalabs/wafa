@@ -119,7 +119,7 @@ export class ReceiptsService {
     if (uploadError) {
       console.error('Receipt upload failed:', uploadError);
       throw new InternalServerErrorException(
-        'Unable to upload the receipt file.',
+        `Unable to upload the receipt file: ${uploadError.message}`,
       );
     }
 

@@ -96,12 +96,13 @@ export default function SuperadminCreateMeetingPage() {
 
   return (
     <SuperadminLayout active="meetings">
-      <main className="max-w-[720px] mx-auto px-6 pt-20 pb-2 max-[650px]:px-4 max-[650px]:pt-[68px] max-[650px]:pb-2 min-h-[calc(100vh-76px)]">
-        <div className="mb-4">
+      <main className="max-w-[720px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+        <div className="shrink-0 mb-4">
           <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Team coordination</p>
           <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">Schedule a meeting.</h1>
           <p className="mt-[9px] text-muted text-sm">Meetings created here get a Zoom link automatically.</p>
         </div>
+        <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto pb-6">
         <section className="p-4 border border-[#e1e9e4] rounded-[10px] bg-white">
           <div className="flex justify-between">
             <div><h2 className="m-0 font-display font-bold text-[23px]">Create a meeting</h2><p className="my-[6px] text-[#8a9892] text-[11px]">A Zoom meeting is created and linked automatically.</p></div>
@@ -118,6 +119,7 @@ export default function SuperadminCreateMeetingPage() {
             <button className="flex justify-center gap-3 border-0 rounded-md p-[13px] text-white bg-brand cursor-pointer text-xs font-bold disabled:opacity-65 disabled:cursor-wait" disabled={isSubmitting}>Select recipients <span>→</span></button>
           </form>
         </section>
+        </div>
       </main>
 
       {showRecipientsModal && (

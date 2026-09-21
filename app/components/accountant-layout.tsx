@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, CalendarClock, ChevronDown, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, CalendarClock, ChevronDown, ChevronRight, LayoutDashboard, LogOut, MessageCircle, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type AccountantLayoutProps = { active: "overview" | "meetings" | "certificates" | "profile"; children: ReactNode };
+type AccountantLayoutProps = { active: "overview" | "meetings" | "certificates" | "chat" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -29,6 +29,7 @@ const links = [
   ["overview", "Overview", "/accountant", LayoutDashboard],
   ["meetings", "Meetings", "/accountant/meetings", CalendarClock],
   ["certificates", "Certificates", "/accountant/certificates", Award],
+  ["chat", "Chat", "/accountant/chat", MessageCircle],
   ["profile", "My profile", "/accountant/profile", UserCircle],
 ] as const;
 
@@ -57,6 +58,7 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
   }, [menuOpen]);
 
   const initials = fullName ? initialsFor(fullName) : "";
+  const currentLink = links.find(([key]) => key === active);
   return (
     <Dashboard role="accountant" fullPage>
       <div className="min-h-screen bg-cream">
@@ -93,6 +95,18 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
             ))}
           </nav>
           <div className="mt-auto">
+            <button
+              type="button"
+              className={
+                "flex items-center w-full mb-[6px] rounded-lg border-0 text-[13px] text-[#b5cfc1] bg-transparent cursor-pointer transition-[gap,padding,background-color,color] duration-300 ease-in-out hover:text-white hover:bg-white/[.12] " +
+                (collapsed ? "gap-0 px-[11px] py-3" : "gap-[13px] px-[13px] py-3")
+              }
+              onClick={toggle}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className="inline-flex items-center justify-center flex-none w-[18px]">{collapsed ? <ArrowRight size={18} /> : <ArrowLeft size={18} />}</span>
+              <span className={labelClass(collapsed)}>Collapse</span>
+            </button>
             <div className="flex items-center gap-[9px] mt-[22px] pt-[15px] border-t border-white/[.15] text-xs">
               <span className="grid place-items-center flex-none w-8 h-8 rounded-full text-[#245d4a] bg-[#cde8d3] text-[10px] font-bold">{initials}</span>
               <span className={labelClass(collapsed)}>
@@ -110,7 +124,17 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
             }
           >
             <div className="flex items-center gap-[14px]">
-              <button type="button" className="grid place-items-center w-9 h-9 border-0 rounded-lg text-[#3f5a4e] bg-transparent cursor-pointer text-base hover:bg-[#eef5f0]" onClick={toggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}</button>
+              <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[13px] max-[650px]:hidden">
+                <Link href="/accountant" className={"no-underline transition-colors duration-200 " + (active === "overview" ? "text-ink font-semibold" : "text-muted hover:text-brand")}>
+                  Accountant
+                </Link>
+                {active !== "overview" && currentLink && (
+                  <span key={active} className="flex items-center gap-2 animate-[breadcrumb-in_250ms_ease-out]">
+                    <ChevronRight size={14} className="text-muted" />
+                    <span className="text-ink font-semibold">{currentLink[1]}</span>
+                  </span>
+                )}
+              </nav>
               <div className="hidden max-[650px]:flex items-center gap-2 text-brand text-sm font-bold">
                 <Image className="block w-[27px] h-[27px] object-contain border border-brand rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} /> WAFA FINANCE
               </div>

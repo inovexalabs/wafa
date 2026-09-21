@@ -43,8 +43,8 @@ function SuperadminWorkspace() {
 
   return (
     <>
-      <main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 max-[650px]:px-4 max-[650px]:pt-[68px] max-[650px]:pb-2 min-h-[calc(100vh-76px)]">
-        <div className="flex justify-between items-end gap-5 max-[760px]:items-start max-[760px]:flex-col">
+      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+        <div className="shrink-0 flex justify-between items-end gap-5 max-[760px]:items-start max-[760px]:flex-col">
           <div>
             <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">System administration</p>
             <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,48px)] leading-[1.1] tracking-[-.04em]">Good morning.</h1>
@@ -53,6 +53,7 @@ function SuperadminWorkspace() {
           <span className="flex items-center gap-[7px] px-[11px] py-2 border border-[#d6e7d9] rounded-[20px] text-[#4b8560] bg-[#f0f8ef] text-[10px] font-bold max-[760px]:self-start"><i className="block w-[7px] h-[7px] rounded-full bg-[#58a86e]" /> System operational</span>
         </div>
 
+        <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto pb-6">
         <div className="grid grid-cols-3 gap-4 mt-[35px] max-[760px]:grid-cols-1">
           <article className="flex items-start gap-[15px] p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
             <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#2a7657] bg-[#e1f2e4]">♙</span>
@@ -161,6 +162,7 @@ function SuperadminWorkspace() {
           </div>
           <span className="ml-auto text-[#a5c8ac] text-2xl max-[500px]:hidden">◈</span>
         </section>
+        </div>
       </main>
     </>
   );
