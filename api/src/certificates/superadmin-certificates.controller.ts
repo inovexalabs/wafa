@@ -5,10 +5,10 @@ import { Roles } from '../auth/roles.decorator';
 import { CertificatesService } from './certificates.service';
 import type { CreateCertificateInput } from './certificates.service';
 
-@Controller('admin/certificates')
+@Controller('superadmin/certificates')
 @UseGuards(AuthGuard)
-@Roles('admin')
-export class AdminCertificatesController {
+@Roles('superadmin')
+export class SuperadminCertificatesController {
   constructor(private readonly certificates: CertificatesService) {}
 
   @Get('recipients')

@@ -83,8 +83,8 @@ export default function AccountantProfilePage() {
             <div className="flex items-center gap-[14px] pb-[25px] border-b border-[#edf1ee] max-[780px]:items-start max-[780px]:flex-wrap">
               <span className="grid place-items-center w-[58px] h-[58px] rounded-full text-[#276b52] bg-[#cfe8d4] text-base font-bold">{initialsFor(profile.fullName ?? profile.userId)}</span>
               <div className="flex-1">
-                <h2 className="font-display font-bold text-xl">{profile.fullName || profile.userId}</h2>
-                <p className="mt-[5px] text-[#8b9992] text-[10px]">Accountant since {memberSince(profile.joinedAt)} · {profile.email}</p>
+                <h2 className="m-0 leading-none font-display font-bold text-xl">{profile.fullName || profile.userId}</h2>
+                <p className="m-0 mt-[6px] leading-none text-[#8b9992] text-[10px]">Accountant since {memberSince(profile.joinedAt)} · {profile.email}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-[19px_16px] mt-[25px] max-[780px]:grid-cols-1">

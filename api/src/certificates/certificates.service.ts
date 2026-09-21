@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 type Profile = { id: string; role: string };
 type RecipientRole = 'superadmin' | 'admin' | 'accountant' | 'member';
@@ -22,7 +23,10 @@ const maxTemplateLength = 200_000;
 
 @Injectable()
 export class CertificatesService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async listRecipients(): Promise<CertificateRecipient[]> {
     const client = this.supabase.getAdminClient();
@@ -49,7 +53,7 @@ export class CertificatesService {
 
     const client = this.supabase.getAdminClient();
     const { data: recipient, error: recipientError } = await client.from('profiles')
-      .select('id').eq('id', input.recipientId.trim()).maybeSingle();
+      .select('id, role').eq('id', input.recipientId.trim()).maybeSingle();
     if (recipientError) throw new InternalServerErrorException('Unable to verify the recipient.');
     if (!recipient) throw new BadRequestException('The selected recipient does not exist.');
 
@@ -61,6 +65,22 @@ export class CertificatesService {
       issued_by: profile.id,
     }).select('id, certificate_number, title, description, template_html, issued_at').single();
     if (error) throw new BadRequestException(error.message);
+
+    try {
+      const origin = process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim();
+      const certificatesPath = recipient.role === 'member' ? '/member/certificates' : '/admin/certificates';
+      await this.notifications.notifyRecipients([recipient.id], {
+        type: 'system',
+        title: `New certificate: ${data.title}`,
+        message: `You have been issued a new certificate: "${data.title}" (${data.certificate_number}).`,
+        referenceType: 'certificate',
+        referenceId: data.id,
+        actionUrl: origin ? `${origin}${certificatesPath}` : undefined,
+        actionLabel: 'View certificate',
+      });
+    } catch {
+      // Notification delivery is best-effort and should never block certificate issuance.
+    }
 
     return this.mapCertificate(data);
   }

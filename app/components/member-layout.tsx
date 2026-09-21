@@ -18,6 +18,13 @@ function initialsFor(fullName: string) {
   return initials.toUpperCase() || "?";
 }
 
+function labelClass(collapsed: boolean) {
+  return (
+    "overflow-hidden whitespace-nowrap transition-[opacity,max-width] duration-300 ease-in-out " +
+    (collapsed ? "opacity-0 max-w-0" : "opacity-100 max-w-[170px]")
+  );
+}
+
 const links = [
   ["overview", "Overview", "/member", Home],
   ["meetings", "Meetings", "/member/meetings", CalendarClock],
@@ -57,58 +64,61 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
       <div className="min-h-dvh bg-cream">
         <aside
           className={
-            "flex flex-col fixed top-0 left-0 z-10 h-dvh py-7 overflow-y-auto overflow-x-hidden text-[#d9e9df] bg-[#164b3c] transition-[width] duration-[180ms] ease-linear max-[650px]:hidden " +
+            "flex flex-col fixed top-0 left-0 z-10 h-dvh py-7 overflow-y-auto overflow-x-hidden text-[#d9e9df] bg-[#164b3c] transition-[width] duration-300 ease-in-out max-[650px]:hidden " +
             (collapsed ? "w-[72px] px-4" : "w-[238px] px-4 max-[900px]:w-[205px]")
           }
         >
-          <div className={"flex items-center gap-[10px] mb-[22px] pb-[15px] px-[13px] border-b border-white/[.15] text-white font-bold tracking-[.12em] " + (collapsed ? "justify-center px-0" : "")}>
-            <Image className="block w-[31px] h-[31px] object-contain border border-[#b5d6c1] rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} />
-            {!collapsed && <span>WAFA</span>}
+          <div
+            className={
+              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.12em] transition-[gap,padding] duration-300 ease-in-out " +
+              (collapsed ? "gap-0 px-1" : "gap-[10px] px-[13px]")
+            }
+          >
+            <Image className="block w-[31px] h-[31px] object-contain border border-[#b5d6c1] rounded-[9px] bg-white shrink-0" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} />
+            <span className={labelClass(collapsed)}>WAFA</span>
           </div>
           <nav className="grid gap-[6px] mt-[12px]" aria-label="Member navigation">
             {links.map(([key, label, href, Icon]) => (
               <Link
                 key={key}
                 className={
-                  "flex items-center gap-[13px] px-[13px] py-3 rounded-lg text-[13px] no-underline hover:text-white hover:bg-white/[.12] " +
-                  (active === key ? "text-white bg-white/[.12] " : "text-[#b5cfc1] ") +
-                  (collapsed ? "justify-center" : "")
+                  "flex items-center w-full rounded-lg text-[13px] no-underline transition-[gap,padding,background-color,color] duration-300 ease-in-out hover:text-white hover:bg-white/[.12] " +
+                  (collapsed ? "gap-0 px-[11px] py-3 " : "gap-[13px] px-[13px] py-3 ") +
+                  (active === key ? "text-white bg-white/[.12]" : "text-[#b5cfc1]")
                 }
                 href={href}
                 title={label}
               >
-                <span className="inline-flex items-center justify-center flex-none"><Icon size={18} /></span>
-                {!collapsed && <span>{label}</span>}
+                <span className="inline-flex items-center justify-center flex-none w-[18px]"><Icon size={18} /></span>
+                <span className={labelClass(collapsed)}>{label}</span>
               </Link>
             ))}
           </nav>
           <div className="mt-auto">
             <a
               className={
-                "flex items-center gap-[13px] px-[13px] py-3 rounded-lg text-[13px] no-underline text-[#b5cfc1] hover:text-white hover:bg-white/[.12] " +
-                (collapsed ? "justify-center" : "")
+                "flex items-center w-full rounded-lg text-[13px] no-underline text-[#b5cfc1] transition-[gap,padding,background-color,color] duration-300 ease-in-out hover:text-white hover:bg-white/[.12] " +
+                (collapsed ? "gap-0 px-[11px] py-3" : "gap-[13px] px-[13px] py-3")
               }
               href="#help"
               title="Help center"
             >
-              <span className="inline-flex items-center justify-center flex-none"><HelpCircle size={18} /></span>
-              {!collapsed && <span>Help center</span>}
+              <span className="inline-flex items-center justify-center flex-none w-[18px]"><HelpCircle size={18} /></span>
+              <span className={labelClass(collapsed)}>Help center</span>
             </a>
-            <div className={"flex items-center gap-[9px] mt-[22px] pt-[15px] border-t border-white/[.15] text-xs " + (collapsed ? "justify-center" : "")}>
+            <div className="flex items-center gap-[9px] mt-[22px] pt-[15px] border-t border-white/[.15] text-xs">
               <span className="grid place-items-center flex-none w-8 h-8 rounded-full text-[#245d4a] bg-[#cde8d3] text-[10px] font-bold">{initials}</span>
-              {!collapsed && (
-                <span>
-                  <strong className="block">{fullName || "Loading…"}</strong>
-                  <small className="block mt-[3px] text-[#91b7a3] text-[10px]">Member</small>
-                </span>
-              )}
+              <span className={labelClass(collapsed)}>
+                <strong className="block whitespace-nowrap">{fullName || "Loading…"}</strong>
+                <small className="block mt-[3px] text-[#91b7a3] text-[10px] whitespace-nowrap">Member</small>
+              </span>
             </div>
           </div>
         </aside>
-        <section className={"min-w-0 transition-[margin-left] duration-[180ms] ease-linear max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[228px] max-[900px]:ml-[205px]")}>
+        <section className={"min-w-0 transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[228px] max-[900px]:ml-[205px]")}>
           <header
             className={
-              "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-200 max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
+              "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-300 ease-in-out max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
               (collapsed ? "left-[72px]" : "left-[238px] max-[900px]:left-[205px]")
             }
           >

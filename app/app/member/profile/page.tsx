@@ -88,11 +88,13 @@ export default function ProfilePage() {
           <div className="p-5 rounded-2xl border border-[#f3d6d3] bg-[#fdf3f2] text-[#ae4d44] text-sm" role="alert">{loadError}</div>
         ) : profile && (
           <form className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white p-[29px] max-[500px]:px-4 max-[500px]:py-[19px]" onSubmit={save}>
-            <div className="flex items-center gap-[14px] pb-[25px] border-b border-[#edf1ee] max-[780px]:items-start max-[780px]:flex-wrap">
-              <span className="grid place-items-center w-[58px] h-[58px] rounded-full text-[#276b52] bg-[#cfe8d4] text-base font-bold">{initialsFor(profile.fullName)}</span>
-              <div className="flex-1">
-                <h2 className="font-display font-bold text-xl">{profile.fullName}</h2>
-                <p className="mt-[5px] text-[#8b9992] text-[10px]">Member since {memberSince(profile.joinedAt)} · {profile.email ?? "No email on file"}</p>
+            <div className="flex items-center justify-between gap-[14px] pb-[25px] border-b border-[#edf1ee] max-[780px]:flex-wrap">
+              <div className="flex items-center gap-[14px]">
+                <span className="grid place-items-center w-[58px] h-[58px] rounded-full text-[#276b52] bg-[#cfe8d4] text-base font-bold">{initialsFor(profile.fullName)}</span>
+                <div>
+                  <h2 className="m-0 leading-none font-display font-bold text-xl">{profile.fullName}</h2>
+                  <p className="m-0 mt-[6px] leading-none text-[#8b9992] text-[10px]">Member since {memberSince(profile.joinedAt)} · {profile.email ?? "No email on file"}</p>
+                </div>
               </div>
               <button type="button" className="border border-[#c8dad0] rounded-[5px] px-[13px] py-2 text-[#2b6b54] bg-white text-[10px]">Change photo</button>
             </div>

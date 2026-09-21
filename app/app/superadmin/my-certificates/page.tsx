@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Award, Eye, AwardIcon } from "lucide-react";
-import MemberLayout from "../../../components/member-layout";
+import SuperadminLayout from "../../../components/superadmin-layout";
 import Modal from "../../../components/modal";
 import CertificateView from "../../../components/certificate-view";
-import { Certificate, getMemberProfile, listMyCertificates } from "../../../lib/auth";
+import { Certificate, getStaffProfile, listMyIssuerCertificates } from "../../../lib/auth";
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -29,7 +29,7 @@ function PreviewModal({ certificate, userName, onClose }: { certificate: Certifi
   );
 }
 
-export default function CertificatesPage() {
+export default function SuperadminMyCertificatesPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -37,23 +37,23 @@ export default function CertificatesPage() {
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    listMyCertificates()
+    listMyIssuerCertificates("superadmin")
       .then(setCertificates)
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Unable to load your certificates."))
       .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
-    getMemberProfile().then((p) => setUserName(p.fullName)).catch(() => {});
+    getStaffProfile("superadmin").then((p) => setUserName(p.fullName ?? p.userId)).catch(() => {});
   }, []);
 
   return (
-    <MemberLayout active="certificates">
+    <SuperadminLayout active="my-certificates">
       <main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 max-[650px]:px-4 max-[650px]:pt-[68px] max-[650px]:pb-2 min-h-[calc(100vh-76px)]">
         <div className="flex justify-between items-end gap-5 mb-10 max-[780px]:items-start max-[780px]:flex-col">
           <div>
             <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Your achievements</p>
-            <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">Certificates</h1>
+            <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">My certificates</h1>
             <p className="mt-[9px] text-muted text-sm">View and download certificates awarded to you.</p>
           </div>
           {!isLoading && certificates.length > 0 && (
@@ -75,7 +75,7 @@ export default function CertificatesPage() {
           <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 rounded-2xl border border-dashed border-line bg-white text-center">
             <div className="w-14 h-14 rounded-full bg-[#eef1ee] grid place-items-center text-muted"><AwardIcon size={22} /></div>
             <p className="text-sm font-semibold text-ink">No certificates yet</p>
-            <p className="text-xs text-muted max-w-[240px]">Certificates awarded by WAFA admins will appear here.</p>
+            <p className="text-xs text-muted max-w-[240px]">Certificates awarded to you will appear here.</p>
           </div>
         ) : (
           <div className="rounded-2xl border border-line bg-white">
@@ -110,6 +110,6 @@ export default function CertificatesPage() {
       {previewCertificate && (
         <PreviewModal certificate={previewCertificate} userName={userName} onClose={() => setPreviewCertificate(null)} />
       )}
-    </MemberLayout>
+    </SuperadminLayout>
   );
 }

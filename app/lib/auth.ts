@@ -433,22 +433,24 @@ export interface IssueCertificateRequest {
   templateHtml: string;
 }
 
-export async function listCertificateRecipients(): Promise<CertificateRecipient[]> {
-  const response = await apiFetch(`${apiUrl}/api/admin/certificates/recipients`);
+export type CertificateIssuerRole = "admin" | "superadmin";
+
+export async function listCertificateRecipients(role: CertificateIssuerRole = "admin"): Promise<CertificateRecipient[]> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/certificates/recipients`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load recipients.");
   return body as CertificateRecipient[];
 }
 
-export async function listIssuedCertificates(): Promise<AdminCertificate[]> {
-  const response = await apiFetch(`${apiUrl}/api/admin/certificates`);
+export async function listIssuedCertificates(role: CertificateIssuerRole = "admin"): Promise<AdminCertificate[]> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/certificates`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load certificates.");
   return body as AdminCertificate[];
 }
 
-export async function issueCertificate(input: IssueCertificateRequest): Promise<AdminCertificate & { certificateNumber: string }> {
-  const response = await apiFetch(`${apiUrl}/api/admin/certificates`, {
+export async function issueCertificate(input: IssueCertificateRequest, role: CertificateIssuerRole = "admin"): Promise<AdminCertificate & { certificateNumber: string }> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/certificates`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -460,6 +462,20 @@ export async function issueCertificate(input: IssueCertificateRequest): Promise<
 
 export async function listMyCertificates(): Promise<Certificate[]> {
   const response = await apiFetch(`${apiUrl}/api/member/certificates`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your certificates.");
+  return body as Certificate[];
+}
+
+export async function listMyAccountantCertificates(): Promise<Certificate[]> {
+  const response = await apiFetch(`${apiUrl}/api/accountant/certificates`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your certificates.");
+  return body as Certificate[];
+}
+
+export async function listMyIssuerCertificates(role: CertificateIssuerRole): Promise<Certificate[]> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/certificates/mine`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load your certificates.");
   return body as Certificate[];

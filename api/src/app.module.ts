@@ -22,6 +22,8 @@ import { MemberPaymentsController } from './payments/member-payments.controller'
 import { PaymentsService } from './payments/payments.service';
 import { AdminCertificatesController } from './certificates/admin-certificates.controller';
 import { MemberCertificatesController } from './certificates/member-certificates.controller';
+import { AccountantCertificatesController } from './certificates/accountant-certificates.controller';
+import { SuperadminCertificatesController } from './certificates/superadmin-certificates.controller';
 import { CertificatesService } from './certificates/certificates.service';
 import { ZoomController } from './zoom/zoom.controller';
 import { ZoomService } from './zoom/zoom.service';
@@ -54,6 +56,8 @@ import { AuditService } from './audit/audit.service';
     MemberPaymentsController,
     AdminCertificatesController,
     MemberCertificatesController,
+    AccountantCertificatesController,
+    SuperadminCertificatesController,
     ZoomController,
     AdminNotificationsController,
     SuperadminNotificationsController,

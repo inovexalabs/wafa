@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Award, Eye, AwardIcon } from "lucide-react";
-import MemberLayout from "../../../components/member-layout";
+import AccountantLayout from "../../../components/accountant-layout";
 import Modal from "../../../components/modal";
 import CertificateView from "../../../components/certificate-view";
-import { Certificate, getMemberProfile, listMyCertificates } from "../../../lib/auth";
+import { Certificate, getStaffProfile, listMyAccountantCertificates } from "../../../lib/auth";
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -29,7 +29,7 @@ function PreviewModal({ certificate, userName, onClose }: { certificate: Certifi
   );
 }
 
-export default function CertificatesPage() {
+export default function AccountantCertificatesPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -37,18 +37,18 @@ export default function CertificatesPage() {
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    listMyCertificates()
+    listMyAccountantCertificates()
       .then(setCertificates)
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Unable to load your certificates."))
       .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
-    getMemberProfile().then((p) => setUserName(p.fullName)).catch(() => {});
+    getStaffProfile("accountant").then((p) => setUserName(p.fullName ?? p.userId)).catch(() => {});
   }, []);
 
   return (
-    <MemberLayout active="certificates">
+    <AccountantLayout active="certificates">
       <main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 max-[650px]:px-4 max-[650px]:pt-[68px] max-[650px]:pb-2 min-h-[calc(100vh-76px)]">
         <div className="flex justify-between items-end gap-5 mb-10 max-[780px]:items-start max-[780px]:flex-col">
           <div>
@@ -110,6 +110,6 @@ export default function CertificatesPage() {
       {previewCertificate && (
         <PreviewModal certificate={previewCertificate} userName={userName} onClose={() => setPreviewCertificate(null)} />
       )}
-    </MemberLayout>
+    </AccountantLayout>
   );
 }

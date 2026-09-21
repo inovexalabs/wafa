@@ -71,7 +71,6 @@ export default function AdminProfilePage() {
             <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">My profile</h1>
             <p className="mt-[9px] text-muted text-sm">Manage your administrator account details.</p>
           </div>
-          <span className="px-[10px] py-[7px] rounded-2xl text-[#3c825b] bg-[#e6f3e6] text-[10px] font-bold">Admin</span>
         </div>
 
         {isLoading ? (
@@ -80,12 +79,15 @@ export default function AdminProfilePage() {
           <div className="p-5 rounded-2xl border border-[#f3d6d3] bg-[#fdf3f2] text-[#ae4d44] text-sm" role="alert">{loadError}</div>
         ) : profile && (
           <form className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white p-[29px] max-[500px]:px-4 max-[500px]:py-[19px]" onSubmit={save}>
-            <div className="flex items-center gap-[14px] pb-[25px] border-b border-[#edf1ee] max-[780px]:items-start max-[780px]:flex-wrap">
-              <span className="grid place-items-center w-[58px] h-[58px] rounded-full text-[#276b52] bg-[#cfe8d4] text-base font-bold">{initialsFor(profile.fullName ?? profile.userId)}</span>
-              <div className="flex-1">
-                <h2 className="font-display font-bold text-xl">{profile.fullName || profile.userId}</h2>
-                <p className="mt-[5px] text-[#8b9992] text-[10px]">Admin since {memberSince(profile.joinedAt)} · {profile.email}</p>
+            <div className="flex items-center justify-between gap-[14px] pb-[25px] border-b border-[#edf1ee] max-[780px]:flex-wrap">
+              <div className="flex items-center gap-[14px]">
+                <span className="grid place-items-center w-[58px] h-[58px] rounded-full text-[#276b52] bg-[#cfe8d4] text-base font-bold">{initialsFor(profile.fullName ?? profile.userId)}</span>
+                <div>
+                  <h2 className="m-0 leading-none font-display font-bold text-xl">{profile.fullName || profile.userId}</h2>
+                  <p className="m-0 mt-[6px] leading-none text-[#8b9992] text-[10px]">Admin since {memberSince(profile.joinedAt)} · {profile.email}</p>
+                </div>
               </div>
+              <span className="px-[10px] py-[7px] rounded-2xl text-[#3c825b] bg-[#e6f3e6] text-[10px] font-bold">Admin</span>
             </div>
             <div className="grid grid-cols-2 gap-[19px_16px] mt-[25px] max-[780px]:grid-cols-1">
               <label className="text-[#53665c] text-[11px] font-bold">Full name<input className={fieldInput} value={fullName} onChange={(event) => setFullName(event.target.value)} required /></label>
