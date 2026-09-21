@@ -20,6 +20,9 @@ import { MemberReceiptsController } from './receipts/member-receipts.controller'
 import { ReceiptsService } from './receipts/receipts.service';
 import { MemberPaymentsController } from './payments/member-payments.controller';
 import { PaymentsService } from './payments/payments.service';
+import { AdminCertificatesController } from './certificates/admin-certificates.controller';
+import { MemberCertificatesController } from './certificates/member-certificates.controller';
+import { CertificatesService } from './certificates/certificates.service';
 import { ZoomController } from './zoom/zoom.controller';
 import { ZoomService } from './zoom/zoom.service';
 import { HealthController } from './health/health.controller';
@@ -41,8 +44,10 @@ import { HealthController } from './health/health.controller';
     AccountantProfileController,
     MemberReceiptsController,
     MemberPaymentsController,
+    AdminCertificatesController,
+    MemberCertificatesController,
     ZoomController,
   ],
-  providers: [AuthService, SupabaseService, MeetingsService, MembersService, ProfilesService, ReceiptsService, PaymentsService, ZoomService],
+  providers: [AuthService, SupabaseService, MeetingsService, MembersService, ProfilesService, ReceiptsService, PaymentsService, CertificatesService, ZoomService],
 })
 export class AppModule {}
