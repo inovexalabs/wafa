@@ -41,7 +41,7 @@ export class AuthController {
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax' as const,
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
       path: '/',
       ...(rememberMe ? { maxAge: 30 * 24 * 60 * 60 * 1000 } : {}),
     };
@@ -51,9 +51,10 @@ export class AuthController {
   }
 
   private clearSessionCookies(response: Response) {
-    response.clearCookie(accessCookie, { httpOnly: true, secure: isProduction, sameSite: 'lax', path: '/' });
-    response.clearCookie(refreshCookie, { httpOnly: true, secure: isProduction, sameSite: 'lax', path: '/' });
-    response.clearCookie(rememberCookie, { httpOnly: true, secure: isProduction, sameSite: 'lax', path: '/' });
+    const cookieOptions = { httpOnly: true, secure: isProduction, sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax', path: '/' };
+    response.clearCookie(accessCookie, cookieOptions);
+    response.clearCookie(refreshCookie, cookieOptions);
+    response.clearCookie(rememberCookie, cookieOptions);
   }
 
   private getCookie(request: Request, name: string) {
