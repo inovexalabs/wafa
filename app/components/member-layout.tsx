@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarClock, ChevronDown, HelpCircle, Home, LogOut, Receipt, UserCircle, Wallet } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, CalendarClock, ChevronDown, HelpCircle, Home, LogOut, Receipt, UserCircle, Wallet } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getMemberProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "receipts" | "profile"; children: ReactNode };
+type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "receipts" | "certificates" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -23,6 +23,7 @@ const links = [
   ["meetings", "Meetings", "/member/meetings", CalendarClock],
   ["payments", "Payments", "/member/payments", Wallet],
   ["receipts", "Receipts", "/member/receipts", Receipt],
+  ["certificates", "Certificates", "/member/certificates", Award],
   ["profile", "My profile", "/member/profile", UserCircle],
 ] as const;
 
