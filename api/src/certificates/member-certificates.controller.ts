@@ -15,3 +15,15 @@ export class MemberCertificatesController {
     return this.certificates.listForProfile(profile);
   }
 }
+
+@Controller('accountant/certificates')
+@UseGuards(AuthGuard)
+@Roles('accountant')
+export class AccountantCertificatesController {
+  constructor(private readonly certificates: CertificatesService) {}
+
+  @Get()
+  list(@CurrentProfile() profile: { id: string; role: string }) {
+    return this.certificates.listForProfile(profile);
+  }
+}

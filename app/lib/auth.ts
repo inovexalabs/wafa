@@ -465,6 +465,13 @@ export async function listMyCertificates(): Promise<Certificate[]> {
   return body as Certificate[];
 }
 
+export async function listMyAccountantCertificates(): Promise<Certificate[]> {
+  const response = await apiFetch(`${apiUrl}/api/accountant/certificates`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load your certificates.");
+  return body as Certificate[];
+}
+
 export type NotificationType = "loan_due" | "payment_due" | "receipt_approved" | "receipt_rejected" | "meeting" | "dividend" | "system";
 
 export interface AppNotification {
