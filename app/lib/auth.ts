@@ -461,6 +461,48 @@ export async function announceNotification(role: "admin" | "superadmin", input: 
   return body as { sentTo: number };
 }
 
+export interface AuditLogEntry {
+  id: string;
+  actor_user_id: string | null;
+  actor_member_id: string | null;
+  actor_role: string | null;
+  actor_email: string | null;
+  actor_full_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  ip_address: string | null;
+  created_at: string;
+}
+
+export interface AuditLogFilters {
+  actorId?: string;
+  action?: string;
+  entityType?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ items: AuditLogEntry[]; total: number }> {
+  const params = new URLSearchParams();
+  if (filters.actorId) params.set("actorId", filters.actorId);
+  if (filters.action) params.set("action", filters.action);
+  if (filters.entityType) params.set("entityType", filters.entityType);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.offset) params.set("offset", String(filters.offset));
+  const query = params.toString();
+  const response = await apiFetch(`${apiUrl}/api/superadmin/audit-logs${query ? `?${query}` : ""}`);
+  const body = await response.json().catch(() => ({ items: [], total: 0 }));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load audit logs.");
+  return body as { items: AuditLogEntry[]; total: number };
+}
+
 
 
 

@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 import { CurrentAccessToken } from './current-access-token.decorator';
 import { Roles } from './roles.decorator';
+import { requestMeta } from '../audit/request-meta';
 
 const accessCookie = 'wafa_access_token';
 const refreshCookie = 'wafa_refresh_token';
@@ -27,7 +28,6 @@ type CreateUserBody = {
   memberNumber?: string;
   phone?: string;
 };
-
 
 @Controller('auth')
 export class AuthController {
@@ -51,7 +51,12 @@ export class AuthController {
   }
 
   private clearSessionCookies(response: Response) {
-    const cookieOptions = { httpOnly: true, secure: isProduction, sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax', path: '/' };
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      path: '/',
+    };
     response.clearCookie(accessCookie, cookieOptions);
     response.clearCookie(refreshCookie, cookieOptions);
     response.clearCookie(rememberCookie, cookieOptions);
@@ -59,33 +64,57 @@ export class AuthController {
 
   private getCookie(request: Request, name: string) {
     const cookies = request.headers.cookie?.split(';') ?? [];
-    const match = cookies.find((cookie) => cookie.trim().startsWith(name + '='));
-    return match ? decodeURIComponent(match.trim().slice(name.length + 1)) : undefined;
+    const match = cookies.find((cookie) =>
+      cookie.trim().startsWith(name + '='),
+    );
+    return match
+      ? decodeURIComponent(match.trim().slice(name.length + 1))
+      : undefined;
   }
 
   @Post('login')
   @HttpCode(200)
   async login(
     @Body() body: { userId: string; password: string; rememberMe?: boolean },
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const session = await this.authService.login(body?.userId, body?.password);
+    const session = await this.authService.login(
+      body?.userId,
+      body?.password,
+      requestMeta(request),
+    );
     this.setSessionCookies(response, session, body?.rememberMe === true);
     return { user: session.user };
   }
 
   @Post('refresh')
   @HttpCode(200)
-  async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-    const session = await this.authService.refresh(this.getCookie(request, refreshCookie) ?? '');
-    this.setSessionCookies(response, session, this.getCookie(request, rememberCookie) === '1');
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const session = await this.authService.refresh(
+      this.getCookie(request, refreshCookie) ?? '',
+    );
+    this.setSessionCookies(
+      response,
+      session,
+      this.getCookie(request, rememberCookie) === '1',
+    );
     return { user: session.user };
   }
 
   @Post('logout')
   @HttpCode(204)
-  async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-    await this.authService.logout(this.getCookie(request, accessCookie));
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.authService.logout(
+      this.getCookie(request, accessCookie),
+      requestMeta(request),
+    );
     this.clearSessionCookies(response);
   }
 
@@ -95,8 +124,14 @@ export class AuthController {
   createUserAsSuperadmin(
     @CurrentAccessToken() accessToken: string,
     @Body() body: CreateUserBody,
+    @Req() request: Request,
   ) {
-    return this.authService.createUser(accessToken, body, 'superadmin');
+    return this.authService.createUser(
+      accessToken,
+      body,
+      'superadmin',
+      requestMeta(request),
+    );
   }
 
   @Post('admin/users')
@@ -104,9 +139,15 @@ export class AuthController {
   @Roles('admin')
   createUserAsAdmin(
     @CurrentAccessToken() accessToken: string,
-    @Body() body: Omit<CreateUserBody, 'role'> & { role: 'member' | 'accountant' },
+    @Body()
+    body: Omit<CreateUserBody, 'role'> & { role: 'member' | 'accountant' },
+    @Req() request: Request,
   ) {
-    return this.authService.createUser(accessToken, body, 'admin');
+    return this.authService.createUser(
+      accessToken,
+      body,
+      'admin',
+      requestMeta(request),
+    );
   }
 }
-

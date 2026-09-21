@@ -36,7 +36,10 @@ export class AdminNotificationsController {
   }
 
   @Post()
-  announce(@Body() body: AnnounceBody) {
-    return this.notifications.announce(body);
+  announce(
+    @CurrentProfile() profile: { id: string; role: string },
+    @Body() body: AnnounceBody,
+  ) {
+    return this.notifications.announce(body, profile);
   }
 }

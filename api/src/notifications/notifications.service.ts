@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { ResendService } from './resend.service';
+import { AuditService } from '../audit/audit.service';
 
 type Profile = { id: string; role: string };
 type NotificationType =
@@ -39,6 +40,7 @@ export class NotificationsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly resend: ResendService,
+    private readonly audit: AuditService,
   ) {}
 
   async list(profile: Profile) {
@@ -181,19 +183,27 @@ export class NotificationsService {
     return { sentTo: created.length };
   }
 
-  async announce(input: {
-    title: string;
-    message: string;
-    recipientIds?: string[];
-  }) {
+  async announce(
+    input: { title: string; message: string; recipientIds?: string[] },
+    actor?: Profile,
+  ) {
     if (!input.title?.trim() || !input.message?.trim())
       throw new BadRequestException('Title and message are required.');
     const recipients = await this.resolveRecipients(input.recipientIds);
-    return this.createForRecipients(recipients, {
+    const result = await this.createForRecipients(recipients, {
       type: 'system',
       title: input.title.trim(),
       message: input.message.trim(),
     });
+
+    await this.audit.log({
+      actor: actor ? { userId: actor.id } : undefined,
+      action: 'notification.announced',
+      entityType: 'notification',
+      newData: { title: input.title.trim(), sentTo: result.sentTo },
+    });
+
+    return result;
   }
 
   async notifyRecipients(
