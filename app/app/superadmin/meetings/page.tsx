@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, CalendarDays, CalendarX2, CheckCircle2, Clock, MapPin, Plus, Settings, Timer, Video } from "lucide-react";
+import { toast } from "sonner";
 import SuperadminLayout from "../../../components/superadmin-layout";
 import Modal from "../../../components/modal";
 import RecipientPicker, { toggleRecipient, toggleRecipientGroup, useMeetingRecipients } from "../../../components/recipient-picker";
@@ -213,9 +214,12 @@ function ManageMeetingModal({ meetingId, onClose, onUpdated, onCancelled }: { me
 				setInitialSelection(selection);
 			}
 			onUpdated(updated);
+			toast.success("Meeting updated.");
 			onClose();
 		} catch (submissionError) {
-			setError(submissionError instanceof Error ? submissionError.message : "Unable to update this meeting.");
+			const message = submissionError instanceof Error ? submissionError.message : "Unable to update this meeting.";
+			setError(message);
+			toast.error(message);
 		} finally {
 			setIsSaving(false);
 		}
@@ -227,9 +231,12 @@ function ManageMeetingModal({ meetingId, onClose, onUpdated, onCancelled }: { me
 		setError("");
 		try {
 			await cancelMeeting("superadmin", meetingId);
+			toast.success("Meeting cancelled.");
 			onCancelled(meetingId);
 		} catch (cancelError) {
-			setError(cancelError instanceof Error ? cancelError.message : "Unable to cancel this meeting.");
+			const message = cancelError instanceof Error ? cancelError.message : "Unable to cancel this meeting.";
+			setError(message);
+			toast.error(message);
 		} finally {
 			setIsCancelling(false);
 		}

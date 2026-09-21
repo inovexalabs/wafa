@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Award, ArrowLeft, ArrowRight, CalendarClock, ChevronDown, HelpCircle, Home, LogOut, Receipt, UserCircle, Wallet } from "lucide-react";
 import Dashboard from "./dashboard";
+import NotificationBell from "./notification-bell";
 import { getMemberProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
@@ -117,38 +118,41 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
                 <Image className="block w-[27px] h-[27px] object-contain border border-brand rounded-[9px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} /> WAFA
               </div>
             </div>
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                className="flex items-center gap-3 text-[#65756e] text-xs bg-transparent border-0 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-[#eef5f0]"
-                onClick={() => setMenuOpen((open) => !open)}
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-              >
-                <span className="grid place-items-center w-[30px] h-[30px] rounded-full text-[#245d4a] bg-[#cde8d3] text-[10px] font-bold">{initials}</span>
-                <span className="max-[650px]:hidden">{fullName || "Loading…"}</span>
-                <ChevronDown size={14} className={"max-[650px]:hidden transition-transform " + (menuOpen ? "rotate-180" : "")} />
-              </button>
-              {menuOpen && (
-                <div role="menu" className="absolute right-0 top-[calc(100%+8px)] w-[190px] rounded-lg border border-[#e4ebe6] bg-white shadow-[0_12px_28px_-12px_rgba(22,75,60,0.25)] overflow-hidden">
-                  <Link
-                    role="menuitem"
-                    href="/member/profile"
-                    className="flex items-center gap-[10px] px-4 py-3 text-[#2d4037] text-xs no-underline hover:bg-[#f0f7f0]"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <UserCircle size={15} /> Profile
-                  </Link>
-                  <button
-                    role="menuitem"
-                    type="button"
-                    className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#286c54] bg-white cursor-pointer text-xs font-bold hover:bg-[#f0f7f0]"
-                    onClick={() => { setMenuOpen(false); void signOut(); router.replace("/"); }}
-                  >
-                    <LogOut size={15} /> Sign out
-                  </button>
-                </div>
-              )}
+            <div className="flex items-center gap-[10px]">
+              <NotificationBell role="member" />
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  className="flex items-center gap-3 text-[#65756e] text-xs bg-transparent border-0 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-[#eef5f0]"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                >
+                  <span className="grid place-items-center w-[30px] h-[30px] rounded-full text-[#245d4a] bg-[#cde8d3] text-[10px] font-bold">{initials}</span>
+                  <span className="max-[650px]:hidden">{fullName || "Loading…"}</span>
+                  <ChevronDown size={14} className={"max-[650px]:hidden transition-transform " + (menuOpen ? "rotate-180" : "")} />
+                </button>
+                {menuOpen && (
+                  <div role="menu" className="absolute right-0 top-[calc(100%+8px)] w-[190px] rounded-lg border border-[#e4ebe6] bg-white shadow-[0_12px_28px_-12px_rgba(22,75,60,0.25)] overflow-hidden">
+                    <Link
+                      role="menuitem"
+                      href="/member/profile"
+                      className="flex items-center gap-[10px] px-4 py-3 text-[#2d4037] text-xs no-underline hover:bg-[#f0f7f0]"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <UserCircle size={15} /> Profile
+                    </Link>
+                    <button
+                      role="menuitem"
+                      type="button"
+                      className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#286c54] bg-white cursor-pointer text-xs font-bold hover:bg-[#f0f7f0]"
+                      onClick={() => { setMenuOpen(false); void signOut(); router.replace("/"); }}
+                    >
+                      <LogOut size={15} /> Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
           {children}

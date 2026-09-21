@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import AdminLayout from "../../../../components/admin-layout";
 import Modal from "../../../../components/modal";
 import RecipientPicker, { toggleRecipient, toggleRecipientGroup, useMeetingRecipients } from "../../../../components/recipient-picker";
@@ -71,7 +72,7 @@ export default function CreateMeetingPage() {
     setError("");
     try {
       const scheduledAt = new Date(`${form.date}T${form.time}`).toISOString();
-      await createMeeting("admin", {
+      const created = await createMeeting("admin", {
         title: form.title,
         description: form.description || undefined,
         scheduledAt,
@@ -79,9 +80,16 @@ export default function CreateMeetingPage() {
         meetingType: "online",
         recipientIds: recipientIds.length ? recipientIds : undefined,
       });
+      toast.success(
+        created.sharedWithCount
+          ? `Meeting created and shared with ${created.sharedWithCount} recipient${created.sharedWithCount === 1 ? "" : "s"}.`
+          : "Meeting created and shared with everyone.",
+      );
       router.push("/admin/meetings");
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "Unable to create this meeting.");
+      const message = submissionError instanceof Error ? submissionError.message : "Unable to create this meeting.";
+      setError(message);
+      toast.error(message);
       setIsSubmitting(false);
     }
   }
