@@ -378,6 +378,54 @@ export async function submitReceipt(input: SubmitReceiptRequest): Promise<Receip
   return body as Receipt;
 }
 
+export type ReceiptReviewerRole = "accountant" | "superadmin";
+
+export interface ReviewReceipt extends Receipt {
+  memberId: string;
+  memberName: string;
+  memberEmail: string | null;
+  reviewedAt: string | null;
+}
+
+export async function listReceiptsForReview(
+  role: ReceiptReviewerRole,
+  filters?: { status?: ReceiptStatus | "all"; memberId?: string },
+): Promise<ReviewReceipt[]> {
+  const params = new URLSearchParams();
+  if (filters?.status && filters.status !== "all") params.set("status", filters.status);
+  if (filters?.memberId) params.set("memberId", filters.memberId);
+  const query = params.toString();
+  const response = await apiFetch(`${apiUrl}/api/${role}/receipts${query ? `?${query}` : ""}`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load receipts.");
+  return body as ReviewReceipt[];
+}
+
+export async function approveReceipt(role: ReceiptReviewerRole, receiptId: string): Promise<ReviewReceipt> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/receipts/${receiptId}/approve`, { method: "POST" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to approve this receipt.");
+  return body as ReviewReceipt;
+}
+
+export async function getReceiptFile(role: ReceiptReviewerRole, receiptId: string): Promise<{ fileUrl: string; fileName: string }> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/receipts/${receiptId}/file`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load this receipt file.");
+  return body as { fileUrl: string; fileName: string };
+}
+
+export async function rejectReceipt(role: ReceiptReviewerRole, receiptId: string, reason: string): Promise<ReviewReceipt> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/receipts/${receiptId}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to reject this receipt.");
+  return body as ReviewReceipt;
+}
+
 export type PaymentEntryState = "due" | "overdue" | "paid";
 
 export interface PaymentEntry {

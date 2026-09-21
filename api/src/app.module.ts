@@ -17,6 +17,8 @@ import { SuperadminProfileController } from './profiles/superadmin-profile.contr
 import { AccountantProfileController } from './profiles/accountant-profile.controller';
 import { ProfilesService } from './profiles/profiles.service';
 import { MemberReceiptsController } from './receipts/member-receipts.controller';
+import { AccountantReceiptsController } from './receipts/accountant-receipts.controller';
+import { SuperadminReceiptsController } from './receipts/superadmin-receipts.controller';
 import { ReceiptsService } from './receipts/receipts.service';
 import { MemberPaymentsController } from './payments/member-payments.controller';
 import { PaymentsService } from './payments/payments.service';
@@ -53,6 +55,8 @@ import { AuditService } from './audit/audit.service';
     SuperadminProfileController,
     AccountantProfileController,
     MemberReceiptsController,
+    AccountantReceiptsController,
+    SuperadminReceiptsController,
     MemberPaymentsController,
     AdminCertificatesController,
     MemberCertificatesController,
