@@ -4,12 +4,12 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, ChevronDown, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarClock, ChevronDown, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type AccountantLayoutProps = { active: "overview" | "profile"; children: ReactNode };
+type AccountantLayoutProps = { active: "overview" | "meetings" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -19,6 +19,7 @@ function initialsFor(fullName: string) {
 
 const links = [
   ["overview", "Overview", "/accountant", LayoutDashboard],
+  ["meetings", "Meetings", "/accountant/meetings", CalendarClock],
   ["profile", "My profile", "/accountant/profile", UserCircle],
 ] as const;
 

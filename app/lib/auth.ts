@@ -182,7 +182,7 @@ export interface CreateMeetingRequest {
   durationMinutes?: number;
   meetingType?: "online" | "physical" | "hybrid";
   meetingUrl?: string;
-  memberIds?: string[];
+  recipientIds?: string[];
 }
 
 export async function listMeetings(role: UserRole): Promise<Meeting[]> {
@@ -203,36 +203,55 @@ export async function createMeeting(role: "admin" | "superadmin", input: CreateM
   return body as Meeting & { zoomMeetingId: string | null; hostUrl: string | null; sharedWithCount: number };
 }
 
-export interface MemberOption {
+export interface MeetingRecipient {
   id: string;
-  full_name: string;
-  member_number: string;
+  fullName: string;
   email: string | null;
+  role: UserRole;
 }
 
-export async function listMembers(role: "admin" | "superadmin"): Promise<MemberOption[]> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/members`);
+export async function listMeetingRecipients(role: "admin" | "superadmin"): Promise<MeetingRecipient[]> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/recipients`);
   const body = await response.json().catch(() => []);
-  if (!response.ok) throw new Error(body.message ?? "Unable to load members.");
-  return body as MemberOption[];
+  if (!response.ok) throw new Error(body.message ?? "Unable to load recipients.");
+  return body as MeetingRecipient[];
 }
 
-export async function getMeetingShares(role: "admin" | "superadmin", meetingId: string): Promise<string[]> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}/shares`);
+export async function getMeetingRecipients(role: "admin" | "superadmin", meetingId: string): Promise<string[]> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}/recipients`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load who this meeting is shared with.");
   return body as string[];
 }
 
-export async function shareMeeting(role: "admin" | "superadmin", meetingId: string, memberIds: string[]) {
-  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}/share`, {
-    method: "POST",
+export async function setMeetingRecipients(role: "admin" | "superadmin", meetingId: string, recipientIds: string[]) {
+  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}/recipients`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ memberIds }),
+    body: JSON.stringify({ recipientIds }),
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message ?? "Unable to share this meeting.");
-  return body as { added: number };
+  if (!response.ok) throw new Error(body.message ?? "Unable to update who this meeting is shared with.");
+  return body as { recipientIds: string[] };
+}
+
+export interface UpdateMeetingRequest {
+  title?: string;
+  description?: string;
+  scheduledAt?: string;
+  durationMinutes?: number;
+  meetingType?: "online" | "physical" | "hybrid";
+}
+
+export async function updateMeeting(role: "admin" | "superadmin", meetingId: string, input: UpdateMeetingRequest) {
+  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this meeting.");
+  return body as Meeting;
 }
 
 export async function cancelMeeting(role: "admin" | "superadmin", meetingId: string) {

@@ -22,10 +22,12 @@ import { MemberPaymentsController } from './payments/member-payments.controller'
 import { PaymentsService } from './payments/payments.service';
 import { ZoomController } from './zoom/zoom.controller';
 import { ZoomService } from './zoom/zoom.service';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
   controllers: [
+    HealthController,
     AuthController,
     AdminMeetingsController,
     SuperadminMeetingsController,

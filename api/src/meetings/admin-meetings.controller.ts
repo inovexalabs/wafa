@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentProfile } from '../auth/current-profile.decorator';
 import { Roles } from '../auth/roles.decorator';
 import { MeetingsService } from './meetings.service';
 
-type CreateMeetingBody = { title: string; description?: string; scheduledAt: string; durationMinutes?: number; meetingType?: 'online' | 'physical' | 'hybrid'; meetingUrl?: string; memberIds?: string[] };
+type CreateMeetingBody = { title: string; description?: string; scheduledAt: string; durationMinutes?: number; meetingType?: 'online' | 'physical' | 'hybrid'; meetingUrl?: string; recipientIds?: string[] };
+type UpdateMeetingBody = { title?: string; description?: string; scheduledAt?: string; durationMinutes?: number; meetingType?: 'online' | 'physical' | 'hybrid' };
 
 @Controller('admin/meetings')
 @UseGuards(AuthGuard)
@@ -22,14 +23,24 @@ export class AdminMeetingsController {
     return this.meetings.create(profile, body);
   }
 
-  @Get(':id/shares')
-  shares(@Param('id') id: string) {
-    return this.meetings.sharedMemberIds(id);
+  @Get('recipients')
+  recipients() {
+    return this.meetings.listRecipients();
   }
 
-  @Post(':id/share')
-  share(@Param('id') id: string, @Body() body: { memberIds: string[] }) {
-    return this.meetings.addMembers(id, body?.memberIds ?? []);
+  @Get(':id/recipients')
+  sharedRecipients(@Param('id') id: string) {
+    return this.meetings.sharedRecipientIds(id);
+  }
+
+  @Put(':id/recipients')
+  setRecipients(@Param('id') id: string, @Body() body: { recipientIds: string[] }) {
+    return this.meetings.setRecipients(id, body?.recipientIds ?? []);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: UpdateMeetingBody) {
+    return this.meetings.update(id, body);
   }
 
   @Delete(':id')

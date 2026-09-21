@@ -9,7 +9,7 @@ import Dashboard from "./dashboard";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type AdminLayoutProps = { active: "overview" | "meeting" | "profile"; children: ReactNode };
+type AdminLayoutProps = { active: "overview" | "meetings" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -19,7 +19,7 @@ function initialsFor(fullName: string) {
 
 const links = [
   ["overview", "Overview", "/admin", LayoutDashboard],
-  ["meeting", "Meetings", "/admin/meeting", CalendarClock],
+  ["meetings", "Meetings", "/admin/meetings", CalendarClock],
   ["profile", "My profile", "/admin/profile", UserCircle],
 ] as const;
 

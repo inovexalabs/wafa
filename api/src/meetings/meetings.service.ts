@@ -2,9 +2,11 @@ import { BadRequestException, ForbiddenException, Injectable, InternalServerErro
 import { SupabaseService } from '../supabase.service';
 import { ZoomService } from '../zoom/zoom.service';
 
-type MeetingInput = { title: string; description?: string; scheduledAt: string; durationMinutes?: number; meetingType?: 'online' | 'physical' | 'hybrid'; meetingUrl?: string; memberIds?: string[] };
+type MeetingInput = { title: string; description?: string; scheduledAt: string; durationMinutes?: number; meetingType?: 'online' | 'physical' | 'hybrid'; meetingUrl?: string; recipientIds?: string[] };
 type Profile = { id: string; role: string };
 type MeetingTiming = { scheduled_at: string; duration_minutes: number | null; status: string };
+type RecipientRole = 'superadmin' | 'admin' | 'accountant' | 'member';
+export type MeetingRecipient = { id: string; fullName: string; email: string | null; role: RecipientRole };
 
 @Injectable()
 export class MeetingsService {
@@ -18,12 +20,6 @@ export class MeetingsService {
       const message = error instanceof Error ? error.message : 'Unable to create the Zoom meeting.';
       throw new InternalServerErrorException(message);
     }
-  }
-
-  private async memberIdFor(profile: Profile) {
-    const { data, error } = await this.supabase.getAdminClient().from('members').select('id').eq('auth_user_id', profile.id).maybeSingle();
-    if (error) throw new InternalServerErrorException('Unable to resolve your member profile.');
-    return data?.id ?? null;
   }
 
   private hasEnded(meeting: MeetingTiming) {
@@ -49,16 +45,26 @@ export class MeetingsService {
     if (error) throw new InternalServerErrorException('Unable to load meetings.');
     if (profile.role !== 'member') return meetings ?? [];
 
-    const memberId = await this.memberIdFor(profile);
-    if (!memberId) return [];
-
-    const { data: shares, error: sharesError } = await client.from('meeting_notifications').select('meeting_id, member_id');
+    const { data: shares, error: sharesError } = await client.from('meeting_notifications').select('meeting_id, profile_id');
     if (sharesError) throw new InternalServerErrorException('Unable to load meeting visibility.');
 
     const targetedMeetingIds = new Set((shares ?? []).map((share) => share.meeting_id));
-    const sharedWithMeIds = new Set((shares ?? []).filter((share) => share.member_id === memberId).map((share) => share.meeting_id));
+    const sharedWithMeIds = new Set((shares ?? []).filter((share) => share.profile_id === profile.id).map((share) => share.meeting_id));
 
     return (meetings ?? []).filter((meeting) => !targetedMeetingIds.has(meeting.id) || sharedWithMeIds.has(meeting.id));
+  }
+
+  async listRecipients(): Promise<MeetingRecipient[]> {
+    const client = this.supabase.getAdminClient();
+    const [{ data: staff, error: staffError }, { data: members, error: membersError }] = await Promise.all([
+      client.from('profiles').select('id, full_name, email, role').in('role', ['superadmin', 'admin', 'accountant']).order('full_name'),
+      client.from('members').select('auth_user_id, full_name, email').eq('status', 'active').order('full_name'),
+    ]);
+    if (staffError || membersError) throw new InternalServerErrorException('Unable to load recipients.');
+
+    const staffRecipients: MeetingRecipient[] = (staff ?? []).map((row) => ({ id: row.id, fullName: row.full_name || row.email, email: row.email, role: row.role as RecipientRole }));
+    const memberRecipients: MeetingRecipient[] = (members ?? []).map((row) => ({ id: row.auth_user_id, fullName: row.full_name, email: row.email, role: 'member' }));
+    return [...staffRecipients, ...memberRecipients];
   }
 
   async create(profile: Profile, input: MeetingInput) {
@@ -68,42 +74,70 @@ export class MeetingsService {
     const { data, error } = await this.supabase.getAdminClient().from('meetings').insert({ title: input.title.trim(), description: input.description?.trim() || null, meeting_type: input.meetingType ?? 'online', scheduled_at: input.scheduledAt, duration_minutes: input.durationMinutes ?? 60, meeting_url: meetingUrl, status: 'scheduled', created_by: profile.id }).select('id, title, description, meeting_type, scheduled_at, duration_minutes, meeting_url, status').single();
     if (error) throw new BadRequestException(error.message);
 
-    const memberIds = Array.from(new Set(input.memberIds ?? [])).filter(Boolean);
-    if (memberIds.length) {
-      const shareRows = memberIds.map((memberId) => ({ meeting_id: data.id, member_id: memberId, notification_type: 'in_app' as const, status: 'pending' as const }));
+    const recipientIds = Array.from(new Set(input.recipientIds ?? [])).filter(Boolean);
+    if (recipientIds.length) {
+      const shareRows = recipientIds.map((profileId) => ({ meeting_id: data.id, profile_id: profileId, notification_type: 'in_app' as const, status: 'pending' as const }));
       const { error: shareError } = await this.supabase.getAdminClient().from('meeting_notifications').insert(shareRows);
-      if (shareError) throw new BadRequestException(`Meeting was created, but sharing it with the selected members failed: ${shareError.message}`);
+      if (shareError) throw new BadRequestException(`Meeting was created, but sharing it with the selected recipients failed: ${shareError.message}`);
     }
 
-    return { ...data, zoomMeetingId: zoom?.id ?? null, hostUrl: zoom?.startUrl ?? null, sharedWithCount: memberIds.length };
+    return { ...data, zoomMeetingId: zoom?.id ?? null, hostUrl: zoom?.startUrl ?? null, sharedWithCount: recipientIds.length };
   }
 
-  async sharedMemberIds(meetingId: string) {
+  async sharedRecipientIds(meetingId: string) {
     await this.getMeetingOrThrow(meetingId);
-    const { data, error } = await this.supabase.getAdminClient().from('meeting_notifications').select('member_id').eq('meeting_id', meetingId);
+    const { data, error } = await this.supabase.getAdminClient().from('meeting_notifications').select('profile_id').eq('meeting_id', meetingId);
     if (error) throw new InternalServerErrorException('Unable to load meeting shares.');
-    return Array.from(new Set((data ?? []).map((row) => row.member_id)));
+    return Array.from(new Set((data ?? []).map((row) => row.profile_id)));
   }
 
-  async addMembers(meetingId: string, memberIds: string[]) {
+  async update(meetingId: string, input: Partial<Pick<MeetingInput, 'title' | 'description' | 'scheduledAt' | 'durationMinutes' | 'meetingType'>>) {
     const meeting = await this.getMeetingOrThrow(meetingId);
     this.assertMutable(meeting);
 
-    const requestedIds = Array.from(new Set(memberIds ?? [])).filter(Boolean);
-    if (!requestedIds.length) throw new BadRequestException('Select at least one member to share with.');
+    const patch: Record<string, unknown> = {};
+    if (input.title !== undefined) {
+      if (!input.title.trim()) throw new BadRequestException('Title cannot be empty.');
+      patch.title = input.title.trim();
+    }
+    if (input.description !== undefined) patch.description = input.description?.trim() || null;
+    if (input.scheduledAt !== undefined) patch.scheduled_at = input.scheduledAt;
+    if (input.durationMinutes !== undefined) patch.duration_minutes = input.durationMinutes;
+    if (input.meetingType !== undefined) patch.meeting_type = input.meetingType;
 
+    if (!Object.keys(patch).length) throw new BadRequestException('Nothing to update.');
+
+    const { data, error } = await this.supabase.getAdminClient().from('meetings').update(patch).eq('id', meetingId).select('id, title, description, meeting_type, scheduled_at, duration_minutes, meeting_url, status').single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async setRecipients(meetingId: string, recipientIds: string[]) {
+    const meeting = await this.getMeetingOrThrow(meetingId);
+    this.assertMutable(meeting);
+
+    const requestedIds = Array.from(new Set(recipientIds ?? [])).filter(Boolean);
     const client = this.supabase.getAdminClient();
-    const { data: existing, error: existingError } = await client.from('meeting_notifications').select('member_id').eq('meeting_id', meetingId);
+    const { data: existing, error: existingError } = await client.from('meeting_notifications').select('profile_id').eq('meeting_id', meetingId);
     if (existingError) throw new InternalServerErrorException('Unable to check existing shares.');
 
-    const alreadyShared = new Set((existing ?? []).map((row) => row.member_id));
-    const newIds = requestedIds.filter((id) => !alreadyShared.has(id));
-    if (!newIds.length) return { added: 0 };
+    const existingIds = new Set((existing ?? []).map((row) => row.profile_id));
+    const requestedSet = new Set(requestedIds);
 
-    const shareRows = newIds.map((memberId) => ({ meeting_id: meetingId, member_id: memberId, notification_type: 'in_app' as const, status: 'pending' as const }));
-    const { error } = await client.from('meeting_notifications').insert(shareRows);
-    if (error) throw new BadRequestException(error.message);
-    return { added: newIds.length };
+    const toAdd = requestedIds.filter((id) => !existingIds.has(id));
+    const toRemove = Array.from(existingIds).filter((id) => !requestedSet.has(id));
+
+    if (toRemove.length) {
+      const { error } = await client.from('meeting_notifications').delete().eq('meeting_id', meetingId).in('profile_id', toRemove);
+      if (error) throw new BadRequestException(error.message);
+    }
+    if (toAdd.length) {
+      const shareRows = toAdd.map((profileId) => ({ meeting_id: meetingId, profile_id: profileId, notification_type: 'in_app' as const, status: 'pending' as const }));
+      const { error } = await client.from('meeting_notifications').insert(shareRows);
+      if (error) throw new BadRequestException(error.message);
+    }
+
+    return { recipientIds: requestedIds };
   }
 
   async cancel(meetingId: string) {
