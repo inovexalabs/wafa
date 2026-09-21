@@ -403,6 +403,64 @@ export async function getPaymentsOverview(): Promise<PaymentsOverview> {
   return body as PaymentsOverview;
 }
 
+export type NotificationType = "loan_due" | "payment_due" | "receipt_approved" | "receipt_rejected" | "meeting" | "dividend" | "system";
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  reference_type: string | null;
+  reference_id: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export async function listNotifications(role: UserRole): Promise<AppNotification[]> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/notifications`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load notifications.");
+  return body as AppNotification[];
+}
+
+export async function unreadNotificationCount(role: UserRole): Promise<number> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/notifications/unread-count`);
+  const body = await response.json().catch(() => ({ count: 0 }));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load unread notifications.");
+  return (body as { count: number }).count;
+}
+
+export async function markNotificationRead(role: UserRole, notificationId: string) {
+  const response = await apiFetch(`${apiUrl}/api/${role}/notifications/${notificationId}/read`, { method: "POST" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this notification.");
+  return body as { id: string };
+}
+
+export async function markAllNotificationsRead(role: UserRole) {
+  const response = await apiFetch(`${apiUrl}/api/${role}/notifications/read-all`, { method: "POST" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update notifications.");
+  return body as { ok: boolean };
+}
+
+export interface AnnounceRequest {
+  title: string;
+  message: string;
+  recipientIds?: string[];
+}
+
+export async function announceNotification(role: "admin" | "superadmin", input: AnnounceRequest) {
+  const response = await apiFetch(`${apiUrl}/api/${role}/notifications`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to send this announcement.");
+  return body as { sentTo: number };
+}
+
 
 
 

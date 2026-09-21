@@ -23,6 +23,12 @@ import { PaymentsService } from './payments/payments.service';
 import { ZoomController } from './zoom/zoom.controller';
 import { ZoomService } from './zoom/zoom.service';
 import { HealthController } from './health/health.controller';
+import { AdminNotificationsController } from './notifications/admin-notifications.controller';
+import { SuperadminNotificationsController } from './notifications/superadmin-notifications.controller';
+import { AccountantNotificationsController } from './notifications/accountant-notifications.controller';
+import { MemberNotificationsController } from './notifications/member-notifications.controller';
+import { NotificationsService } from './notifications/notifications.service';
+import { ResendService } from './notifications/resend.service';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -42,7 +48,22 @@ import { HealthController } from './health/health.controller';
     MemberReceiptsController,
     MemberPaymentsController,
     ZoomController,
+    AdminNotificationsController,
+    SuperadminNotificationsController,
+    AccountantNotificationsController,
+    MemberNotificationsController,
   ],
-  providers: [AuthService, SupabaseService, MeetingsService, MembersService, ProfilesService, ReceiptsService, PaymentsService, ZoomService],
+  providers: [
+    AuthService,
+    SupabaseService,
+    MeetingsService,
+    MembersService,
+    ProfilesService,
+    ReceiptsService,
+    PaymentsService,
+    ZoomService,
+    NotificationsService,
+    ResendService,
+  ],
 })
 export class AppModule {}
