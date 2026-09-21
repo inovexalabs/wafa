@@ -211,6 +211,8 @@ export class MeetingsService {
           message: `${data.title} is scheduled for ${new Date(data.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}.`,
           referenceType: 'meeting',
           referenceId: data.id,
+          actionUrl: data.meeting_url ?? undefined,
+          actionLabel: 'Join meeting',
         },
       );
     } catch {

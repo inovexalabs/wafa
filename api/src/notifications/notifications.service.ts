@@ -23,6 +23,8 @@ type NotifyInput = {
   message: string;
   referenceType?: string;
   referenceId?: string;
+  actionUrl?: string;
+  actionLabel?: string;
 };
 
 function escapeHtml(value: string) {
@@ -33,6 +35,31 @@ function escapeHtml(value: string) {
         char
       ] as string,
   );
+}
+
+function emailHtml(input: NotifyInput) {
+  const button = input.actionUrl
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px">
+        <tr>
+          <td style="border-radius:6px;background-color:#111827">
+            <a href="${escapeHtml(input.actionUrl)}"
+              style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:6px">
+              ${escapeHtml(input.actionLabel ?? 'View details')}
+            </a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin-top:16px;font-size:12px;color:#6b7280">
+        If the button doesn't work, copy and paste this link into your browser:<br />
+        <a href="${escapeHtml(input.actionUrl)}" style="color:#2563eb">${escapeHtml(input.actionUrl)}</a>
+      </p>`
+    : '';
+
+  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="font-size:18px;color:#111827;margin-bottom:12px">${escapeHtml(input.title)}</h2>
+      <p style="font-size:14px;line-height:1.5;color:#374151">${escapeHtml(input.message)}</p>
+      ${button}
+    </div>`;
 }
 
 @Injectable()
@@ -155,7 +182,7 @@ export class NotificationsService {
             const providerMessageId = await this.resend.send(
               email,
               input.title,
-              `<p>${escapeHtml(input.message)}</p>`,
+              emailHtml(input),
             );
             await client.from('notification_deliveries').insert({
               notification_id: notification.id,
