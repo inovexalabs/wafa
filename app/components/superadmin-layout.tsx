@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarClock, ChevronDown, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarClock, ChevronDown, ClipboardList, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type SuperadminLayoutProps = { active: "overview" | "meetings" | "profile"; children: ReactNode };
+type SuperadminLayoutProps = { active: "overview" | "meetings" | "audit" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -21,6 +21,7 @@ function initialsFor(fullName: string) {
 const links = [
   ["overview", "Control center", "/superadmin", LayoutDashboard],
   ["meetings", "Meetings", "/superadmin/meetings", CalendarClock],
+  ["audit", "Activity log", "/superadmin/audit", ClipboardList],
   ["profile", "My profile", "/superadmin/profile", UserCircle],
 ] as const;
 

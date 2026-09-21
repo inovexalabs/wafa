@@ -8,6 +8,7 @@ import {
 import { SupabaseService } from '../supabase.service';
 import { ZoomService } from '../zoom/zoom.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuditService } from '../audit/audit.service';
 
 type MeetingInput = {
   title: string;
@@ -38,6 +39,7 @@ export class MeetingsService {
     private readonly supabase: SupabaseService,
     private readonly zoom: ZoomService,
     private readonly notifications: NotificationsService,
+    private readonly audit: AuditService,
   ) {}
 
   private async zoomMeeting(input: MeetingInput) {
@@ -209,11 +211,25 @@ export class MeetingsService {
           message: `${data.title} is scheduled for ${new Date(data.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}.`,
           referenceType: 'meeting',
           referenceId: data.id,
+          actionUrl: data.meeting_url ?? undefined,
+          actionLabel: 'Join meeting',
         },
       );
     } catch {
       // Notification delivery is best-effort and should never block meeting creation.
     }
+
+    await this.audit.log({
+      actor: { userId: profile.id },
+      action: 'meeting.created',
+      entityType: 'meeting',
+      entityId: data.id,
+      newData: {
+        title: data.title,
+        scheduledAt: data.scheduled_at,
+        recipientCount: recipientIds.length,
+      },
+    });
 
     return {
       ...data,
@@ -247,6 +263,7 @@ export class MeetingsService {
         | 'meetingType'
       >
     >,
+    actor?: Profile,
   ) {
     const meeting = await this.getMeetingOrThrow(meetingId);
     this.assertMutable(meeting);
@@ -277,10 +294,23 @@ export class MeetingsService {
       )
       .single();
     if (error) throw new BadRequestException(error.message);
+
+    await this.audit.log({
+      actor: actor ? { userId: actor.id } : undefined,
+      action: 'meeting.updated',
+      entityType: 'meeting',
+      entityId: meetingId,
+      newData: patch,
+    });
+
     return data;
   }
 
-  async setRecipients(meetingId: string, recipientIds: string[]) {
+  async setRecipients(
+    meetingId: string,
+    recipientIds: string[],
+    actor?: Profile,
+  ) {
     const meeting = await this.getMeetingOrThrow(meetingId);
     this.assertMutable(meeting);
 
@@ -326,10 +356,22 @@ export class MeetingsService {
       if (error) throw new BadRequestException(error.message);
     }
 
+    await this.audit.log({
+      actor: actor ? { userId: actor.id } : undefined,
+      action: 'meeting.recipients_updated',
+      entityType: 'meeting',
+      entityId: meetingId,
+      newData: {
+        added: toAdd.length,
+        removed: toRemove.length,
+        total: requestedIds.length,
+      },
+    });
+
     return { recipientIds: requestedIds };
   }
 
-  async cancel(meetingId: string) {
+  async cancel(meetingId: string, actor?: Profile) {
     const meeting = await this.getMeetingOrThrow(meetingId);
     this.assertMutable(meeting);
     const { error } = await this.supabase
@@ -338,6 +380,14 @@ export class MeetingsService {
       .update({ status: 'cancelled' })
       .eq('id', meetingId);
     if (error) throw new BadRequestException(error.message);
+
+    await this.audit.log({
+      actor: actor ? { userId: actor.id } : undefined,
+      action: 'meeting.cancelled',
+      entityType: 'meeting',
+      entityId: meetingId,
+    });
+
     return { id: meetingId, status: 'cancelled' };
   }
 }

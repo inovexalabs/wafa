@@ -32,6 +32,8 @@ import { AccountantNotificationsController } from './notifications/accountant-no
 import { MemberNotificationsController } from './notifications/member-notifications.controller';
 import { NotificationsService } from './notifications/notifications.service';
 import { ResendService } from './notifications/resend.service';
+import { SuperadminAuditController } from './audit/superadmin-audit.controller';
+import { AuditService } from './audit/audit.service';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -58,6 +60,7 @@ import { ResendService } from './notifications/resend.service';
     SuperadminNotificationsController,
     AccountantNotificationsController,
     MemberNotificationsController,
+    SuperadminAuditController,
   ],
   providers: [
     AuthService,
@@ -71,6 +74,7 @@ import { ResendService } from './notifications/resend.service';
     ZoomService,
     NotificationsService,
     ResendService,
+    AuditService,
   ],
 })
 export class AppModule {}
