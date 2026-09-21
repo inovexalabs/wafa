@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, BadgeCheck, CalendarClock, ChevronDown, ChevronRight, ClipboardList, LayoutDashboard, LogOut, MessageCircle, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BadgeCheck, CalendarClock, ChevronDown, ChevronRight, ClipboardList, LayoutDashboard, LogOut, MessageCircle, Receipt, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type SuperadminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "audit" | "chat" | "profile"; children: ReactNode };
+type SuperadminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "receipts" | "audit" | "chat" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -30,6 +30,7 @@ const links = [
   ["meetings", "Meetings", "/superadmin/meetings", CalendarClock],
   ["certificates", "Issue certificate", "/superadmin/certificates", Award],
   ["my-certificates", "My certificates", "/superadmin/my-certificates", BadgeCheck],
+  ["receipts", "Receipt approvals", "/superadmin/receipts", Receipt],
   ["audit", "Activity log", "/superadmin/audit", ClipboardList],
   ["chat", "Chat", "/superadmin/chat", MessageCircle],
   ["profile", "My profile", "/superadmin/profile", UserCircle],
