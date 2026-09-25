@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { SupabaseService } from './supabase.service';
@@ -8,8 +9,10 @@ import { SuperadminMeetingsController } from './meetings/superadmin-meetings.con
 import { AccountantMeetingsController } from './meetings/accountant-meetings.controller';
 import { MemberMeetingsController } from './meetings/member-meetings.controller';
 import { MeetingsService } from './meetings/meetings.service';
+import { MeetingsSchedulerService } from './meetings/meetings-scheduler.service';
 import { AdminMembersController } from './members/admin-members.controller';
 import { SuperadminMembersController } from './members/superadmin-members.controller';
+import { AccountantMembersController } from './members/accountant-members.controller';
 import { MemberProfileController } from './members/member-profile.controller';
 import { MembersService } from './members/members.service';
 import { AdminProfileController } from './profiles/admin-profile.controller';
@@ -40,9 +43,14 @@ import { SuperadminAuditController } from './audit/superadmin-audit.controller';
 import { AuditService } from './audit/audit.service';
 import { ChatController } from './chat/chat.controller';
 import { ChatService } from './chat/chat.service';
+import { MemberLedgerController } from './ledger/member-ledger.controller';
+import { AccountantLedgerController } from './ledger/accountant-ledger.controller';
+import { SuperadminLedgerController } from './ledger/superadmin-ledger.controller';
+import { AdminLedgerController } from './ledger/admin-ledger.controller';
+import { LedgerService } from './ledger/ledger.service';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), ScheduleModule.forRoot()],
   controllers: [
     HealthController,
     AuthController,
@@ -52,6 +60,7 @@ import { ChatService } from './chat/chat.service';
     MemberMeetingsController,
     AdminMembersController,
     SuperadminMembersController,
+    AccountantMembersController,
     MemberProfileController,
     AdminProfileController,
     SuperadminProfileController,
@@ -71,11 +80,16 @@ import { ChatService } from './chat/chat.service';
     MemberNotificationsController,
     SuperadminAuditController,
     ChatController,
+    MemberLedgerController,
+    AccountantLedgerController,
+    SuperadminLedgerController,
+    AdminLedgerController,
   ],
   providers: [
     AuthService,
     SupabaseService,
     MeetingsService,
+    MeetingsSchedulerService,
     MembersService,
     ProfilesService,
     ReceiptsService,
@@ -86,6 +100,7 @@ import { ChatService } from './chat/chat.service';
     ResendService,
     AuditService,
     ChatService,
+    LedgerService,
   ],
 })
 export class AppModule {}

@@ -25,7 +25,13 @@ type NotifyInput = {
   referenceId?: string;
   actionUrl?: string;
   actionLabel?: string;
+  secondaryUrl?: string;
+  secondaryLabel?: string;
 };
+
+const BRAND_COLOR = '#1f6752';
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
 
 function escapeHtml(value: string) {
   return value.replace(
@@ -37,28 +43,69 @@ function escapeHtml(value: string) {
   );
 }
 
+function emailButton(url: string, label: string, primary: boolean) {
+  const background = primary ? BRAND_COLOR : '#ffffff';
+  const color = primary ? '#ffffff' : BRAND_COLOR;
+  const border = primary ? BRAND_COLOR : '#dfe8e3';
+  return `<td style="border-radius:8px;background-color:${background};border:1px solid ${border}">
+      <a href="${escapeHtml(url)}"
+        style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:600;color:${color};text-decoration:none;border-radius:8px">
+        ${escapeHtml(label)}
+      </a>
+    </td>`;
+}
+
 function emailHtml(input: NotifyInput) {
-  const button = input.actionUrl
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px">
-        <tr>
-          <td style="border-radius:6px;background-color:#111827">
-            <a href="${escapeHtml(input.actionUrl)}"
-              style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:6px">
-              ${escapeHtml(input.actionLabel ?? 'View details')}
-            </a>
-          </td>
-        </tr>
-      </table>
-      <p style="margin-top:16px;font-size:12px;color:#6b7280">
+  const buttons = [
+    input.actionUrl
+      ? emailButton(input.actionUrl, input.actionLabel ?? 'View details', true)
+      : '',
+    input.secondaryUrl
+      ? emailButton(
+          input.secondaryUrl,
+          input.secondaryLabel ?? 'Open WAFA app',
+          !input.actionUrl,
+        )
+      : '',
+  ]
+    .filter(Boolean)
+    .join('<td style="width:12px">&nbsp;</td>');
+
+  const actions = buttons
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:26px">
+        <tr>${buttons}</tr>
+      </table>`
+    : '';
+
+  const fallbackLink = input.actionUrl
+    ? `<p style="margin-top:18px;font-size:12px;color:#71807a">
         If the button doesn't work, copy and paste this link into your browser:<br />
-        <a href="${escapeHtml(input.actionUrl)}" style="color:#2563eb">${escapeHtml(input.actionUrl)}</a>
+        <a href="${escapeHtml(input.actionUrl)}" style="color:${BRAND_COLOR}">${escapeHtml(input.actionUrl)}</a>
       </p>`
     : '';
 
-  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto">
-      <h2 style="font-size:18px;color:#111827;margin-bottom:12px">${escapeHtml(input.title)}</h2>
-      <p style="font-size:14px;line-height:1.5;color:#374151">${escapeHtml(input.message)}</p>
-      ${button}
+  return `<div style="font-family:'DM Sans',Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;border:1px solid #dfe8e3;border-radius:12px;overflow:hidden;background-color:#ffffff">
+      <div style="background-color:${BRAND_COLOR};padding:22px 28px">
+        <table role="presentation" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="vertical-align:middle">
+              <img src="${escapeHtml(FRONTEND_ORIGIN)}/logo.jpeg" alt="WAFA" width="34" height="34" style="display:block;border-radius:8px;background-color:#ffffff" />
+            </td>
+            <td style="vertical-align:middle;padding-left:12px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#e2f4e8">WAFA workspace</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div style="padding:28px">
+        <h2 style="font-size:18px;color:#17201d;margin:0 0 12px">${escapeHtml(input.title)}</h2>
+        <p style="font-size:14px;line-height:1.6;color:#374151;margin:0">${escapeHtml(input.message)}</p>
+        ${actions}
+        ${fallbackLink}
+      </div>
+      <div style="background-color:#f7f8f4;padding:16px 28px;border-top:1px solid #dfe8e3">
+        <p style="margin:0;font-size:11px;color:#71807a">© ${new Date().getFullYear()} WAFA · We Are For All · Authorized users only</p>
+      </div>
     </div>`;
 }
 

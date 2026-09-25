@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, CalendarClock, ChevronDown, ChevronRight, LayoutDashboard, LogOut, MessageCircle, Receipt, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, LayoutDashboard, LogOut, Landmark, MessageCircle, Receipt, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type AccountantLayoutProps = { active: "overview" | "meetings" | "certificates" | "receipts" | "chat" | "profile"; children: ReactNode };
+type AccountantLayoutProps = { active: "overview" | "meetings" | "certificates" | "ledger" | "ledger-totals" | "receipts" | "chat" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -29,6 +29,8 @@ const links = [
   ["overview", "Overview", "/accountant", LayoutDashboard],
   ["meetings", "Meetings", "/accountant/meetings", CalendarClock],
   ["certificates", "Certificates", "/accountant/certificates", Award],
+  ["ledger", "Savings ledger", "/accountant/ledger", BookOpenCheck],
+  ["ledger-totals", "Org totals", "/accountant/ledger/totals", Landmark],
   ["receipts", "Receipt approvals", "/accountant/receipts", Receipt],
   ["chat", "Chat", "/accountant/chat", MessageCircle],
   ["profile", "My profile", "/accountant/profile", UserCircle],

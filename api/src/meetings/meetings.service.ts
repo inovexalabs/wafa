@@ -208,11 +208,11 @@ export class MeetingsService {
         {
           type: 'meeting',
           title: `New meeting: ${data.title}`,
-          message: `${data.title} is scheduled for ${new Date(data.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}.`,
+          message: `${data.title} is scheduled for ${new Date(data.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}. The join link will be sent when the meeting starts. You can check all your scheduled meetings anytime in the WAFA app or website.`,
           referenceType: 'meeting',
           referenceId: data.id,
-          actionUrl: data.meeting_url ?? undefined,
-          actionLabel: 'Join meeting',
+          secondaryUrl: process.env.FRONTEND_ORIGIN,
+          secondaryLabel: 'View scheduled meetings',
         },
       );
     } catch {
@@ -237,6 +237,45 @@ export class MeetingsService {
       hostUrl: zoom?.startUrl ?? null,
       sharedWithCount: recipientIds.length,
     };
+  }
+
+  async notifyDueMeetings() {
+    const client = this.supabase.getAdminClient();
+    const nowIso = new Date().toISOString();
+    const { data: dueMeetings, error } = await client
+      .from('meetings')
+      .select('id, title, meeting_url, scheduled_at')
+      .eq('status', 'scheduled')
+      .is('join_link_notified_at', null)
+      .lte('scheduled_at', nowIso);
+    if (error || !dueMeetings?.length) return;
+
+    for (const meeting of dueMeetings) {
+      if (!meeting.meeting_url) continue;
+      const recipientIds = await this.sharedRecipientIds(meeting.id);
+      try {
+        await this.notifications.notifyRecipients(
+          recipientIds.length ? recipientIds : undefined,
+          {
+            type: 'meeting',
+            title: `Meeting starting now: ${meeting.title}`,
+            message: `${meeting.title} is starting now. Use the link below to join, or open the WAFA app or website to join from there.`,
+            referenceType: 'meeting',
+            referenceId: meeting.id,
+            actionUrl: meeting.meeting_url,
+            actionLabel: 'Join meeting',
+            secondaryUrl: process.env.FRONTEND_ORIGIN,
+            secondaryLabel: 'Open WAFA app',
+          },
+        );
+      } catch {
+        // Notification delivery is best-effort and should never block the sweep.
+      }
+      await client
+        .from('meetings')
+        .update({ join_link_notified_at: nowIso })
+        .eq('id', meeting.id);
+    }
   }
 
   async sharedRecipientIds(meetingId: string) {

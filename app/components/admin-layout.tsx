@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Award, ArrowLeft, ArrowRight, BadgeCheck, CalendarClock, ChevronDown, ChevronRight, LayoutDashboard, LogOut, MessageCircle, UserCircle } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, BadgeCheck, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, LayoutDashboard, LogOut, Landmark, MessageCircle, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type AdminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "chat" | "profile"; children: ReactNode };
+type AdminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "ledger" | "ledger-totals" | "chat" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -30,6 +30,8 @@ const links = [
   ["meetings", "Meetings", "/admin/meetings", CalendarClock],
   ["certificates", "Issue certificate", "/admin/certificates", Award],
   ["my-certificates", "My certificates", "/admin/my-certificates", BadgeCheck],
+  ["ledger", "Savings ledger", "/admin/ledger", BookOpenCheck],
+  ["ledger-totals", "Org totals", "/admin/ledger/totals", Landmark],
   ["chat", "Chat", "/admin/chat", MessageCircle],
   ["profile", "My profile", "/admin/profile", UserCircle],
 ] as const;

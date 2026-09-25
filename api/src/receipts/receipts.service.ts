@@ -4,9 +4,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import NepaliDate from 'nepali-date-converter';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { LedgerService } from '../ledger/ledger.service';
 
 type Profile = { id: string; role: string };
 type PaymentType =
@@ -43,6 +45,7 @@ export class ReceiptsService {
     private readonly supabase: SupabaseService,
     private readonly audit: AuditService,
     private readonly notifications: NotificationsService,
+    private readonly ledger: LedgerService,
   ) {}
 
   private async memberIdFor(profile: Profile) {
@@ -64,19 +67,25 @@ export class ReceiptsService {
     return fileKey.split('/').pop() ?? fileKey;
   }
 
-  private async signedUrlFor(fileKey: string, attempt = 1): Promise<string | null> {
+  private async signedUrlFor(
+    fileKey: string,
+    attempt = 1,
+  ): Promise<string | null> {
     const { data, error } = await this.supabase
       .getAdminClient()
       .storage.from(bucket)
       .createSignedUrl(fileKey, signedUrlTtlSeconds);
     if (error) {
       // Supabase storage can briefly lag right after an upload before the
-      // object is signable, so retry a couple of times before giving up.
-      if (attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
+      // object is signable, so retry with backoff before giving up.
+      if (attempt < 6) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
         return this.signedUrlFor(fileKey, attempt + 1);
       }
-      console.error(`Failed to sign receipt file "${fileKey}":`, error);
+      console.error(
+        `Failed to sign receipt file "${fileKey}" after ${attempt} attempts:`,
+        error,
+      );
       return null;
     }
     return data?.signedUrl ?? null;
@@ -252,7 +261,9 @@ export class ReceiptsService {
     const client = this.supabase.getAdminClient();
     const { data: existing, error: fetchError } = await client
       .from('payment_receipts')
-      .select('id, status, members:member_id ( auth_user_id )')
+      .select(
+        'id, status, member_id, amount, payment_type, payment_date, members:member_id ( auth_user_id )',
+      )
       .eq('id', receiptId)
       .maybeSingle();
     if (fetchError)
@@ -263,6 +274,67 @@ export class ReceiptsService {
         `This receipt has already been ${existing.status}.`,
       );
 
+    // Approving a receipt requires a ledger_entries row (payment_receipts'
+    // approved_receipt_ledger check constraint), and monthly deposits /
+    // share contributions each need their own typed row linked to it.
+    let ledgerEntryId: string | null = null;
+    let monthlyDepositId: string | null = null;
+    let shareContributionId: string | null = null;
+    if (status === 'approved') {
+      const { data: ledgerEntry, error: ledgerEntryError } = await client
+        .from('ledger_entries')
+        .insert({
+          member_id: existing.member_id,
+          entry_type: existing.payment_type,
+          amount: existing.amount,
+          direction: 'credit',
+          transaction_date: existing.payment_date,
+          description: `Receipt ${receiptId}`,
+          reference_type: 'receipt',
+          reference_id: receiptId,
+          created_by: profile.id,
+        })
+        .select('id')
+        .single();
+      if (ledgerEntryError)
+        throw new BadRequestException(ledgerEntryError.message);
+      ledgerEntryId = ledgerEntry.id as string;
+
+      if (existing.payment_type === 'monthly_deposit') {
+        const paymentDate = new Date(existing.payment_date as string);
+        const { data: deposit, error: depositError } = await client
+          .from('monthly_deposits')
+          .insert({
+            member_id: existing.member_id,
+            period_year: paymentDate.getUTCFullYear(),
+            period_month: paymentDate.getUTCMonth() + 1,
+            amount: existing.amount,
+            ledger_entry_id: ledgerEntryId,
+            payment_date: existing.payment_date,
+            created_by: profile.id,
+          })
+          .select('id')
+          .single();
+        if (depositError) throw new BadRequestException(depositError.message);
+        monthlyDepositId = deposit.id as string;
+      } else if (existing.payment_type === 'share_contribution') {
+        const { data: contribution, error: contributionError } = await client
+          .from('share_contributions')
+          .insert({
+            member_id: existing.member_id,
+            amount: existing.amount,
+            contribution_date: existing.payment_date,
+            ledger_entry_id: ledgerEntryId,
+            created_by: profile.id,
+          })
+          .select('id')
+          .single();
+        if (contributionError)
+          throw new BadRequestException(contributionError.message);
+        shareContributionId = contribution.id as string;
+      }
+    }
+
     const { data, error } = await client
       .from('payment_receipts')
       .update({
@@ -270,6 +342,7 @@ export class ReceiptsService {
         reviewed_at: new Date().toISOString(),
         reviewed_by: profile.id,
         rejection_reason: status === 'rejected' ? rejectionReason : null,
+        ledger_entry_id: ledgerEntryId,
       })
       .eq('id', receiptId)
       .select(
@@ -286,6 +359,31 @@ export class ReceiptsService {
       oldData: { status: existing.status },
       newData: { status, rejectionReason: rejectionReason ?? null },
     });
+
+    if (
+      status === 'approved' &&
+      (data.payment_type === 'monthly_deposit' ||
+        data.payment_type === 'share_contribution')
+    ) {
+      try {
+        const bs = new NepaliDate(new Date(data.payment_date)).getBS();
+        await this.ledger.syncAutoEntry({
+          memberId: data.member_id,
+          bsYear: bs.year,
+          bsMonth: bs.month + 1,
+          bsDay: bs.date,
+          field:
+            data.payment_type === 'monthly_deposit'
+              ? 'monthly_deposit'
+              : 'share_value',
+          amount: Number(data.amount),
+          monthlyDepositId: monthlyDepositId ?? undefined,
+          shareContributionId: shareContributionId ?? undefined,
+        });
+      } catch {
+        // Ledger sync is best-effort and should never block receipt approval.
+      }
+    }
 
     const memberField = existing.members as MemberRef | MemberRef[] | null;
     const member = Array.isArray(memberField) ? memberField[0] : memberField;
