@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Landmark, MessageCircle, Receipt, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Globe2, LayoutDashboard, LogOut, Landmark, MessageCircle, Receipt, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type SuperadminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "ledger" | "ledger-totals" | "receipts" | "audit" | "chat" | "profile"; children: ReactNode };
+type SuperadminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "ledger" | "ledger-totals" | "receipts" | "audit" | "chat" | "landing" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -35,6 +35,7 @@ const links = [
   ["receipts", "Receipt approvals", "/superadmin/receipts", Receipt],
   ["audit", "Activity log", "/superadmin/audit", ClipboardList],
   ["chat", "Chat", "/superadmin/chat", MessageCircle],
+  ["landing", "Landing page", "/superadmin/landing", Globe2],
   ["profile", "My profile", "/superadmin/profile", UserCircle],
 ] as const;
 
@@ -75,12 +76,12 @@ export default function SuperadminLayout({ active, children }: SuperadminLayoutP
         >
           <div
             className={
-              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.12em] transition-[gap,padding] duration-300 ease-in-out " +
+              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.04em] transition-[gap,padding] duration-300 ease-in-out " +
               (collapsed ? "gap-0 px-1" : "gap-[10px] px-[13px]")
             }
           >
             <Image className="block w-[31px] h-[31px] object-contain border border-[#b5d6c1] rounded-[9px] bg-white shrink-0" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} />
-            <span className={labelClass(collapsed)}>WAFA CONTROL</span>
+            <span className={labelClass(collapsed) + " text-[13px]"}>WAFA CONTROL</span>
           </div>
           <nav className="grid gap-[6px] mt-[12px]" aria-label="Superadmin navigation">
             {links.map(([key, label, href, Icon]) => (

@@ -48,6 +48,9 @@ import { AccountantLedgerController } from './ledger/accountant-ledger.controlle
 import { SuperadminLedgerController } from './ledger/superadmin-ledger.controller';
 import { AdminLedgerController } from './ledger/admin-ledger.controller';
 import { LedgerService } from './ledger/ledger.service';
+import { PublicLandingController } from './landing/public-landing.controller';
+import { SuperadminLandingController } from './landing/superadmin-landing.controller';
+import { LandingService } from './landing/landing.service';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), ScheduleModule.forRoot()],
@@ -84,6 +87,8 @@ import { LedgerService } from './ledger/ledger.service';
     AccountantLedgerController,
     SuperadminLedgerController,
     AdminLedgerController,
+    PublicLandingController,
+    SuperadminLandingController,
   ],
   providers: [
     AuthService,
@@ -101,6 +106,7 @@ import { LedgerService } from './ledger/ledger.service';
     AuditService,
     ChatService,
     LedgerService,
+    LandingService,
   ],
 })
 export class AppModule {}

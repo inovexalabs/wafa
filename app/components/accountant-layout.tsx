@@ -73,12 +73,12 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
         >
           <div
             className={
-              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.12em] transition-[gap,padding] duration-300 ease-in-out " +
+              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.04em] transition-[gap,padding] duration-300 ease-in-out " +
               (collapsed ? "gap-0 px-1" : "gap-[10px] px-[13px]")
             }
           >
             <Image className="block w-[31px] h-[31px] object-contain border border-[#b5d6c1] rounded-[9px] bg-white shrink-0" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} />
-            <span className={labelClass(collapsed)}>WAFA FINANCE</span>
+            <span className={labelClass(collapsed) + " text-[13px]"}>WAFA FINANCE</span>
           </div>
           <nav className="grid gap-[6px] mt-[12px]" aria-label="Accountant navigation">
             {links.map(([key, label, href, Icon]) => (

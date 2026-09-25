@@ -73,12 +73,12 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
         >
           <div
             className={
-              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.12em] transition-[gap,padding] duration-300 ease-in-out " +
+              "flex items-center mb-[22px] pb-[15px] border-b border-white/[.15] text-white font-bold tracking-[.04em] transition-[gap,padding] duration-300 ease-in-out " +
               (collapsed ? "gap-0 px-1" : "gap-[10px] px-[13px]")
             }
           >
             <Image className="block w-[31px] h-[31px] object-contain border border-[#b5d6c1] rounded-[9px] bg-white shrink-0" src="/logo.jpeg" alt="WAFA Group logo" width={32} height={32} />
-            <span className={labelClass(collapsed)}>WAFA</span>
+            <span className={labelClass(collapsed) + " text-[13px]"}>WAFA</span>
           </div>
           <nav className="grid gap-[6px] mt-[12px]" aria-label="Member navigation">
             {links.map(([key, label, href, Icon]) => (
@@ -103,7 +103,7 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
                 "flex items-center w-full rounded-lg text-[13px] no-underline text-[#b5cfc1] transition-[gap,padding,background-color,color] duration-300 ease-in-out hover:text-white hover:bg-white/[.12] " +
                 (collapsed ? "gap-0 px-[11px] py-3" : "gap-[13px] px-[13px] py-3")
               }
-              href="#help"
+              href="mailto:wafagroup10@outlook.com"
               title="Help center"
             >
               <span className="inline-flex items-center justify-center flex-none w-[18px]"><HelpCircle size={18} /></span>

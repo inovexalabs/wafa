@@ -1,8 +1,19 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Activity,
+  Check,
+  CircleDashed,
+  Command,
+  ShieldCheck,
+  Sparkles,
+  UserCog,
+  Users,
+} from "lucide-react";
 import SuperadminLayout from "../../components/superadmin-layout";
-import { createUser, UserRole } from "../../lib/auth";
+import { createUser, listMeetingRecipients, UserRole } from "../../lib/auth";
 
 type Role = "admin" | "accountant" | "member";
 type CreatedUser = { id: string; userId: string; role: UserRole };
@@ -12,6 +23,13 @@ const roleLabels: Record<Role, string> = { admin: "Admin", accountant: "Accounta
 const saFormInput = "w-full h-[42px] mt-[7px] border border-line rounded-md px-[11px] outline-none text-[#2d4037] bg-white text-xs focus:border-[#2b7358] focus:shadow-[0_0_0_3px_#2b73581a]";
 const saFormLabel = "block text-[#53665c] text-[11px] font-bold";
 
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning.";
+  if (hour < 18) return "Good afternoon.";
+  return "Good evening.";
+}
+
 function SuperadminWorkspace() {
   const [role, setRole] = useState<Role>("admin");
   const [form, setForm] = useState({ userId: "", email: "", password: "", fullName: "", memberNumber: "", phone: "" });
@@ -19,6 +37,22 @@ function SuperadminWorkspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [counts, setCounts] = useState<{ total: number; staff: number; members: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    listMeetingRecipients("superadmin")
+      .then((recipients) => {
+        if (cancelled) return;
+        const staff = recipients.filter((r) => r.role !== "member").length;
+        const members = recipients.filter((r) => r.role === "member").length;
+        setCounts({ total: recipients.length, staff, members });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -32,6 +66,15 @@ function SuperadminWorkspace() {
     try {
       const created = await createUser({ ...form, role, ...(role === "member" ? {} : { fullName: undefined, memberNumber: undefined, phone: undefined }) });
       setCreatedUsers((current) => [created, ...current]);
+      setCounts((current) =>
+        current
+          ? {
+              total: current.total + 1,
+              staff: current.staff + (role === "member" ? 0 : 1),
+              members: current.members + (role === "member" ? 1 : 0),
+            }
+          : current,
+      );
       setMessage(`${roleLabels[role]} ${form.userId} was created successfully.`);
       setForm({ userId: "", email: "", password: "", fullName: "", memberNumber: "", phone: "" });
     } catch (submissionError) {
@@ -47,35 +90,34 @@ function SuperadminWorkspace() {
         <div className="shrink-0 flex justify-between items-end gap-5 max-[760px]:items-start max-[760px]:flex-col">
           <div>
             <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">System administration</p>
-            <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,48px)] leading-[1.1] tracking-[-.04em]">Good morning.</h1>
+            <h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,48px)] leading-[1.1] tracking-[-.04em]">{greeting()}</h1>
             <p className="mt-[10px] text-muted text-sm">Manage access, roles, and the people who keep WAFA moving.</p>
           </div>
-          <span className="flex items-center gap-[7px] px-[11px] py-2 border border-[#d6e7d9] rounded-[20px] text-[#4b8560] bg-[#f0f8ef] text-[10px] font-bold max-[760px]:self-start"><i className="block w-[7px] h-[7px] rounded-full bg-[#58a86e]" /> System operational</span>
         </div>
 
         <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto pb-6">
         <div className="grid grid-cols-3 gap-4 mt-[35px] max-[760px]:grid-cols-1">
           <article className="flex items-start gap-[15px] p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
-            <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#2a7657] bg-[#e1f2e4]">♙</span>
+            <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#2a7657] bg-[#e1f2e4]"><Users size={17} /></span>
             <div>
               <small className="block text-[#7c8a83] text-[11px]">Total users</small>
-              <strong className="block my-1 text-2xl">{42 + createdUsers.length}</strong>
-              <em className="block text-[#6b9d78] text-[10px] not-italic">↑ 8% this month</em>
+              <strong className="block my-1 text-2xl">{counts ? counts.total : "—"}</strong>
+              <em className="block text-[#6b9d78] text-[10px] not-italic">Across every role</em>
             </div>
           </article>
           <article className="flex items-start gap-[15px] p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
-            <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#4b7ea4] bg-[#e5f0f8]">▣</span>
+            <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#4b7ea4] bg-[#e5f0f8]"><UserCog size={17} /></span>
             <div>
-              <small className="block text-[#7c8a83] text-[11px]">Administrators</small>
-              <strong className="block my-1 text-2xl">{4 + createdUsers.filter((user) => user.role === "admin").length}</strong>
-              <em className="block text-[#6b9d78] text-[10px] not-italic">Across all teams</em>
+              <small className="block text-[#7c8a83] text-[11px]">Staff</small>
+              <strong className="block my-1 text-2xl">{counts ? counts.staff : "—"}</strong>
+              <em className="block text-[#6b9d78] text-[10px] not-italic">Superadmins, admins & accountants</em>
             </div>
           </article>
           <article className="flex items-start gap-[15px] p-5 border border-[#e0e9e3] rounded-[10px] bg-white">
-            <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#b56f36] bg-[#f8eadc]">◉</span>
+            <span className="grid place-items-center w-[38px] h-[38px] rounded-[9px] text-[#b56f36] bg-[#f8eadc]"><ShieldCheck size={17} /></span>
             <div>
               <small className="block text-[#7c8a83] text-[11px]">Members</small>
-              <strong className="block my-1 text-2xl">{38 + createdUsers.filter((user) => user.role === "member").length}</strong>
+              <strong className="block my-1 text-2xl">{counts ? counts.members : "—"}</strong>
               <em className="block text-[#6b9d78] text-[10px] not-italic">Active accounts</em>
             </div>
           </article>
@@ -88,7 +130,7 @@ function SuperadminWorkspace() {
                 <h2 className="m-0 font-display font-bold text-2xl tracking-[-.025em]">Create a user</h2>
                 <p className="mt-[6px] text-[#8b9992] text-[11px]">Give someone access to the WAFA workspace.</p>
               </div>
-              <span className="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#236950] bg-[#e5f4e6]">⌘</span>
+              <span className="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#236950] bg-[#e5f4e6]"><Command size={16} /></span>
             </div>
             <div className="flex gap-[22px] my-6 mb-5 border-b border-[#edf1ee]">
               {(["admin", "accountant", "member"] as Role[]).map((item) => (
@@ -130,13 +172,13 @@ function SuperadminWorkspace() {
                 <h2 className="m-0 font-display font-bold text-2xl tracking-[-.025em]">Recent activity</h2>
                 <p className="mt-[6px] text-[#8b9992] text-[11px]">Latest access changes.</p>
               </div>
-              <button className="border-0 text-[#9aa8a1] bg-transparent tracking-[2px] cursor-pointer" aria-label="More activity options">•••</button>
+              <span className="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#236950] bg-[#e5f4e6]"><Activity size={16} /></span>
             </div>
             <div className="mt-[26px]">
               {createdUsers.length === 0 ? (
                 <div className="grid place-items-center py-10 text-[#a0aaa5] text-center">
-                  <span className="text-[28px]">◌</span>
-                  <p className="text-[11px] leading-[1.6]">No new accounts yet.<br />Created users will appear here.</p>
+                  <CircleDashed size={26} />
+                  <p className="mt-2 text-[11px] leading-[1.6]">No new accounts yet.<br />Created users will appear here.</p>
                 </div>
               ) : (
                 createdUsers.map((user) => (
@@ -151,17 +193,9 @@ function SuperadminWorkspace() {
                 ))
               )}
             </div>
-            <a className="block mt-5 text-[#286c54] text-[11px] font-bold no-underline" href="#activity">View audit log <span>→</span></a>
+            <Link className="block mt-5 text-[#286c54] text-[11px] font-bold no-underline" href="/superadmin/audit">View audit log <span>→</span></Link>
           </section>
         </div>
-        <section className="flex items-center gap-[13px] mt-5 px-5 py-[17px] border border-[#dce8df] rounded-[9px] bg-[#f0f7ee] max-[500px]:items-start">
-          <span className="grid place-items-center w-[27px] h-[27px] rounded-full text-white bg-[#5b9c70] text-xs">✓</span>
-          <div>
-            <strong className="text-xs">Protected by role-based access control</strong>
-            <p className="mt-1 text-[#809087] text-[10px]">Only authenticated superadmins can create administrators. Admins have their own restricted route for accountants and members.</p>
-          </div>
-          <span className="ml-auto text-[#a5c8ac] text-2xl max-[500px]:hidden">◈</span>
-        </section>
         </div>
       </main>
     </>

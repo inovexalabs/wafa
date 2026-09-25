@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  --color-cream: #f7f8f4;
+  --color-cream-soft: #fbfcf9;
+  --color-ink: #14201b;
+  --color-muted: #5b6b63;
+  --color-line: #e1e9e3;
+  --color-brand: #1f6752;
+  --color-brand-dark: #123a2f;
+  --color-brand-light: #2f8a6e;
+  --color-gold: #d98a2b;
+  --color-coral: #d1553f;
+  --color-sky: #2e78b5;
+}
+
+@theme inline {
+  --color-cream: var(--color-cream);
+  --color-cream-soft: var(--color-cream-soft);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-line: var(--color-line);
+  --color-brand: var(--color-brand);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-brand-light: var(--color-brand-light);
+  --color-gold: var(--color-gold);
+  --color-coral: var(--color-coral);
+  --color-sky: var(--color-sky);
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-dm-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  background: var(--color-cream);
+  font-family: var(--font-sans), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-light);
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.04);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-slow-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.animate-drift {
+  animation: drift 12s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 34s linear infinite;
+}
+
+.animate-spin-slow-reverse {
+  animation: spin-slow-reverse 26s linear infinite;
+}
+
+.animate-float-y {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+.text-balance {
+  text-wrap: balance;
+}

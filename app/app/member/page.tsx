@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarClock, Clock, Receipt as ReceiptIcon, Video, MapPin } from "lucide-react";
+import { Award, CalendarClock, Clock, Receipt as ReceiptIcon, Video, MapPin, Wallet } from "lucide-react";
 import MemberLayout from "../../components/member-layout";
 import {
   Certificate,
@@ -111,7 +111,7 @@ function MemberWorkspace() {
           <>
             <div className="grid grid-cols-3 gap-4 mt-[25px] max-[650px]:grid-cols-1">
               <article className="flex gap-[14px] p-5 border border-[#e1e9e4] rounded-[10px] bg-white">
-                <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#297256] bg-[#e2f3e4]">◈</span>
+                <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#297256] bg-[#e2f3e4]"><Wallet size={17} /></span>
                 <div>
                   <small className="block text-[#7a8982] text-[11px]">Current balance</small>
                   <strong className="block my-[5px] text-[25px]">{isLoading ? "…" : formatAmount(payments?.currentBalance ?? 0)}</strong>

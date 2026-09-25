@@ -641,6 +641,56 @@ export async function sendChatMessage(content: string): Promise<ChatMessage> {
   return body as ChatMessage;
 }
 
+export interface LandingHero {
+  eyebrow: string;
+  headline: [string, string, string];
+  subtext: string;
+  primaryCta: string;
+  secondaryCta: string;
+}
+export interface LandingStat { value: number; suffix: string; label: string }
+export interface LandingAbout {
+  eyebrow: string;
+  heading: string;
+  body: string;
+  quote: string;
+  quoteCaption: string;
+}
+export interface LandingServiceItem { title: string; text: string }
+export interface LandingStep { title: string; text: string }
+export interface LandingTestimonial { quote: string; name: string; role: string }
+export interface LandingCta { heading: string; body: string }
+export interface LandingContact { email: string; phone: string; address: string; website: string }
+
+export interface LandingContent {
+  hero: LandingHero;
+  stats: LandingStat[];
+  about: LandingAbout;
+  services: LandingServiceItem[];
+  steps: LandingStep[];
+  testimonials: LandingTestimonial[];
+  cta: LandingCta;
+  contact: LandingContact;
+}
+
+export async function getLandingContent(): Promise<LandingContent> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to load the landing page content.");
+  return body as LandingContent;
+}
+
+export async function updateLandingContent(input: LandingContent): Promise<LandingContent> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to save the landing page content.");
+  return body as LandingContent;
+}
+
 export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ items: AuditLogEntry[]; total: number }> {
   const params = new URLSearchParams();
   if (filters.actorId) params.set("actorId", filters.actorId);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Wallet } from "lucide-react";
 import MemberLayout from "../../../components/member-layout";
 import { getPaymentsOverview, PaymentEntry, PaymentsOverview } from "../../../lib/auth";
 
@@ -85,7 +86,7 @@ export default function PaymentsPage() {
                 ) : (
                   overview?.history.map((payment) => (
                     <article className="flex items-center gap-4 py-[17px] border-t border-[#edf1ee] first:border-t-0" key={payment.id}>
-                      <span className="grid place-items-center w-[33px] h-[33px] rounded-lg text-[#286d54] bg-[#e4f2e5]">◈</span>
+                      <span className="grid place-items-center w-[33px] h-[33px] rounded-lg text-[#286d54] bg-[#e4f2e5]"><Wallet size={15} /></span>
                       <div className="flex-1"><strong className="text-xs">{payment.label}</strong><p className="my-[5px] text-[#909e97] text-[10px]">{payment.period}</p></div>
                       <b className="text-xs">{formatAmount(payment.amount)}</b>
                       <span className={"inline-block px-2 py-[5px] rounded text-[9px] font-bold " + stateStyle[payment.state]}>{stateLabel[payment.state]} {formatDate(payment.date)}</span>
