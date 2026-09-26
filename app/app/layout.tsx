@@ -3,8 +3,15 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sign in | WAFA",
+  title: {
+    default: "Sign in | WAFA",
+    template: "%s | WAFA",
+  },
   description: "Sign in to your WAFA workspace.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

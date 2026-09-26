@@ -3,6 +3,9 @@ import type { MouseEvent } from "react";
 export const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+
 export const NAV_LINKS = [
   { href: "#about", label: "About" },
   { href: "#services", label: "Services" },
