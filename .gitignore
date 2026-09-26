@@ -64,3 +64,5 @@ docs/*.temp
 
 
 .agents/*
+.claude/
+skills-lock.json
