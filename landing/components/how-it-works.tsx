@@ -8,7 +8,7 @@ const ICONS = [UserPlus, PiggyBank, CheckCircle2, TrendingUp];
 
 export default function HowItWorks({ steps }: { steps: LandingStep[] }) {
   return (
-    <section id="how-it-works" className="px-6 py-28 sm:py-36">
+    <section id="how-it-works" className="px-6 py-16 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <motion.p

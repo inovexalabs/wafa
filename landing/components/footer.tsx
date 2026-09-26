@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Globe, Mail, MapPin, Phone } from "lucide-react";
 import { NAV_LINKS, smoothScrollTo } from "@/lib/site";
 import type { LandingContact } from "@/lib/content";
@@ -64,7 +65,14 @@ export default function Footer({ contact }: { contact: LandingContact }) {
 
       <div className="mx-auto mt-14 flex max-w-6xl flex-col items-center justify-between gap-3 border-t border-line pt-6 text-xs text-muted sm:flex-row">
         <p>&copy; {new Date().getFullYear()} WAFA Group. All rights reserved.</p>
-        <p>We Are For All</p>
+        <div className="flex items-center gap-5">
+          <Link href="/privacy" className="text-muted transition-colors hover:text-brand">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="text-muted transition-colors hover:text-brand">
+            Terms of Service
+          </Link>
+        </div>
       </div>
     </footer>
   );

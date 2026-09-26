@@ -22,7 +22,7 @@ const ICON_STYLE = [
 
 export default function Services({ services }: { services: LandingServiceItem[] }) {
   return (
-    <section id="services" className="bg-cream-soft px-6 py-28 sm:py-36">
+    <section id="services" className="bg-cream-soft px-6 py-16 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <motion.p

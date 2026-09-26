@@ -65,10 +65,12 @@ export default function Navbar() {
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href={APP_URL}
-            className="group inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-10px_rgba(31,103,82,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_14px_30px_-10px_rgba(31,103,82,0.75)]"
+            className="group inline-flex items-center gap-2 rounded-full bg-brand py-1.5 pl-5 pr-1.5 text-sm font-semibold text-white shadow-[0_10px_25px_-10px_rgba(31,103,82,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_14px_30px_-10px_rgba(31,103,82,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
           >
             Member Login
-            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+              <ArrowUpRight className="h-4 w-4" />
+            </span>
           </Link>
         </div>
 
@@ -76,7 +78,7 @@ export default function Navbar() {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-ink md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-ink md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>

@@ -661,6 +661,7 @@ export interface LandingStep { title: string; text: string }
 export interface LandingTestimonial { quote: string; name: string; role: string }
 export interface LandingCta { heading: string; body: string }
 export interface LandingContact { email: string; phone: string; address: string; website: string }
+export interface LandingLegal { privacyPolicy: string; termsOfService: string }
 
 export interface LandingContent {
   hero: LandingHero;
@@ -671,6 +672,7 @@ export interface LandingContent {
   testimonials: LandingTestimonial[];
   cta: LandingCta;
   contact: LandingContact;
+  legal: LandingLegal;
 }
 
 export async function getLandingContent(): Promise<LandingContent> {

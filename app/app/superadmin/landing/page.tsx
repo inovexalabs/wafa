@@ -227,6 +227,19 @@ export default function SuperadminLandingPage() {
               </div>
             </section>
 
+            <section className={card}>
+              <h2 className={sectionTitle}>Legal</h2>
+              <p className={sectionHint}>Shown on the public Privacy Policy and Terms of Service pages, linked from the footer.</p>
+              <label className={label + " block mt-4"}>
+                Privacy policy
+                <textarea rows={8} className={fieldTextarea} value={content.legal.privacyPolicy} onChange={(e) => patch((d) => ({ ...d, legal: { ...d.legal, privacyPolicy: e.target.value } }))} />
+              </label>
+              <label className={label + " block mt-4"}>
+                Terms of service
+                <textarea rows={8} className={fieldTextarea} value={content.legal.termsOfService} onChange={(e) => patch((d) => ({ ...d, legal: { ...d.legal, termsOfService: e.target.value } }))} />
+              </label>
+            </section>
+
             {saveError && <p className="m-0 text-[11px] text-[#ae4d44]" role="alert">{saveError}</p>}
             {saved && !saveError && <p className="m-0 text-[11px] text-[#38805d]">Landing page saved. Changes appear on the live site within a minute.</p>}
 

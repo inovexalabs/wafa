@@ -26,6 +26,7 @@ export type LandingContact = {
   address: string;
   website: string;
 };
+export type LandingLegal = { privacyPolicy: string; termsOfService: string };
 
 export type LandingContent = {
   hero: LandingHero;
@@ -36,6 +37,7 @@ export type LandingContent = {
   testimonials: LandingTestimonial[];
   cta: LandingCta;
   contact: LandingContact;
+  legal: LandingLegal;
 };
 
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
@@ -135,6 +137,12 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     address: 'Nepal',
     website: 'wafagroup.com.np',
   },
+  legal: {
+    privacyPolicy:
+      'This is placeholder privacy policy text. Replace this with your reviewed privacy policy before publishing the site — it should explain what member data WAFA collects, how it is stored, who can access it, and how members can request their data be corrected or removed.',
+    termsOfService:
+      'This is placeholder terms of service text. Replace this with your reviewed terms before publishing the site — it should explain membership eligibility, savings and loan obligations, and the rules members agree to by using the WAFA workspace.',
+  },
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -157,6 +165,7 @@ export async function getLandingContent(): Promise<LandingContent> {
         : DEFAULT_LANDING_CONTENT.testimonials,
       cta: { ...DEFAULT_LANDING_CONTENT.cta, ...data.cta },
       contact: { ...DEFAULT_LANDING_CONTENT.contact, ...data.contact },
+      legal: { ...DEFAULT_LANDING_CONTENT.legal, ...data.legal },
     };
   } catch {
     return DEFAULT_LANDING_CONTENT;

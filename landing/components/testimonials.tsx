@@ -22,7 +22,7 @@ export default function Testimonials({ testimonials }: { testimonials: LandingTe
   return (
     <section
       id="impact"
-      className="relative mt-10 flex min-h-[70vh] items-center overflow-hidden bg-brand px-6 py-16 text-white sm:mt-16 sm:min-h-[65vh] sm:py-20"
+      className="relative mt-10 flex min-h-[55vh] items-center overflow-hidden bg-brand px-6 py-12 text-white sm:mt-14 sm:min-h-[50vh] sm:py-16"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 left-1/4 h-72 w-72 animate-drift rounded-full bg-white/10 blur-3xl" />

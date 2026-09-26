@@ -25,6 +25,7 @@ export type LandingContent = {
   testimonials: { quote: string; name: string; role: string }[];
   cta: { heading: string; body: string };
   contact: { email: string; phone: string; address: string; website: string };
+  legal: { privacyPolicy: string; termsOfService: string };
 };
 
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
@@ -124,6 +125,12 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     address: 'Nepal',
     website: 'wafagroup.com.np',
   },
+  legal: {
+    privacyPolicy:
+      'This is placeholder privacy policy text. Replace this with your reviewed privacy policy before publishing the site — it should explain what member data WAFA collects, how it is stored, who can access it, and how members can request their data be corrected or removed.',
+    termsOfService:
+      'This is placeholder terms of service text. Replace this with your reviewed terms before publishing the site — it should explain membership eligibility, savings and loan obligations, and the rules members agree to by using the WAFA workspace.',
+  },
 };
 
 function mergeContent(partial: Partial<LandingContent> | null | undefined): LandingContent {
@@ -139,6 +146,7 @@ function mergeContent(partial: Partial<LandingContent> | null | undefined): Land
       : DEFAULT_LANDING_CONTENT.testimonials,
     cta: { ...DEFAULT_LANDING_CONTENT.cta, ...source.cta },
     contact: { ...DEFAULT_LANDING_CONTENT.contact, ...source.contact },
+    legal: { ...DEFAULT_LANDING_CONTENT.legal, ...source.legal },
   };
 }
 
