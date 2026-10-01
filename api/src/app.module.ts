@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { SupabaseService } from './supabase.service';
@@ -53,7 +55,11 @@ import { SuperadminLandingController } from './landing/superadmin-landing.contro
 import { LandingService } from './landing/landing.service';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), ScheduleModule.forRoot()],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
+  ],
   controllers: [
     HealthController,
     AuthController,
@@ -107,6 +113,7 @@ import { LandingService } from './landing/landing.service';
     ChatService,
     LedgerService,
     LandingService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

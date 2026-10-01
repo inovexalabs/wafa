@@ -1,6 +1,18 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import sanitizeHtml from 'sanitize-html';
 import { SupabaseService } from '../supabase.service';
 import { NotificationsService } from '../notifications/notifications.service';
+
+const sanitizeOptions: sanitizeHtml.IOptions = {
+  allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'h1', 'h2', 'style']),
+  allowedAttributes: {
+    ...sanitizeHtml.defaults.allowedAttributes,
+    '*': ['class', 'style'],
+    img: ['src', 'alt', 'width', 'height'],
+  },
+  allowedSchemes: ['http', 'https', 'data'],
+  disallowedTagsMode: 'discard',
+};
 
 type Profile = { id: string; role: string };
 type RecipientRole = 'superadmin' | 'admin' | 'accountant' | 'member';
@@ -46,7 +58,7 @@ export class CertificatesService {
     if (!input?.recipientId?.trim() || !input?.title?.trim() || !input?.templateHtml?.trim()) {
       throw new BadRequestException('recipientId, title, and templateHtml are required.');
     }
-    const templateHtml = input.templateHtml.trim();
+    const templateHtml = sanitizeHtml(input.templateHtml.trim(), sanitizeOptions);
     if (templateHtml.length > maxTemplateLength) {
       throw new BadRequestException('The certificate HTML is too large.');
     }

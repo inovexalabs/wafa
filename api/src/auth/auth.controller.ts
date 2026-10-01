@@ -8,6 +8,7 @@
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 import { CurrentAccessToken } from './current-access-token.decorator';
@@ -74,6 +75,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async login(
     @Body() body: { userId: string; password: string; rememberMe?: boolean },
     @Req() request: Request,

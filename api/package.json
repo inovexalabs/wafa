@@ -26,12 +26,14 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^12.0.2",
+    "@nestjs/throttler": "^6.7.1",
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^16.6.1",
     "nepali-date-converter": "^3.4.0",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.28.1",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sanitize-html": "^2.18.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -43,6 +45,7 @@
     "@types/jest": "^30.0.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^24.0.0",
+    "@types/sanitize-html": "^2.16.2",
     "@types/supertest": "^7.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
