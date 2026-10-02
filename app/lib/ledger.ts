@@ -1,6 +1,7 @@
 import { apiFetch } from "./auth";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+// Same-origin via this app's own server proxy; see next.config.ts rewrites.
+const apiUrl = "";
 
 export type LedgerStaffRole = "accountant" | "superadmin" | "admin";
 

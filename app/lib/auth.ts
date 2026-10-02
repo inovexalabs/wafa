@@ -10,7 +10,10 @@ export interface WafaSession {
   user: WafaUser;
 }
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// Same-origin: requests go through this app's own server, which proxies
+// /api/* to the backend (see next.config.ts rewrites). This keeps the
+// session cookie first-party so mobile browsers don't block it.
+const apiUrl = '';
 const legacySessionKey = 'wafa_session';
 const userSnapshotKey = 'wafa_user_snapshot';
 const rememberedSessionKey = 'wafa_remembered';

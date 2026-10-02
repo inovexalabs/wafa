@@ -39,10 +39,14 @@ export class AuthController {
     session: { accessToken: string; refreshToken: string },
     rememberMe: boolean,
   ) {
+    // Requests arrive via the frontend's same-origin proxy (see the
+    // app's next.config.ts rewrites), not directly cross-site from the
+    // browser, so SameSite=Lax works here and avoids mobile browsers
+    // (Safari in particular) blocking third-party SameSite=None cookies.
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       ...(rememberMe ? { maxAge: 30 * 24 * 60 * 60 * 1000 } : {}),
     };
@@ -55,7 +59,7 @@ export class AuthController {
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      sameSite: 'lax' as const,
       path: '/',
     };
     response.clearCookie(accessCookie, cookieOptions);
