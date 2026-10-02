@@ -2,10 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "WAFA Group | We Are For All",
-    short_name: "WAFA Group",
-    description:
-      "WAFA Group is a member-owned savings and credit cooperative built on trust, discipline and shared growth.",
+    name: "WAFA",
+    short_name: "WAFA",
+    description: "Sign in to your WAFA workspace.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

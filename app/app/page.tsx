@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { dashboardFor, restoreSession, saveSession, signIn } from "../lib/auth";
 
-const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL ?? "http://localhost:3003";
+const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL;
 
 export default function Home() {
   const router = useRouter();
@@ -59,14 +59,16 @@ export default function Home() {
       <section className="relative flex flex-col justify-between overflow-hidden min-h-[680px] px-[clamp(36px,7vw,104px)] py-12 text-[#f6fbf6] bg-brand max-[720px]:hidden">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative">
-          <img className="block w-16 h-16 object-contain border border-white/50 rounded-[14px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" />
+        <div className="relative flex flex-col items-center text-center">
+          <img className="block w-28 h-28 object-contain border border-white/50 rounded-[20px] bg-white" src="/logo.jpeg" alt="WAFA Group logo" />
           <p className="mt-4 text-[#e2f4e8] text-xs font-bold tracking-[.22em] uppercase">We Are For All</p>
         </div>
-        <div className="relative z-10 max-w-[380px] my-auto">
-          <p className="mb-[11px] text-[11px] font-bold tracking-[.18em] uppercase text-[#b6d3c4]">WAFA workspace</p>
-          <h1 className="m-0 font-display font-bold text-[clamp(36px,5vw,54px)] leading-[1.05] tracking-[-.03em]">Welcome back.</h1>
-          <p className="max-w-[300px] mt-[16px] text-[#c5ddd0] text-sm leading-[1.55]">One secure workspace for your whole team.</p>
+        <div className="relative z-10 flex flex-1 items-center justify-center">
+          <div className="max-w-[380px] text-center">
+            <p className="mb-[11px] text-[11px] font-bold tracking-[.18em] uppercase text-[#b6d3c4]">WAFA workspace</p>
+            <h1 className="m-0 font-display font-bold text-[clamp(36px,5vw,54px)] leading-[1.05] tracking-[-.03em]">Welcome back.</h1>
+            <p className="max-w-[300px] mx-auto mt-[16px] text-[#c5ddd0] text-sm leading-[1.55]">One secure workspace for your whole team.</p>
+          </div>
         </div>
       </section>
 

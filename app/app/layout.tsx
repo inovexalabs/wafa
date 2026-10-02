@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -12,6 +12,15 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "WAFA",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
