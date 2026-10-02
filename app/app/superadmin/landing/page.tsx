@@ -6,7 +6,9 @@ import SuperadminLayout from "../../../components/superadmin-layout";
 import {
   getLandingContent,
   LandingContent,
+  LandingSocialLink,
   updateLandingContent,
+  uploadLandingMedia,
 } from "../../../lib/auth";
 
 const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL ?? "http://localhost:3003";
@@ -27,6 +29,7 @@ export default function SuperadminLandingPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [isUploadingChairmanPhoto, setIsUploadingChairmanPhoto] = useState(false);
 
   useEffect(() => {
     getLandingContent()
@@ -142,6 +145,82 @@ export default function SuperadminLandingPage() {
                 <input className={fieldInput} value={content.about.quoteCaption} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, quoteCaption: e.target.value } }))} />
               </label>
             </section>
+
+            <section className={card}>
+              <h2 className={sectionTitle}>Vision</h2>
+              <p className={sectionHint}>Shown alongside the about section.</p>
+              <label className={label + " block mt-4"}>
+                Vision statement
+                <textarea rows={4} className={fieldTextarea} value={content.about.vision} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, vision: e.target.value } }))} />
+              </label>
+            </section>
+
+            <section className={card}>
+              <h2 className={sectionTitle}>Mission</h2>
+              <p className={sectionHint}>Shown alongside the about section.</p>
+              <label className={label + " block mt-4"}>
+                Mission statement
+                <textarea rows={4} className={fieldTextarea} value={content.about.mission} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, mission: e.target.value } }))} />
+              </label>
+            </section>
+
+            <ListEditor
+              title="Our Values"
+              hint="The core values grid — each card has a title and a short description."
+              items={content.about.values}
+              onChange={(items) => patch((d) => ({ ...d, about: { ...d.about, values: items } }))}
+              addLabel="Add value"
+              emptyItem={{ title: "New value", text: "" }}
+            />
+
+            <section className={card}>
+              <h2 className={sectionTitle}>Chairman&apos;s message</h2>
+              <p className={sectionHint}>A photo and message from the chairman shown on the landing page.</p>
+              <label className={label + " block mt-4"}>
+                Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={fieldInput + " py-2"}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsUploadingChairmanPhoto(true);
+                    try {
+                      const { url } = await uploadLandingMedia(file);
+                      patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, photoUrl: url } } }));
+                    } catch (error) {
+                      setSaveError(error instanceof Error ? error.message : "Unable to upload this photo.");
+                    } finally {
+                      setIsUploadingChairmanPhoto(false);
+                    }
+                  }}
+                />
+              </label>
+              {isUploadingChairmanPhoto && <p className="mt-2 text-[11px] text-[#8b9992]">Uploading…</p>}
+              {content.about.chairmanMessage.photoUrl && (
+                <img src={content.about.chairmanMessage.photoUrl} alt="" className="mt-3 h-20 w-20 rounded-lg object-cover border border-[#edf1ee]" />
+              )}
+              <div className="grid grid-cols-2 gap-[16px] mt-4 max-[650px]:grid-cols-1">
+                <label className={label}>
+                  Name
+                  <input className={fieldInput} value={content.about.chairmanMessage.name} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, name: e.target.value } } }))} />
+                </label>
+                <label className={label}>
+                  Role
+                  <input className={fieldInput} value={content.about.chairmanMessage.role} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, role: e.target.value } } }))} />
+                </label>
+              </div>
+              <label className={label + " block mt-4"}>
+                Message
+                <textarea rows={5} className={fieldTextarea} value={content.about.chairmanMessage.message} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, message: e.target.value } } }))} />
+              </label>
+            </section>
+
+            <SocialLinksEditor
+              items={content.socialLinks}
+              onChange={(items) => patch((d) => ({ ...d, socialLinks: items }))}
+            />
 
             <ListEditor
               title="Services"
@@ -295,6 +374,41 @@ function ListEditor({
       </div>
       <button type="button" onClick={() => onChange([...items, emptyItem])} className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold text-brand bg-transparent border-0 cursor-pointer">
         <Plus size={14} /> {addLabel}
+      </button>
+    </section>
+  );
+}
+
+function SocialLinksEditor({
+  items,
+  onChange,
+}: {
+  items: LandingSocialLink[];
+  onChange: (items: LandingSocialLink[]) => void;
+}) {
+  return (
+    <section className={card}>
+      <h2 className={sectionTitle}>Social links</h2>
+      <p className={sectionHint}>Links shown in the footer, e.g. Facebook, LinkedIn.</p>
+      <div className="flex flex-col gap-3 mt-4">
+        {items.map((item, i) => (
+          <div key={i} className="grid grid-cols-[1fr_1.5fr_auto] gap-[10px] items-end max-[650px]:grid-cols-1">
+            <label className={label}>
+              Platform
+              <input className={fieldInput} placeholder="Facebook" value={item.platform} onChange={(e) => onChange(items.map((x, idx) => (idx === i ? { ...x, platform: e.target.value } : x)))} />
+            </label>
+            <label className={label}>
+              URL
+              <input className={fieldInput} placeholder="https://facebook.com/..." value={item.url} onChange={(e) => onChange(items.map((x, idx) => (idx === i ? { ...x, url: e.target.value } : x)))} />
+            </label>
+            <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="h-[42px] w-[42px] grid place-items-center rounded-md border border-[#f3d6d3] text-[#ae4d44] bg-transparent cursor-pointer">
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => onChange([...items, { platform: "", url: "" }])} className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold text-brand bg-transparent border-0 cursor-pointer">
+        <Plus size={14} /> Add social link
       </button>
     </section>
   );

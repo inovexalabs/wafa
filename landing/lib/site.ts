@@ -6,13 +6,29 @@ export const APP_URL =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
 
-export const NAV_LINKS = [
-  { href: "#about", label: "About" },
-  { href: "#services", label: "Services" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#impact", label: "Impact" },
-  { href: "#contact", label: "Contact" },
-] as const;
+export type NavLink =
+  | { label: string; href: string }
+  | { label: string; children: { label: string; href: string }[] };
+
+export const NAV_LINKS: NavLink[] = [
+  {
+    label: "About",
+    children: [
+      { label: "Overview", href: "/about" },
+      { label: "Our Team", href: "/team" },
+      { label: "Gallery", href: "/gallery" },
+      { label: "Career", href: "/career" },
+      { label: "Partners", href: "/partners" },
+      { label: "Investments & Projects", href: "/investments" },
+    ],
+  },
+  { label: "Services", href: "/#services" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Board & Direction", href: "/board" },
+  { label: "News & Notices", href: "/news" },
+  { label: "Documents", href: "/documents" },
+  { label: "Contact", href: "/contact" },
+];
 
 export function smoothScrollTo(
   event: MouseEvent<HTMLAnchorElement>,

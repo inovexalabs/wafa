@@ -19,12 +19,17 @@ export type LandingContent = {
     body: string;
     quote: string;
     quoteCaption: string;
+    vision: string;
+    mission: string;
+    values: { title: string; text: string }[];
+    chairmanMessage: { photoUrl: string; name: string; role: string; message: string };
   };
   services: { title: string; text: string }[];
   steps: { title: string; text: string }[];
   testimonials: { quote: string; name: string; role: string }[];
   cta: { heading: string; body: string };
   contact: { email: string; phone: string; address: string; website: string };
+  socialLinks: { platform: string; url: string }[];
   legal: { privacyPolicy: string; termsOfService: string };
 };
 
@@ -50,6 +55,19 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     body: "WAFA Group started with a simple belief: when people save and lend to each other honestly, everyone rises together. Today that belief runs through a digital workspace — savings ledgers, receipts, loan certificates, meetings and dividends — all visible to the members it serves.",
     quote: '"We Are For All"',
     quoteCaption: 'The idea our name was built on, since 2080.',
+    vision: 'A placeholder vision statement. Replace this with WAFA’s real vision before publishing.',
+    mission: 'A placeholder mission statement. Replace this with WAFA’s real mission before publishing.',
+    values: [
+      { title: 'Transparency', text: 'Every ledger, receipt, and decision stays visible to the members it affects.' },
+      { title: 'Trust', text: 'We grow only as fast as the trust between members allows.' },
+      { title: 'Community', text: 'We are for all — every member matters, every contribution counts.' },
+    ],
+    chairmanMessage: {
+      photoUrl: '',
+      name: 'Chairman’s name',
+      role: 'Chairman, WAFA Group',
+      message: 'A placeholder message from the chairman. Replace this with a real message before publishing.',
+    },
   },
   services: [
     {
@@ -125,6 +143,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     address: 'Nepal',
     website: 'wafagroup.com.np',
   },
+  socialLinks: [],
   legal: {
     privacyPolicy:
       'This is placeholder privacy policy text. Replace this with your reviewed privacy policy before publishing the site — it should explain what member data WAFA collects, how it is stored, who can access it, and how members can request their data be corrected or removed.',
@@ -138,7 +157,15 @@ function mergeContent(partial: Partial<LandingContent> | null | undefined): Land
   return {
     hero: { ...DEFAULT_LANDING_CONTENT.hero, ...source.hero },
     stats: source.stats?.length ? source.stats : DEFAULT_LANDING_CONTENT.stats,
-    about: { ...DEFAULT_LANDING_CONTENT.about, ...source.about },
+    about: {
+      ...DEFAULT_LANDING_CONTENT.about,
+      ...source.about,
+      values: source.about?.values?.length ? source.about.values : DEFAULT_LANDING_CONTENT.about.values,
+      chairmanMessage: {
+        ...DEFAULT_LANDING_CONTENT.about.chairmanMessage,
+        ...source.about?.chairmanMessage,
+      },
+    },
     services: source.services?.length ? source.services : DEFAULT_LANDING_CONTENT.services,
     steps: source.steps?.length ? source.steps : DEFAULT_LANDING_CONTENT.steps,
     testimonials: source.testimonials?.length
@@ -146,6 +173,7 @@ function mergeContent(partial: Partial<LandingContent> | null | undefined): Land
       : DEFAULT_LANDING_CONTENT.testimonials,
     cta: { ...DEFAULT_LANDING_CONTENT.cta, ...source.cta },
     contact: { ...DEFAULT_LANDING_CONTENT.contact, ...source.contact },
+    socialLinks: source.socialLinks?.length ? source.socialLinks : DEFAULT_LANDING_CONTENT.socialLinks,
     legal: { ...DEFAULT_LANDING_CONTENT.legal, ...source.legal },
   };
 }

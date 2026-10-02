@@ -4,17 +4,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useState } from "react";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
 import { APP_URL, NAV_LINKS, smoothScrollTo } from "@/lib/site";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 24);
   });
+
+  function closeMobileMenu() {
+    setOpen(false);
+    setOpenMobileGroup(null);
+  }
 
   return (
     <motion.header
@@ -49,17 +56,81 @@ export default function Navbar() {
         </a>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(event) => smoothScrollTo(event, link.href)}
-              className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
-            >
-              {link.label}
-              <span className="absolute -bottom-1 left-0 h-px w-0 bg-brand transition-all duration-300 group-hover:w-full" />
-            </a>
-          ))}
+          {NAV_LINKS.map((link) => {
+            if ("children" in link) {
+              const isOpen = openDropdown === link.label;
+              return (
+                <div
+                  key={link.label}
+                  className="relative"
+                  onMouseEnter={() => setOpenDropdown(link.label)}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                >
+                  <button
+                    type="button"
+                    onFocus={() => setOpenDropdown(link.label)}
+                    onClick={() => setOpenDropdown(isOpen ? null : link.label)}
+                    aria-expanded={isOpen}
+                    className="group flex items-center gap-1 text-xs font-medium text-ink/75 transition-colors hover:text-ink"
+                  >
+                    {link.label}
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute left-1/2 top-full mt-3 w-60 -translate-x-1/2 rounded-2xl border border-line bg-cream-soft p-2 shadow-[0_20px_50px_-20px_rgba(20,32,27,0.3)]"
+                      >
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className="block rounded-xl px-3.5 py-2.5 text-xs font-medium text-ink/75 transition-colors hover:bg-brand/10 hover:text-brand"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+
+            if (link.href.startsWith("#")) {
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(event) => smoothScrollTo(event, link.href)}
+                  className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 h-px w-0 bg-brand transition-all duration-300 group-hover:w-full" />
+                </a>
+              );
+            }
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
+              >
+                {link.label}
+                <span className="absolute -bottom-1 left-0 h-px w-0 bg-brand transition-all duration-300 group-hover:w-full" />
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
@@ -91,25 +162,86 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.98 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute left-4 right-4 top-[74px] rounded-2xl border border-line bg-cream-soft p-5 shadow-xl md:hidden"
+            className="absolute left-4 right-4 top-[74px] max-h-[75vh] overflow-y-auto rounded-2xl border border-line bg-cream-soft p-5 shadow-xl md:hidden"
           >
-            <nav className="flex flex-col gap-4">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={(event) => {
-                    smoothScrollTo(event, link.href);
-                    setOpen(false);
-                  }}
-                  className="text-sm font-medium text-ink/80"
-                >
-                  {link.label}
-                </a>
-              ))}
+            <nav className="flex flex-col gap-1">
+              {NAV_LINKS.map((link) => {
+                if ("children" in link) {
+                  const isOpen = openMobileGroup === link.label;
+                  return (
+                    <div key={link.label} className="border-b border-line/70 py-2 last:border-none">
+                      <button
+                        type="button"
+                        onClick={() => setOpenMobileGroup(isOpen ? null : link.label)}
+                        aria-expanded={isOpen}
+                        className="flex w-full items-center justify-between py-1.5 text-sm font-medium text-ink/80"
+                      >
+                        {link.label}
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-300 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="flex flex-col gap-1 py-1 pl-3">
+                              {link.children.map((child) => (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  onClick={closeMobileMenu}
+                                  className="py-1.5 text-sm text-ink/70"
+                                >
+                                  {child.label}
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                }
+
+                if (link.href.startsWith("#")) {
+                  return (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={(event) => {
+                        smoothScrollTo(event, link.href);
+                        closeMobileMenu();
+                      }}
+                      className="border-b border-line/70 py-3 text-sm font-medium text-ink/80 last:border-none"
+                    >
+                      {link.label}
+                    </a>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMobileMenu}
+                    className="border-b border-line/70 py-3 text-sm font-medium text-ink/80 last:border-none"
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               <Link
                 href={APP_URL}
-                className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white"
+                onClick={closeMobileMenu}
+                className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white"
               >
                 Member Login
                 <ArrowUpRight className="h-4 w-4" />

@@ -45,6 +45,8 @@ function publish(session: WafaSession | null) {
   listeners.forEach((listener) => listener());
 }
 
+class SessionAuthError extends Error {}
+
 async function requestSession(path: string, options?: RequestInit) {
   const response = await fetch(`${apiUrl}/api/auth/${path}`, {
     ...options,
@@ -53,7 +55,7 @@ async function requestSession(path: string, options?: RequestInit) {
   });
 
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message ?? 'Your session has expired.');
+  if (!response.ok) throw new SessionAuthError(body.message ?? 'Your session has expired.');
   return body as WafaSession;
 }
 
@@ -72,8 +74,8 @@ export function refreshSession(): Promise<WafaSession | null> {
       publish(session);
       return session;
     })
-    .catch(() => {
-      publish(null);
+    .catch((error) => {
+      if (error instanceof SessionAuthError) publish(null);
       return null;
     })
     .finally(() => {
@@ -85,12 +87,8 @@ export function refreshSession(): Promise<WafaSession | null> {
 
 export async function restoreSession(): Promise<WafaSession | null> {
   clearLegacySession();
-  const hasCurrentTabSession = Boolean(readUserSnapshot());
-  const shouldRestoreRememberedSession = window.localStorage.getItem(rememberedSessionKey) === '1';
-  if (!hasCurrentTabSession && !shouldRestoreRememberedSession) {
-    publish(null);
-    return null;
-  }
+  const snapshot = readUserSnapshot();
+  if (snapshot) publish(snapshot);
   return refreshSession();
 }
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
@@ -649,18 +647,25 @@ export interface LandingHero {
   secondaryCta: string;
 }
 export interface LandingStat { value: number; suffix: string; label: string }
+export interface LandingValue { title: string; text: string }
+export interface LandingChairmanMessage { photoUrl: string; name: string; role: string; message: string }
 export interface LandingAbout {
   eyebrow: string;
   heading: string;
   body: string;
   quote: string;
   quoteCaption: string;
+  vision: string;
+  mission: string;
+  values: LandingValue[];
+  chairmanMessage: LandingChairmanMessage;
 }
 export interface LandingServiceItem { title: string; text: string }
 export interface LandingStep { title: string; text: string }
 export interface LandingTestimonial { quote: string; name: string; role: string }
 export interface LandingCta { heading: string; body: string }
 export interface LandingContact { email: string; phone: string; address: string; website: string }
+export interface LandingSocialLink { platform: string; url: string }
 export interface LandingLegal { privacyPolicy: string; termsOfService: string }
 
 export interface LandingContent {
@@ -672,6 +677,7 @@ export interface LandingContent {
   testimonials: LandingTestimonial[];
   cta: LandingCta;
   contact: LandingContact;
+  socialLinks: LandingSocialLink[];
   legal: LandingLegal;
 }
 
@@ -707,6 +713,297 @@ export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ it
   const body = await response.json().catch(() => ({ items: [], total: 0 }));
   if (!response.ok) throw new Error(body.message ?? "Unable to load audit logs.");
   return body as { items: AuditLogEntry[]; total: number };
+}
+
+export type LandingPersonKind = "team" | "board";
+export interface LandingPerson {
+  id: string;
+  kind: LandingPersonKind;
+  name: string;
+  title: string | null;
+  photoUrl: string | null;
+  bio: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+}
+export interface SaveLandingPersonInput {
+  kind: LandingPersonKind;
+  name: string;
+  title?: string;
+  photoUrl?: string;
+  bio?: string;
+  sortOrder?: number;
+  isPublished?: boolean;
+}
+
+export async function listLandingPeople(kind?: LandingPersonKind): Promise<LandingPerson[]> {
+  const query = kind ? `?kind=${kind}` : "";
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-people${query}`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load this list.");
+  return body as LandingPerson[];
+}
+
+export async function createLandingPerson(input: SaveLandingPersonInput): Promise<LandingPerson> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-people`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to create this entry.");
+  return body as LandingPerson;
+}
+
+export async function updateLandingPerson(id: string, input: Partial<SaveLandingPersonInput>): Promise<LandingPerson> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-people/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this entry.");
+  return body as LandingPerson;
+}
+
+export async function deleteLandingPerson(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-people/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this entry.");
+}
+
+export type LandingItemKind = "partner" | "investment" | "gallery";
+export interface LandingItem {
+  id: string;
+  kind: LandingItemKind;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  linkUrl: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+}
+export interface SaveLandingItemInput {
+  kind: LandingItemKind;
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  linkUrl?: string;
+  sortOrder?: number;
+  isPublished?: boolean;
+}
+
+export async function listLandingItems(kind?: LandingItemKind): Promise<LandingItem[]> {
+  const query = kind ? `?kind=${kind}` : "";
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-items${query}`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load this list.");
+  return body as LandingItem[];
+}
+
+export async function createLandingItem(input: SaveLandingItemInput): Promise<LandingItem> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-items`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to create this entry.");
+  return body as LandingItem;
+}
+
+export async function updateLandingItem(id: string, input: Partial<SaveLandingItemInput>): Promise<LandingItem> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-items/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this entry.");
+  return body as LandingItem;
+}
+
+export async function deleteLandingItem(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-items/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this entry.");
+}
+
+export type NewsCategory = "news" | "notice";
+export interface NewsPost {
+  id: string;
+  category: NewsCategory;
+  title: string;
+  slug: string;
+  body: string;
+  coverImageUrl: string | null;
+  isPublished: boolean;
+  publishedAt: string;
+}
+export interface SaveNewsPostInput {
+  category: NewsCategory;
+  title: string;
+  slug?: string;
+  body: string;
+  coverImageUrl?: string;
+  isPublished?: boolean;
+  publishedAt?: string;
+}
+
+export async function listNewsPosts(): Promise<NewsPost[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/news`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load news posts.");
+  return body as NewsPost[];
+}
+
+export async function createNewsPost(input: SaveNewsPostInput): Promise<NewsPost> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/news`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to create this post.");
+  return body as NewsPost;
+}
+
+export async function updateNewsPost(id: string, input: Partial<SaveNewsPostInput>): Promise<NewsPost> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/news/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this post.");
+  return body as NewsPost;
+}
+
+export async function deleteNewsPost(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/news/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this post.");
+}
+
+export interface CareerOpening {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  employmentType: string | null;
+  applyEmail: string | null;
+  applyUrl: string | null;
+  isOpen: boolean;
+  postedAt: string;
+}
+export interface SaveCareerOpeningInput {
+  title: string;
+  description?: string;
+  location?: string;
+  employmentType?: string;
+  applyEmail?: string;
+  applyUrl?: string;
+  isOpen?: boolean;
+  postedAt?: string;
+}
+
+export async function listCareerOpenings(): Promise<CareerOpening[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/career`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load career openings.");
+  return body as CareerOpening[];
+}
+
+export async function createCareerOpening(input: SaveCareerOpeningInput): Promise<CareerOpening> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/career`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to create this opening.");
+  return body as CareerOpening;
+}
+
+export async function updateCareerOpening(id: string, input: Partial<SaveCareerOpeningInput>): Promise<CareerOpening> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/career/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this opening.");
+  return body as CareerOpening;
+}
+
+export async function deleteCareerOpening(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/career/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this opening.");
+}
+
+export interface PublicDocument {
+  id: string;
+  title: string;
+  description: string | null;
+  fileUrl: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  sortOrder: number;
+  isPublished: boolean;
+}
+export interface SaveDocumentMetaInput {
+  title?: string;
+  description?: string;
+  sortOrder?: number;
+  isPublished?: boolean;
+}
+
+export async function listPublicDocuments(): Promise<PublicDocument[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/documents`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load documents.");
+  return body as PublicDocument[];
+}
+
+export async function uploadPublicDocument(file: File, meta: SaveDocumentMetaInput): Promise<PublicDocument> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (meta.title) formData.append("title", meta.title);
+  if (meta.description) formData.append("description", meta.description);
+  if (meta.sortOrder !== undefined) formData.append("sortOrder", String(meta.sortOrder));
+  if (meta.isPublished !== undefined) formData.append("isPublished", String(meta.isPublished));
+  const response = await apiFetch(`${apiUrl}/api/superadmin/documents`, { method: "POST", body: formData });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to upload this document.");
+  return body as PublicDocument;
+}
+
+export async function updatePublicDocumentMeta(id: string, input: Partial<SaveDocumentMetaInput>): Promise<PublicDocument> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/documents/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this document.");
+  return body as PublicDocument;
+}
+
+export async function deletePublicDocument(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/documents/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this document.");
+}
+
+export async function uploadLandingMedia(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiFetch(`${apiUrl}/api/superadmin/landing-media/upload`, { method: "POST", body: formData });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to upload this image.");
+  return body as { url: string };
 }
 
 

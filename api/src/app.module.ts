@@ -53,6 +53,23 @@ import { LedgerService } from './ledger/ledger.service';
 import { PublicLandingController } from './landing/public-landing.controller';
 import { SuperadminLandingController } from './landing/superadmin-landing.controller';
 import { LandingService } from './landing/landing.service';
+import { PublicLandingPeopleController } from './landing-people/public-landing-people.controller';
+import { SuperadminLandingPeopleController } from './landing-people/superadmin-landing-people.controller';
+import { LandingPeopleService } from './landing-people/landing-people.service';
+import { PublicLandingItemsController } from './landing-items/public-landing-items.controller';
+import { SuperadminLandingItemsController } from './landing-items/superadmin-landing-items.controller';
+import { LandingItemsService } from './landing-items/landing-items.service';
+import { PublicNewsController } from './news/public-news.controller';
+import { SuperadminNewsController } from './news/superadmin-news.controller';
+import { NewsService } from './news/news.service';
+import { PublicCareerController } from './career/public-career.controller';
+import { SuperadminCareerController } from './career/superadmin-career.controller';
+import { CareerService } from './career/career.service';
+import { PublicDocumentsController } from './public-documents/public-documents.controller';
+import { SuperadminPublicDocumentsController } from './public-documents/superadmin-public-documents.controller';
+import { PublicDocumentsService } from './public-documents/public-documents.service';
+import { SuperadminLandingMediaController } from './landing-media/superadmin-landing-media.controller';
+import { LandingMediaService } from './landing-media/landing-media.service';
 
 @Module({
   imports: [
@@ -95,6 +112,17 @@ import { LandingService } from './landing/landing.service';
     AdminLedgerController,
     PublicLandingController,
     SuperadminLandingController,
+    PublicLandingPeopleController,
+    SuperadminLandingPeopleController,
+    PublicLandingItemsController,
+    SuperadminLandingItemsController,
+    PublicNewsController,
+    SuperadminNewsController,
+    PublicCareerController,
+    SuperadminCareerController,
+    PublicDocumentsController,
+    SuperadminPublicDocumentsController,
+    SuperadminLandingMediaController,
   ],
   providers: [
     AuthService,
@@ -113,6 +141,12 @@ import { LandingService } from './landing/landing.service';
     ChatService,
     LedgerService,
     LandingService,
+    LandingPeopleService,
+    LandingItemsService,
+    NewsService,
+    CareerService,
+    PublicDocumentsService,
+    LandingMediaService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

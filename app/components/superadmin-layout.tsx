@@ -4,13 +4,35 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Globe2, LayoutDashboard, LogOut, Landmark, MessageCircle, Receipt, UserCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, Briefcase, CalendarClock, ChevronDown, ChevronRight, ClipboardList, FileText, Globe2, Handshake, Images, LayoutDashboard, LogOut, Landmark, MessageCircle, Newspaper, Receipt, UserCircle, Users } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type SuperadminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "ledger" | "ledger-totals" | "receipts" | "audit" | "chat" | "landing" | "profile"; children: ReactNode };
+type SuperadminLayoutProps = {
+  active:
+    | "overview"
+    | "meetings"
+    | "certificates"
+    | "my-certificates"
+    | "ledger"
+    | "ledger-totals"
+    | "receipts"
+    | "audit"
+    | "chat"
+    | "landing"
+    | "landing-team"
+    | "landing-board"
+    | "landing-gallery"
+    | "landing-partners"
+    | "landing-investments"
+    | "landing-career"
+    | "landing-news"
+    | "landing-documents"
+    | "profile";
+  children: ReactNode;
+};
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -36,6 +58,14 @@ const links = [
   ["audit", "Activity log", "/superadmin/audit", ClipboardList],
   ["chat", "Chat", "/superadmin/chat", MessageCircle],
   ["landing", "Landing page", "/superadmin/landing", Globe2],
+  ["landing-team", "Our team", "/superadmin/landing/team", Users],
+  ["landing-board", "Board & direction", "/superadmin/landing/board", Landmark],
+  ["landing-gallery", "Gallery", "/superadmin/landing/gallery", Images],
+  ["landing-partners", "Partners", "/superadmin/landing/partners", Handshake],
+  ["landing-investments", "Investments & projects", "/superadmin/landing/investments", Briefcase],
+  ["landing-career", "Career", "/superadmin/landing/career", Briefcase],
+  ["landing-news", "News & notices", "/superadmin/landing/news", Newspaper],
+  ["landing-documents", "Public documents", "/superadmin/landing/documents", FileText],
   ["profile", "My profile", "/superadmin/profile", UserCircle],
 ] as const;
 

@@ -22,7 +22,7 @@ export default async function Home() {
         <Testimonials testimonials={content.testimonials} />
         <Cta content={content.cta} />
       </main>
-      <Footer contact={content.contact} />
+      <Footer contact={content.contact} socialLinks={content.socialLinks} />
     </>
   );
 }

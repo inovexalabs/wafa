@@ -14,6 +14,15 @@ export type LandingAbout = {
   body: string;
   quote: string;
   quoteCaption: string;
+  vision: string;
+  mission: string;
+  values: { title: string; text: string }[];
+  chairmanMessage: {
+    photoUrl: string;
+    name: string;
+    role: string;
+    message: string;
+  };
 };
 
 export type LandingServiceItem = { title: string; text: string };
@@ -27,6 +36,7 @@ export type LandingContact = {
   website: string;
 };
 export type LandingLegal = { privacyPolicy: string; termsOfService: string };
+export type LandingSocialLink = { platform: string; url: string };
 
 export type LandingContent = {
   hero: LandingHero;
@@ -37,6 +47,7 @@ export type LandingContent = {
   testimonials: LandingTestimonial[];
   cta: LandingCta;
   contact: LandingContact;
+  socialLinks: LandingSocialLink[];
   legal: LandingLegal;
 };
 
@@ -62,6 +73,31 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     body: "WAFA Group started with a simple belief: when people save and lend to each other honestly, everyone rises together. Today that belief runs through a digital workspace — savings ledgers, receipts, loan certificates, meetings and dividends — all visible to the members it serves.",
     quote: '"We Are For All"',
     quoteCaption: 'The idea our name was built on, since 2080.',
+    vision:
+      "Replace this with WAFA's real vision before publishing.",
+    mission:
+      "Replace this with WAFA's real mission before publishing.",
+    values: [
+      {
+        title: 'Transparency',
+        text: 'Every ledger, receipt, and decision stays visible to the members it affects.',
+      },
+      {
+        title: 'Trust',
+        text: 'We grow only as fast as the trust between members allows.',
+      },
+      {
+        title: 'Community',
+        text: 'We are for all — every member matters, every contribution counts.',
+      },
+    ],
+    chairmanMessage: {
+      photoUrl: '',
+      name: "Chairman's name",
+      role: 'Chairman, WAFA Group',
+      message:
+        "This is a placeholder message from the chairman. Replace this with a real message before publishing.",
+    },
   },
   services: [
     {
@@ -137,6 +173,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     address: 'Nepal',
     website: 'wafagroup.com.np',
   },
+  socialLinks: [],
   legal: {
     privacyPolicy:
       'This is placeholder privacy policy text. Replace this with your reviewed privacy policy before publishing the site — it should explain what member data WAFA collects, how it is stored, who can access it, and how members can request their data be corrected or removed.',
@@ -157,7 +194,17 @@ export async function getLandingContent(): Promise<LandingContent> {
     return {
       hero: { ...DEFAULT_LANDING_CONTENT.hero, ...data.hero },
       stats: data.stats?.length ? data.stats : DEFAULT_LANDING_CONTENT.stats,
-      about: { ...DEFAULT_LANDING_CONTENT.about, ...data.about },
+      about: {
+        ...DEFAULT_LANDING_CONTENT.about,
+        ...data.about,
+        values: data.about?.values?.length
+          ? data.about.values
+          : DEFAULT_LANDING_CONTENT.about.values,
+        chairmanMessage: {
+          ...DEFAULT_LANDING_CONTENT.about.chairmanMessage,
+          ...data.about?.chairmanMessage,
+        },
+      },
       services: data.services?.length ? data.services : DEFAULT_LANDING_CONTENT.services,
       steps: data.steps?.length ? data.steps : DEFAULT_LANDING_CONTENT.steps,
       testimonials: data.testimonials?.length
@@ -165,9 +212,144 @@ export async function getLandingContent(): Promise<LandingContent> {
         : DEFAULT_LANDING_CONTENT.testimonials,
       cta: { ...DEFAULT_LANDING_CONTENT.cta, ...data.cta },
       contact: { ...DEFAULT_LANDING_CONTENT.contact, ...data.contact },
+      socialLinks: data.socialLinks?.length
+        ? data.socialLinks
+        : DEFAULT_LANDING_CONTENT.socialLinks,
       legal: { ...DEFAULT_LANDING_CONTENT.legal, ...data.legal },
     };
   } catch {
     return DEFAULT_LANDING_CONTENT;
+  }
+}
+
+export type LandingPerson = {
+  id: string;
+  kind: "team" | "board";
+  name: string;
+  title: string | null;
+  photoUrl: string | null;
+  bio: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+export async function getLandingPeople(kind: "team" | "board"): Promise<LandingPerson[]> {
+  try {
+    const response = await fetch(`${API_URL}/api/public/landing-people?kind=${kind}`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as LandingPerson[];
+  } catch {
+    return [];
+  }
+}
+
+export type LandingItem = {
+  id: string;
+  kind: "partner" | "investment" | "gallery";
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  linkUrl: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+export async function getLandingItems(
+  kind: "partner" | "investment" | "gallery",
+): Promise<LandingItem[]> {
+  try {
+    const response = await fetch(`${API_URL}/api/public/landing-items?kind=${kind}`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as LandingItem[];
+  } catch {
+    return [];
+  }
+}
+
+export type NewsPost = {
+  id: string;
+  category: "news" | "notice";
+  title: string;
+  slug: string;
+  body: string;
+  coverImageUrl: string | null;
+  isPublished: boolean;
+  publishedAt: string;
+};
+
+export async function getNewsPosts(category?: "news" | "notice"): Promise<NewsPost[]> {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/public/news${category ? `?category=${category}` : ""}`,
+      { next: { revalidate: 60 } },
+    );
+    if (!response.ok) return [];
+    return (await response.json()) as NewsPost[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getNewsPostBySlug(slug: string): Promise<NewsPost | null> {
+  try {
+    const response = await fetch(`${API_URL}/api/public/news/${slug}`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as NewsPost;
+  } catch {
+    return null;
+  }
+}
+
+export type CareerOpening = {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  employmentType: string | null;
+  applyEmail: string | null;
+  applyUrl: string | null;
+  isOpen: boolean;
+  postedAt: string;
+};
+
+export async function getCareerOpenings(): Promise<CareerOpening[]> {
+  try {
+    const response = await fetch(`${API_URL}/api/public/career`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as CareerOpening[];
+  } catch {
+    return [];
+  }
+}
+
+export type PublicDocument = {
+  id: string;
+  title: string;
+  description: string | null;
+  fileUrl: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+export async function getPublicDocuments(): Promise<PublicDocument[]> {
+  try {
+    const response = await fetch(`${API_URL}/api/public/documents`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as PublicDocument[];
+  } catch {
+    return [];
   }
 }
