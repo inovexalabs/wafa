@@ -100,7 +100,7 @@ function MeetingCard({ meeting, now, onManage }: { meeting: Meeting; now: number
 	const TypeIcon = typeIcon[meeting.meeting_type];
 	const startable = hasStarted(meeting, now);
 	return (
-		<article className="group flex items-center gap-5 p-5 rounded-2xl border border-line bg-white transition-all hover:border-brand/30 hover:shadow-[0_8px_24px_-12px_rgba(31,103,82,0.25)]">
+		<article className="group flex items-center gap-5 p-5 rounded-2xl border border-line bg-white transition-all hover:border-brand/30 hover:shadow-[0_8px_24px_-12px_rgba(31,103,82,0.25)] max-[560px]:flex-wrap max-[560px]:gap-x-4 max-[560px]:gap-y-3 max-[560px]:p-4">
 			<div className={"flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0 " + typeTone[meeting.meeting_type]}>
 				<span className="text-lg font-bold leading-none">{formatDay(meeting.scheduled_at)}</span>
 				<span className="text-[9px] font-bold tracking-wider mt-1">{formatMonth(meeting.scheduled_at)}</span>
@@ -117,12 +117,12 @@ function MeetingCard({ meeting, now, onManage }: { meeting: Meeting; now: number
 					<span className="inline-flex items-center gap-1.5"><Timer size={13} /> {meeting.duration_minutes} min</span>
 				</div>
 			</div>
-			<div className="flex items-center gap-2 shrink-0">
+			<div className="flex items-center gap-2 shrink-0 max-[560px]:w-full">
 				{!meeting.meeting_url ? (
-					<span className="text-[11px] text-muted whitespace-nowrap">No link yet</span>
+					<span className="text-[11px] text-muted whitespace-nowrap max-[560px]:flex-1 max-[560px]:py-2.5 max-[560px]:rounded-full max-[560px]:bg-[#f5f7f6] max-[560px]:text-center">No link yet</span>
 				) : startable ? (
 					<a
-						className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 text-brand px-4 py-2.5 text-xs font-bold whitespace-nowrap no-underline transition-colors hover:bg-brand hover:text-white"
+						className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 text-brand px-4 py-2.5 text-xs font-bold whitespace-nowrap no-underline transition-colors hover:bg-brand hover:text-white max-[560px]:flex-1 max-[560px]:justify-center"
 						href={meeting.meeting_url}
 						target="_blank"
 						rel="noreferrer"
@@ -130,7 +130,7 @@ function MeetingCard({ meeting, now, onManage }: { meeting: Meeting; now: number
 						Join <ArrowUpRight size={14} />
 					</a>
 				) : (
-					<span className="inline-flex items-center gap-1.5 rounded-full border border-line text-muted px-4 py-2.5 text-xs font-bold whitespace-nowrap cursor-not-allowed">
+					<span className="inline-flex items-center gap-1.5 rounded-full border border-line text-muted px-4 py-2.5 text-xs font-bold whitespace-nowrap cursor-not-allowed max-[560px]:flex-1 max-[560px]:justify-center">
 						<Clock size={13} /> Opens {formatTime(meeting.scheduled_at)}
 					</span>
 				)}
@@ -323,7 +323,7 @@ function SuperadminMeetingsPageContent() {
 
 	return (
 		<SuperadminLayout active="meetings">
-			<main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+			<main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-app flex flex-col overflow-hidden">
 				<div className="shrink-0 flex justify-between items-end gap-5 mb-10 max-[780px]:items-start max-[780px]:flex-col">
 					<div>
 						<p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Team coordination</p>

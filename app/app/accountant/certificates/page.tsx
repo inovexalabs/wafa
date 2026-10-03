@@ -49,7 +49,7 @@ export default function AccountantCertificatesPage() {
 
   return (
     <AccountantLayout active="certificates">
-      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-app flex flex-col overflow-hidden">
         <div className="shrink-0 flex justify-between items-end gap-5 mb-10 max-[780px]:items-start max-[780px]:flex-col">
           <div>
             <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Your achievements</p>
@@ -81,8 +81,8 @@ export default function AccountantCertificatesPage() {
         ) : (
           <div className="rounded-2xl border border-line bg-white">
             {certificates.map((cert) => (
-              <div key={cert.id} className="flex items-center gap-5 p-5 border-b border-line last:border-b-0 transition-colors hover:bg-[#f8faf8]">
-                <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-[#e4f4ec] text-[#1f6752] shrink-0">
+              <div key={cert.id} className="flex items-center gap-5 p-5 border-b border-line last:border-b-0 transition-colors hover:bg-[#f8faf8] max-[560px]:gap-3 max-[560px]:p-4">
+                <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-[#e4f4ec] text-[#1f6752] shrink-0 max-[560px]:w-11 max-[560px]:h-11">
                   <Award size={20} />
                 </div>
                 <div className="flex-1 min-w-0">

@@ -163,7 +163,7 @@ export default function SuperadminDocumentTypesPage() {
               <div className="flex flex-col gap-3 mt-4">
                 {types.length === 0 && <p className="text-[12px] text-[#8b9992]">No document types yet. Add one above.</p>}
                 {types.map((type) => (
-                  <div key={type.id} className={"flex items-center gap-4 p-4 border rounded-lg " + (editingId === type.id ? "border-brand/40 bg-[#f7faf7]" : "border-[#edf1ee]")}>
+                  <div key={type.id} className={"flex items-center gap-4 p-4 border rounded-lg max-[500px]:gap-3 max-[500px]:p-3 " + (editingId === type.id ? "border-brand/40 bg-[#f7faf7]" : "border-[#edf1ee]")}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="m-0 text-sm font-bold text-ink truncate">{type.name}</p>

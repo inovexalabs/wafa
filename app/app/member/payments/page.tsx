@@ -39,7 +39,7 @@ export default function PaymentsPage() {
 
   return (
     <MemberLayout active="payments">
-      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-app flex flex-col overflow-hidden">
         <div className="shrink-0 flex justify-between items-end gap-5 mb-[30px] max-[780px]:items-start max-[780px]:flex-col">
           <div>
             <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Financial overview</p>
@@ -85,11 +85,13 @@ export default function PaymentsPage() {
                   <p className="m-0 text-[11px] text-[#9ba7a1]">No payment activity yet.</p>
                 ) : (
                   overview?.history.map((payment) => (
-                    <article className="flex items-center gap-4 py-[17px] border-t border-[#edf1ee] first:border-t-0" key={payment.id}>
-                      <span className="grid place-items-center w-[33px] h-[33px] rounded-lg text-[#286d54] bg-[#e4f2e5]"><Wallet size={15} /></span>
-                      <div className="flex-1"><strong className="text-xs">{payment.label}</strong><p className="my-[5px] text-[#909e97] text-[10px]">{payment.period}</p></div>
-                      <b className="text-xs">{formatAmount(payment.amount)}</b>
-                      <span className={"inline-block px-2 py-[5px] rounded text-[9px] font-bold " + stateStyle[payment.state]}>{stateLabel[payment.state]} {formatDate(payment.date)}</span>
+                    <article className="flex items-center gap-4 py-[17px] border-t border-[#edf1ee] first:border-t-0 max-[500px]:gap-3" key={payment.id}>
+                      <span className="grid place-items-center w-[33px] h-[33px] rounded-lg text-[#286d54] bg-[#e4f2e5] shrink-0"><Wallet size={15} /></span>
+                      <div className="flex-1 min-w-0"><strong className="text-xs">{payment.label}</strong><p className="my-[5px] text-[#909e97] text-[10px]">{payment.period}</p></div>
+                      <div className="flex items-center gap-4 shrink-0 max-[500px]:flex-col max-[500px]:items-end max-[500px]:gap-1.5">
+                        <b className="text-xs">{formatAmount(payment.amount)}</b>
+                        <span className={"inline-block px-2 py-[5px] rounded text-[9px] font-bold " + stateStyle[payment.state]}>{stateLabel[payment.state]} {formatDate(payment.date)}</span>
+                      </div>
                     </article>
                   ))
                 )}

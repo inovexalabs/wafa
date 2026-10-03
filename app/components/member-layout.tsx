@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Award, ArrowLeft, ArrowRight, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, HelpCircle, Home, LogOut, Link2, Receipt, UserCircle, Wallet } from "lucide-react";
 import Dashboard from "./dashboard";
+import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
 import { getMemberProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
@@ -59,6 +60,11 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
+
+  function handleSignOut() {
+    void signOut();
+    router.replace("/");
+  }
 
   const initials = fullName ? initialsFor(fullName) : "";
   const currentLink = links.find(([key]) => key === active);
@@ -130,7 +136,7 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
             </div>
           </div>
         </aside>
-        <section className={"min-w-0 transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
+        <section className={"min-w-0 pb-[var(--mobile-nav-h)] transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
           <header
             className={
               "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-300 ease-in-out max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
@@ -181,7 +187,7 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
                       role="menuitem"
                       type="button"
                       className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#286c54] bg-white cursor-pointer text-xs font-bold hover:bg-[#f0f7f0]"
-                      onClick={() => { setMenuOpen(false); void signOut(); router.replace("/"); }}
+                      onClick={() => { setMenuOpen(false); handleSignOut(); }}
                     >
                       <LogOut size={15} /> Sign out
                     </button>
@@ -192,6 +198,21 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
           </header>
           {children}
         </section>
+        <MobileNav
+          links={links}
+          active={active}
+          tabs={[["overview", "Home"], ["meetings", "Meetings"], ["payments", "Payments"], ["receipts", "Receipts"]]}
+          profileKey="profile"
+          fullName={fullName}
+          initials={initials}
+          roleLabel="Member"
+        extra={
+          <a className="flex items-center justify-center gap-2 h-11 rounded-xl bg-[#f2f7f3] text-[#286c54] no-underline text-xs font-bold" href="mailto:wafagroup10@outlook.com">
+            <HelpCircle size={15} /> Help center
+          </a>
+        }
+          onSignOut={handleSignOut}
+        />
       </div>
     </Dashboard>
   );

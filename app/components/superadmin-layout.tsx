@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, Briefcase, CalendarClock, ChevronDown, ChevronRight, ClipboardList, FileText, Globe2, Handshake, IdCard, Images, LayoutDashboard, Link2, LogOut, Landmark, Newspaper, Receipt, UserCircle, Users } from "lucide-react";
 import Dashboard from "./dashboard";
+import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
@@ -95,6 +96,11 @@ export default function SuperadminLayout({ active, children }: SuperadminLayoutP
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
+  function handleSignOut() {
+    void signOut();
+    router.replace("/");
+  }
+
   const initials = fullName ? initialsFor(fullName) : "";
   const currentLink = links.find(([key]) => key === active);
   return (
@@ -154,7 +160,7 @@ export default function SuperadminLayout({ active, children }: SuperadminLayoutP
             </div>
           </div>
         </aside>
-        <section className={"min-w-0 transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
+        <section className={"min-w-0 pb-[var(--mobile-nav-h)] transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
           <header
             className={
               "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-300 ease-in-out max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
@@ -205,7 +211,7 @@ export default function SuperadminLayout({ active, children }: SuperadminLayoutP
                       role="menuitem"
                       type="button"
                       className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#286c54] bg-white cursor-pointer text-xs font-bold hover:bg-[#f0f7f0]"
-                      onClick={() => { setMenuOpen(false); void signOut(); router.replace("/"); }}
+                      onClick={() => { setMenuOpen(false); handleSignOut(); }}
                     >
                       <LogOut size={15} /> Sign out
                     </button>
@@ -216,6 +222,20 @@ export default function SuperadminLayout({ active, children }: SuperadminLayoutP
           </header>
           {children}
         </section>
+        <MobileNav
+          links={links}
+          active={active}
+          tabs={[["overview", "Home"], ["members", "Members"], ["meetings", "Meetings"], ["receipts", "Receipts"]]}
+        groups={[
+          ["Workspace", ["ledger", "ledger-totals", "certificates", "my-certificates", "audit", "links"]],
+          ["Public site", ["landing", "landing-team", "landing-board", "landing-gallery", "landing-partners", "landing-investments", "landing-career", "landing-news", "landing-documents"]],
+        ]}
+          profileKey="profile"
+          fullName={fullName}
+          initials={initials}
+          roleLabel="Superadmin"
+          onSignOut={handleSignOut}
+        />
       </div>
     </Dashboard>
   );

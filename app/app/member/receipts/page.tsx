@@ -88,7 +88,7 @@ export default function ReceiptsPage() {
 
   return (
     <MemberLayout active="receipts">
-      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+      <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-app flex flex-col overflow-hidden">
         <div className="shrink-0 flex justify-between items-end gap-5 mb-[30px] max-[780px]:items-start max-[780px]:flex-col">
           <div>
             <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">Proof of payment</p>

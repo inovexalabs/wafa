@@ -243,10 +243,10 @@ export default function LedgerTable({ role }: { role: Role }) {
 
       {isStaff && (
         <div className="flex items-center gap-3 mb-5 flex-wrap">
-          <label className="text-[11px] font-bold text-[#53665c]">
+          <label className="text-[11px] font-bold text-[#53665c] max-[650px]:flex-1 max-[650px]:min-w-0">
             Member
             <select
-              className="block h-[38px] mt-1 border border-line rounded-md px-2.5 outline-none text-[#2d4037] bg-white text-xs min-w-[220px]"
+              className="block h-[38px] mt-1 border border-line rounded-md px-2.5 outline-none text-[#2d4037] bg-white text-xs min-w-[220px] max-[650px]:min-w-0 max-[650px]:w-full"
               value={memberId}
               onChange={(e) => setMemberId(e.target.value)}
             >
@@ -328,7 +328,39 @@ export default function LedgerTable({ role }: { role: Role }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-line overflow-hidden mb-6 overflow-x-auto">
+          <div className="hidden max-[650px]:grid gap-3 mb-6">
+            {entries.length === 0 ? (
+              <p className="m-0 px-4 py-8 rounded-2xl border border-line bg-white text-center text-muted text-xs">No entries for {bsYear} yet.</p>
+            ) : (
+              entries.map((entry) => (
+                <article key={entry.id} className="rounded-2xl border border-line bg-white overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#edf1ee]">
+                    <p className="m-0 text-sm font-bold text-ink">
+                      {entry.bsDay ? `${entry.bsDay} ` : ""}{bsMonthLabel(entry.bsMonth)} {entry.bsYear}
+                    </p>
+                    <p className="m-0 text-sm font-bold text-[#164b3c]">{formatAmount(entry.total)}</p>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 m-0 px-4 py-3">
+                    {[
+                      ["Share value", entry.shareValue],
+                      ["Monthly deposit", entry.monthlyDeposit],
+                      ["Wafa Kosh", entry.wafaKosh],
+                      ["Additional", entry.additionalDeposit],
+                      ["Interest", entry.interest],
+                      ["Fine", entry.fine],
+                    ].map(([label, value]) => (
+                      <div key={label as string}>
+                        <dt className="text-[10px] font-bold uppercase tracking-wide text-muted">{label}</dt>
+                        <dd className="m-0 mt-0.5 text-xs text-ink">{formatAmount(value as number)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </article>
+              ))
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-line overflow-hidden mb-6 overflow-x-auto max-[650px]:hidden">
             <table className="w-full border-collapse text-xs min-w-[820px]">
               <thead>
                 <tr className="bg-[#164b3c] text-white text-left">

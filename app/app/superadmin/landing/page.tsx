@@ -322,7 +322,7 @@ export default function SuperadminLandingPage() {
             {saveError && <p className="m-0 text-[11px] text-[#ae4d44]" role="alert">{saveError}</p>}
             {saved && !saveError && <p className="m-0 text-[11px] text-[#38805d]">Landing page saved. Changes appear on the live site within a minute.</p>}
 
-            <div className="sticky bottom-0 flex justify-end gap-[15px] py-4 bg-cream/95 backdrop-blur">
+            <div className="sticky bottom-[var(--mobile-nav-h)] flex justify-end gap-[15px] py-4 bg-cream/95 backdrop-blur">
               <button type="submit" disabled={isSaving} className="border-0 rounded-[7px] px-[22px] py-3 text-white bg-brand cursor-pointer text-xs font-bold min-w-[140px] disabled:opacity-60 disabled:cursor-not-allowed">
                 {isSaving ? "Saving…" : "Save landing page"}
               </button>

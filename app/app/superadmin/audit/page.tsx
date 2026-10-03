@@ -115,7 +115,7 @@ export default function AuditLogPage() {
 
 	return (
 		<SuperadminLayout active="audit">
-			<main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden">
+			<main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-app flex flex-col overflow-hidden">
 				<div className="shrink-0 mb-6">
 					<p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">System management</p>
 					<h1 className="m-0 font-display font-bold text-[clamp(32px,4vw,46px)] leading-[1.1]">Activity log.</h1>
@@ -124,8 +124,8 @@ export default function AuditLogPage() {
 
 				<div className="no-scrollbar flex-1 min-h-0 overflow-y-auto pb-6">
 				<div className="flex items-end gap-4 flex-wrap mb-4 p-4 border border-[#e1e9e4] rounded-[10px] bg-white">
-					<div className="flex items-center gap-2 text-[#53665c] text-[11px] font-bold pb-[9px]"><Filter size={13} /> Filters</div>
-					<label className="flex flex-col gap-[5px] text-[#53665c] text-[10px] font-bold">
+					<div className="flex items-center gap-2 text-[#53665c] text-[11px] font-bold pb-[9px] max-[500px]:w-full max-[500px]:pb-0"><Filter size={13} /> Filters</div>
+					<label className="flex flex-col gap-[5px] text-[#53665c] text-[10px] font-bold max-[500px]:w-full">
 						Action
 						<select className={inputClass + " w-[220px] max-[500px]:w-full"} value={action} onChange={(event) => { const value = event.target.value; updateFilter(() => { setAction(value); setPage(0); }); }}>
 							{actionOptions.map((option) => (
@@ -133,11 +133,11 @@ export default function AuditLogPage() {
 							))}
 						</select>
 					</label>
-					<label className="flex flex-col gap-[5px] text-[#53665c] text-[10px] font-bold">
+					<label className="flex flex-col gap-[5px] text-[#53665c] text-[10px] font-bold max-[500px]:flex-1 max-[500px]:min-w-[140px]">
 						From
 						<input className={inputClass + " w-[150px] max-[500px]:w-full"} type="date" value={from} onChange={(event) => { const value = event.target.value; updateFilter(() => { setFrom(value); setPage(0); }); }} />
 					</label>
-					<label className="flex flex-col gap-[5px] text-[#53665c] text-[10px] font-bold">
+					<label className="flex flex-col gap-[5px] text-[#53665c] text-[10px] font-bold max-[500px]:flex-1 max-[500px]:min-w-[140px]">
 						To
 						<input className={inputClass + " w-[150px] max-[500px]:w-full"} type="date" value={to} onChange={(event) => { const value = event.target.value; updateFilter(() => { setTo(value); setPage(0); }); }} />
 					</label>
@@ -146,7 +146,7 @@ export default function AuditLogPage() {
 							<RotateCcw size={12} /> Reset
 						</button>
 					)}
-					<span className="ml-auto text-[11px] text-[#9aa8a1] pb-[9px]">{total} {total === 1 ? "entry" : "entries"}</span>
+					<span className="ml-auto text-[11px] text-[#9aa8a1] pb-[9px] max-[500px]:w-full max-[500px]:pb-0 max-[500px]:text-right">{total} {total === 1 ? "entry" : "entries"}</span>
 				</div>
 
 				{isLoading ? (
@@ -168,22 +168,22 @@ export default function AuditLogPage() {
 						{entries.map((entry) => {
 							const details = describeMetadata(entry);
 							return (
-								<div key={entry.id} className="flex items-start gap-3 px-4 py-3 border-t border-[#edf1ee] first:border-t-0">
-									<div className="w-[150px] shrink-0 text-[10px] text-[#8b9992] pt-[3px]">{formatDateTime(entry.created_at)}</div>
-									<div className="w-[160px] shrink-0">
+								<div key={entry.id} className="flex items-start gap-3 px-4 py-3 border-t border-[#edf1ee] first:border-t-0 max-[650px]:flex-wrap max-[650px]:gap-x-3 max-[650px]:gap-y-1.5">
+									<div className="w-[150px] shrink-0 text-[10px] text-[#8b9992] pt-[3px] max-[650px]:order-4 max-[650px]:w-auto max-[650px]:pt-0">{formatDateTime(entry.created_at)}</div>
+									<div className="w-[160px] shrink-0 max-[650px]:order-1 max-[650px]:flex-1 max-[650px]:min-w-0">
 										<p className="m-0 text-[11px] font-bold text-[#2d4037]">{actorLabel(entry)}</p>
 										{entry.actor_role && <p className="m-0 mt-0.5 text-[9px] uppercase tracking-wide text-[#9aa8a1]">{entry.actor_role}</p>}
 									</div>
-									<div className="shrink-0">
+									<div className="shrink-0 max-[650px]:order-2">
 										<span className={"inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold " + (actionTone[entry.action] ?? "text-[#6b7a72] bg-[#f1f3f1]")}>
 											{actionLabels[entry.action] ?? entry.action}
 										</span>
 									</div>
-									<div className="flex-1 min-w-0 text-[11px] text-[#6b7a72]">
+									<div className="flex-1 min-w-0 text-[11px] text-[#6b7a72] break-words max-[650px]:order-3 max-[650px]:basis-full">
 										{entry.entity_type && <span className="text-[#9aa8a1]">{entry.entity_type}{entry.entity_id ? ` #${entry.entity_id.slice(0, 8)}` : ""} — </span>}
 										{details ?? <span className="text-[#c3cdc7]">No additional details.</span>}
 									</div>
-									{entry.ip_address && <div className="w-[110px] shrink-0 text-right text-[9px] text-[#c3cdc7]">{entry.ip_address}</div>}
+									{entry.ip_address && <div className="w-[110px] shrink-0 text-right text-[9px] text-[#c3cdc7] max-[650px]:order-5 max-[650px]:w-auto max-[650px]:ml-auto">{entry.ip_address}</div>}
 								</div>
 							);
 						})}

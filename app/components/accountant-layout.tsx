@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Award, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, LayoutDashboard, LogOut, Landmark, Link2, Receipt, UserCircle } from "lucide-react";
 import Dashboard from "./dashboard";
+import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
@@ -59,6 +60,11 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
+
+  function handleSignOut() {
+    void signOut();
+    router.replace("/");
+  }
 
   const initials = fullName ? initialsFor(fullName) : "";
   const currentLink = links.find(([key]) => key === active);
@@ -119,7 +125,7 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
             </div>
           </div>
         </aside>
-        <section className={"min-w-0 transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
+        <section className={"min-w-0 pb-[var(--mobile-nav-h)] transition-[margin-left] duration-300 ease-in-out max-[650px]:ml-0 " + (collapsed ? "ml-[72px]" : "ml-[238px] max-[900px]:ml-[205px]")}>
           <header
             className={
               "flex justify-between items-center h-[76px] px-6 border-b border-[#e4ebe6] bg-white fixed top-0 right-0 z-20 transition-[left] duration-300 ease-in-out max-[650px]:left-0 max-[650px]:h-16 max-[650px]:px-5 " +
@@ -170,7 +176,7 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
                       role="menuitem"
                       type="button"
                       className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#286c54] bg-white cursor-pointer text-xs font-bold hover:bg-[#f0f7f0]"
-                      onClick={() => { setMenuOpen(false); void signOut(); router.replace("/"); }}
+                      onClick={() => { setMenuOpen(false); handleSignOut(); }}
                     >
                       <LogOut size={15} /> Sign out
                     </button>
@@ -181,6 +187,16 @@ export default function AccountantLayout({ active, children }: AccountantLayoutP
           </header>
           {children}
         </section>
+        <MobileNav
+          links={links}
+          active={active}
+          tabs={[["overview", "Home"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["meetings", "Meetings"]]}
+          profileKey="profile"
+          fullName={fullName}
+          initials={initials}
+          roleLabel="Accountant"
+          onSignOut={handleSignOut}
+        />
       </div>
     </Dashboard>
   );

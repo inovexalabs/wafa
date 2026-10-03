@@ -188,7 +188,7 @@ export default function SuperadminLandingInvestmentsPage() {
                   .slice()
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg">
+                    <div key={item.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg max-[500px]:gap-3 max-[500px]:p-3">
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt="" className="h-12 w-12 rounded-lg object-contain bg-white border border-[#edf1ee] p-1 flex-shrink-0" />
                       ) : (

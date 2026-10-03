@@ -188,7 +188,7 @@ export default function SuperadminLandingBoardPage() {
                   .slice()
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((person) => (
-                    <div key={person.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg">
+                    <div key={person.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg max-[500px]:gap-3 max-[500px]:p-3">
                       {person.photoUrl ? (
                         <img src={person.photoUrl} alt="" className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
                       ) : (

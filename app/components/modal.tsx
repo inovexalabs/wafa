@@ -15,12 +15,16 @@ export default function Modal({ title, onClose, children, wide }: ModalProps) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 max-[650px]:items-end max-[650px]:p-0" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={"w-full " + (wide ? "max-w-[640px]" : "max-w-[440px]") + " max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-5 shadow-[0_24px_60px_-20px_rgba(22,75,60,0.45)]"}
+        className={
+          "w-full " +
+          (wide ? "max-w-[640px]" : "max-w-[440px]") +
+          " max-h-[85vh] overflow-y-auto overscroll-contain rounded-2xl bg-white p-5 shadow-[0_24px_60px_-20px_rgba(22,75,60,0.45)] max-[650px]:max-w-none max-[650px]:max-h-[92dvh] max-[650px]:rounded-b-none max-[650px]:pb-[calc(20px+env(safe-area-inset-bottom))]"
+        }
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">

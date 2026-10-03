@@ -92,7 +92,7 @@ function MemberWorkspace() {
   );
 
   return (
-    <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-dvh flex flex-col overflow-hidden" id="overview">
+    <main className="max-w-[1190px] mx-auto px-6 pt-20 max-[650px]:px-4 max-[650px]:pt-[68px] h-app flex flex-col overflow-hidden" id="overview">
       <div className="shrink-0 flex justify-between items-end gap-5 max-[650px]:items-start max-[650px]:flex-col">
         <div>
           <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">{today}</p>

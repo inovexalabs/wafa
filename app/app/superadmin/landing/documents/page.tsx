@@ -204,7 +204,7 @@ export default function SuperadminLandingDocumentsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div key={doc.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg">
+                      <div key={doc.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg max-[500px]:gap-3 max-[500px]:p-3">
                         <div className="flex-1 min-w-0">
                           <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold text-ink no-underline hover:text-brand">
                             {doc.title} <ExternalLink size={12} />

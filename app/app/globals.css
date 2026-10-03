@@ -13,6 +13,27 @@
   --font-sans: "DM Sans", sans-serif;
 }
 
+/* Height of the phone bottom tab bar (components/mobile-nav.tsx); 0 on wider screens. */
+:root {
+  --mobile-nav-h: 0px;
+}
+@media (max-width: 650px) {
+  :root {
+    --mobile-nav-h: calc(62px + env(safe-area-inset-bottom));
+  }
+  /* iOS Safari zooms into any field under 16px on focus. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Full-height workspace pages that scroll internally; leaves room for the phone tab bar. */
+@utility h-app {
+  height: calc(100dvh - var(--mobile-nav-h));
+}
+
 @keyframes breadcrumb-in {
   from {
     opacity: 0;
@@ -39,7 +60,9 @@
     font-family: var(--font-sans);
   }
   button,
-  input {
+  input,
+  select,
+  textarea {
     font: inherit;
   }
   a {

@@ -268,7 +268,7 @@ export default function ReceiptsReview({ role }: { role: ReceiptReviewerRole }) 
       ) : (
         <div className="rounded-2xl border border-line bg-white">
           {receipts.map((receipt) => (
-            <div key={receipt.id} className="flex items-center gap-5 p-5 border-b border-line last:border-b-0 transition-colors hover:bg-[#f8faf8] max-[700px]:flex-wrap">
+            <div key={receipt.id} className="flex items-center gap-5 p-5 border-b border-line last:border-b-0 transition-colors hover:bg-[#f8faf8] max-[700px]:flex-wrap max-[500px]:gap-x-3 max-[500px]:gap-y-4 max-[500px]:p-4">
               <span className="grid place-items-center w-11 h-11 rounded-xl text-[#b05f4b] bg-[#fae9e3] text-[9px] font-bold shrink-0">{extensionLabel(receipt.fileName)}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -293,7 +293,7 @@ export default function ReceiptsReview({ role }: { role: ReceiptReviewerRole }) 
               <div className="flex items-center gap-2 shrink-0 max-[700px]:w-full max-[700px]:justify-end">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-line bg-white text-[#53665c] text-[11px] font-bold cursor-pointer hover:border-brand/40"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-line bg-white text-[#53665c] text-[11px] font-bold cursor-pointer hover:border-brand/40 whitespace-nowrap max-[500px]:flex-1 max-[500px]:justify-center"
                   onClick={() => setPreviewTarget(receipt)}
                 >
                   <Eye size={13} /> View receipt
@@ -302,7 +302,7 @@ export default function ReceiptsReview({ role }: { role: ReceiptReviewerRole }) 
                   <>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#e4f2e6] px-3 py-2 text-[11px] font-bold text-[#3f835b] cursor-pointer border-0 disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#e4f2e6] px-3 py-2 text-[11px] font-bold text-[#3f835b] cursor-pointer border-0 disabled:opacity-60 whitespace-nowrap max-[500px]:flex-1 max-[500px]:justify-center"
                       disabled={busyId === receipt.id}
                       onClick={() => approve(receipt)}
                     >
@@ -310,7 +310,7 @@ export default function ReceiptsReview({ role }: { role: ReceiptReviewerRole }) 
                     </button>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#fae3e1] px-3 py-2 text-[11px] font-bold text-[#b0473f] cursor-pointer border-0 disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#fae3e1] px-3 py-2 text-[11px] font-bold text-[#b0473f] cursor-pointer border-0 disabled:opacity-60 whitespace-nowrap max-[500px]:flex-1 max-[500px]:justify-center"
                       disabled={busyId === receipt.id}
                       onClick={() => setRejectTarget(receipt)}
                     >

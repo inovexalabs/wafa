@@ -184,7 +184,7 @@ export default function NotificationBell({ role, canAnnounce }: { role: UserRole
 			</button>
 
 			{open && (
-				<div role="menu" className="absolute right-0 top-[calc(100%+8px)] w-[340px] max-h-[440px] flex flex-col rounded-lg border border-[#e4ebe6] bg-white shadow-[0_12px_28px_-12px_rgba(22,75,60,0.25)] overflow-hidden z-30">
+				<div role="menu" className="absolute right-0 top-[calc(100%+8px)] w-[340px] max-h-[440px] flex flex-col rounded-lg border border-[#e4ebe6] bg-white shadow-[0_12px_28px_-12px_rgba(22,75,60,0.25)] overflow-hidden z-30 max-[650px]:fixed max-[650px]:inset-x-3 max-[650px]:top-[72px] max-[650px]:w-auto max-[650px]:max-h-[min(440px,calc(100dvh-72px-var(--mobile-nav-h)-12px))] max-[650px]:rounded-xl">
 					<div className="flex items-center justify-between px-4 py-3 border-b border-[#edf1ee]">
 						<span className="text-xs font-bold text-[#2d4037]">Notifications</span>
 						<div className="flex items-center gap-3">

@@ -171,7 +171,7 @@ export default function SuperadminLandingCareerPage() {
               <div className="flex flex-col gap-3 mt-4">
                 {(openings ?? []).length === 0 && <p className="text-[12px] text-[#8b9992]">No openings yet.</p>}
                 {(openings ?? []).map((opening) => (
-                  <div key={opening.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg">
+                  <div key={opening.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg max-[500px]:gap-3 max-[500px]:p-3">
                     <div className="flex-1 min-w-0">
                       <p className="m-0 text-sm font-bold text-ink truncate">{opening.title}</p>
                       <p className="m-0 text-[11px] text-[#8b9992] truncate">

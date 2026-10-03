@@ -206,7 +206,7 @@ export default function SuperadminLandingNewsPage() {
               <div className="flex flex-col gap-3 mt-4">
                 {(posts ?? []).length === 0 && <p className="text-[12px] text-[#8b9992]">No posts yet.</p>}
                 {(posts ?? []).map((post) => (
-                  <div key={post.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg">
+                  <div key={post.id} className="flex items-center gap-4 p-4 border border-[#edf1ee] rounded-lg max-[500px]:gap-3 max-[500px]:p-3">
                     <span
                       className={
                         "text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 border flex-shrink-0 " +
