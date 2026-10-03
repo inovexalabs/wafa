@@ -8,7 +8,7 @@ import type { LandingCta } from "@/lib/content";
 
 export default function Cta({ content }: { content: LandingCta }) {
   return (
-    <section id="contact" className="px-6 py-14 sm:py-20">
+    <section id="get-started" className="px-6 py-14 sm:py-20">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}

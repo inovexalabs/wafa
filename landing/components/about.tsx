@@ -111,6 +111,61 @@ export default function About({ content }: { content: LandingAbout }) {
             </motion.div>
           ))}
         </div>
+
+        <div className="mt-16 grid grid-cols-1 gap-10 border-b border-line pb-16 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Our Vision</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{content.vision}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Our Mission</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{content.mission}</p>
+          </div>
+        </div>
+
+        <div className="mt-16">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">Our Values</p>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {content.values.map((value) => (
+              <div
+                key={value.title}
+                className="rounded-2xl border border-line bg-cream-soft p-6 transition-colors duration-300 hover:bg-cream-soft/70"
+              >
+                <p className="font-display text-base font-bold text-ink">{value.title}</p>
+                <p className="mt-2 text-xs leading-relaxed text-muted">{value.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-16 rounded-[2.25rem] bg-cream-soft/60 p-1.5 shadow-[0_30px_80px_-30px_rgba(20,32,27,0.3)] ring-1 ring-line/70">
+          <div className="overflow-hidden rounded-[1.9rem] bg-cream-soft p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] sm:p-10">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">
+              Chairman&apos;s Message
+            </p>
+            <div className="mt-6 flex flex-col items-start gap-6 sm:flex-row">
+              <span className="relative block h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-cream ring-1 ring-brand/15">
+                {content.chairmanMessage.photoUrl ? (
+                  <Image
+                    src={content.chairmanMessage.photoUrl}
+                    alt={content.chairmanMessage.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : null}
+              </span>
+              <div>
+                <p className="font-display text-lg italic leading-relaxed text-ink">
+                  &ldquo;{content.chairmanMessage.message}&rdquo;
+                </p>
+                <p className="mt-4 text-sm font-semibold text-ink">
+                  {content.chairmanMessage.name}
+                </p>
+                <p className="text-xs text-muted">{content.chairmanMessage.role}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

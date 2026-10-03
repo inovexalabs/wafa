@@ -56,11 +56,11 @@ function YoutubeIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 const FOOTER_LINKS = [
-  { href: "/about", label: "About" },
-  { href: "/board", label: "Board & Direction" },
-  { href: "/news", label: "News & Notices" },
-  { href: "/documents", label: "Documents" },
-  { href: "/contact", label: "Contact" },
+  { href: "/#about", label: "About" },
+  { href: "/#board", label: "Board & Direction" },
+  { href: "/#news", label: "News & Notices" },
+  { href: "/#documents", label: "Documents" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 type IconComponent = (props: SVGProps<SVGSVGElement>) => ReturnType<typeof FacebookIcon>;

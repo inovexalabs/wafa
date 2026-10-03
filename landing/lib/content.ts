@@ -294,18 +294,6 @@ export async function getNewsPosts(category?: "news" | "notice"): Promise<NewsPo
   }
 }
 
-export async function getNewsPostBySlug(slug: string): Promise<NewsPost | null> {
-  try {
-    const response = await fetch(`${API_URL}/api/public/news/${slug}`, {
-      next: { revalidate: 60 },
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as NewsPost;
-  } catch {
-    return null;
-  }
-}
-
 export type CareerOpening = {
   id: string;
   title: string;

@@ -14,20 +14,20 @@ export const NAV_LINKS: NavLink[] = [
   {
     label: "About",
     children: [
-      { label: "Overview", href: "/about" },
-      { label: "Our Team", href: "/team" },
-      { label: "Gallery", href: "/gallery" },
-      { label: "Career", href: "/career" },
-      { label: "Partners", href: "/partners" },
-      { label: "Investments & Projects", href: "/investments" },
+      { label: "Overview", href: "/#about" },
+      { label: "Our Team", href: "/#team" },
+      { label: "Board & Direction", href: "/#board" },
+      { label: "Gallery", href: "/#gallery" },
+      { label: "Career", href: "/#career" },
+      { label: "Partners", href: "/#partners" },
+      { label: "Investments & Projects", href: "/#investments" },
     ],
   },
   { label: "Services", href: "/#services" },
   { label: "How it works", href: "/#how-it-works" },
-  { label: "Board & Direction", href: "/board" },
-  { label: "News & Notices", href: "/news" },
-  { label: "Documents", href: "/documents" },
-  { label: "Contact", href: "/contact" },
+  { label: "News & Notices", href: "/#news" },
+  { label: "Documents", href: "/#documents" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export function smoothScrollTo(
