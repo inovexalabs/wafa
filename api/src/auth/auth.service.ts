@@ -7,6 +7,7 @@
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
 import { RequestMeta } from '../audit/request-meta';
+import { joinedAtFromDate } from '../members/joined-at.util';
 
 type CreateUserRole = 'admin' | 'member' | 'accountant';
 type CreatorRole = 'superadmin' | 'admin';
@@ -19,6 +20,7 @@ interface CreateUserInput {
   fullName?: string;
   memberNumber?: string;
   phone?: string;
+  joinedAt?: string;
 }
 
 @Injectable()
@@ -191,6 +193,12 @@ export class AuthService {
     }
     if (input.password.length < 8)
       throw new BadRequestException('Password must be at least 8 characters.');
+    let joinedAt: string | undefined;
+    if (input.role === 'member') {
+      if (!input.joinedAt?.trim())
+        throw new BadRequestException('Date of joining is required for members.');
+      joinedAt = joinedAtFromDate(input.joinedAt);
+    }
 
     const client = this.supabase.getAdminClient();
     const {
@@ -264,6 +272,7 @@ export class AuthService {
         full_name: fullName,
         email,
         phone: input.phone?.trim() || null,
+        joined_at: joinedAt,
       });
       if (memberError) {
         await client.from('profiles').delete().eq('id', created.user.id);

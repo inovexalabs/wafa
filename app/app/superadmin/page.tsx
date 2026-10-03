@@ -23,6 +23,13 @@ const roleLabels: Record<Role, string> = { admin: "Admin", accountant: "Accounta
 const saFormInput = "w-full h-[42px] mt-[7px] border border-line rounded-md px-[11px] outline-none text-[#2d4037] bg-white text-xs focus:border-[#2b7358] focus:shadow-[0_0_0_3px_#2b73581a]";
 const saFormLabel = "block text-[#53665c] text-[11px] font-bold";
 
+function todayInput() {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+const emptyUserForm = () => ({ userId: "", email: "", password: "", fullName: "", memberNumber: "", phone: "", joinedAt: todayInput() });
+
 function greeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning.";
@@ -32,7 +39,7 @@ function greeting() {
 
 function SuperadminWorkspace() {
   const [role, setRole] = useState<Role>("admin");
-  const [form, setForm] = useState({ userId: "", email: "", password: "", fullName: "", memberNumber: "", phone: "" });
+  const [form, setForm] = useState(emptyUserForm);
   const [createdUsers, setCreatedUsers] = useState<CreatedUser[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -64,7 +71,7 @@ function SuperadminWorkspace() {
     setError("");
     setIsSubmitting(true);
     try {
-      const created = await createUser({ ...form, role, ...(role === "member" ? {} : { fullName: undefined, memberNumber: undefined, phone: undefined }) });
+      const created = await createUser({ ...form, role, ...(role === "member" ? {} : { fullName: undefined, memberNumber: undefined, phone: undefined, joinedAt: undefined }) });
       setCreatedUsers((current) => [created, ...current]);
       setCounts((current) =>
         current
@@ -76,7 +83,7 @@ function SuperadminWorkspace() {
           : current,
       );
       setMessage(`${roleLabels[role]} ${form.userId} was created successfully.`);
-      setForm({ userId: "", email: "", password: "", fullName: "", memberNumber: "", phone: "" });
+      setForm(emptyUserForm());
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : "Unable to create this user.");
     } finally {
@@ -159,7 +166,10 @@ function SuperadminWorkspace() {
               )}
               <label className={saFormLabel}>Temporary password<input className={saFormInput} type="password" value={form.password} onChange={(event) => updateField("password", event.target.value)} placeholder="At least 8 characters" minLength={8} required /></label>
               {role === "member" && (
-                <label className={saFormLabel}>Phone <span className="text-[#9aa8a1] text-[10px] font-normal">Optional</span><input className={saFormInput} value={form.phone} onChange={(event) => updateField("phone", event.target.value)} placeholder="+977 ..." /></label>
+                <div className="grid grid-cols-2 gap-[14px] max-[500px]:grid-cols-1">
+                  <label className={saFormLabel}>Date of joining<input className={saFormInput} type="date" value={form.joinedAt} max={todayInput()} onChange={(event) => updateField("joinedAt", event.target.value)} required /></label>
+                  <label className={saFormLabel}>Phone <span className="text-[#9aa8a1] text-[10px] font-normal">Optional</span><input className={saFormInput} value={form.phone} onChange={(event) => updateField("phone", event.target.value)} placeholder="+977 ..." /></label>
+                </div>
               )}
               {error && <p className="m-0 text-[11px] text-[#ae4d44]" role="alert">{error}</p>}
               {message && <p className="m-0 text-[11px] text-[#38805d]" role="status">{message}</p>}

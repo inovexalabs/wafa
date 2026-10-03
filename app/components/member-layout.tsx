@@ -4,13 +4,13 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Award, ArrowLeft, ArrowRight, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, HelpCircle, Home, LogOut, MessageCircle, Receipt, UserCircle, Wallet } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, BookOpenCheck, CalendarClock, ChevronDown, ChevronRight, HelpCircle, Home, LogOut, Link2, Receipt, UserCircle, Wallet } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getMemberProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 
-type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "ledger" | "receipts" | "certificates" | "chat" | "profile"; children: ReactNode };
+type MemberLayoutProps = { active: "overview" | "meetings" | "payments" | "ledger" | "receipts" | "certificates" | "links" | "profile"; children: ReactNode };
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -32,7 +32,7 @@ const links = [
   ["ledger", "Personal record", "/member/ledger", BookOpenCheck],
   ["receipts", "Receipts", "/member/receipts", Receipt],
   ["certificates", "Certificates", "/member/certificates", Award],
-  ["chat", "Chat", "/member/chat", MessageCircle],
+  ["links", "Quick links", "/member/links", Link2],
   ["profile", "My profile", "/member/profile", UserCircle],
 ] as const;
 

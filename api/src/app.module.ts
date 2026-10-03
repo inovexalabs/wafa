@@ -43,8 +43,12 @@ import { NotificationsService } from './notifications/notifications.service';
 import { ResendService } from './notifications/resend.service';
 import { SuperadminAuditController } from './audit/superadmin-audit.controller';
 import { AuditService } from './audit/audit.service';
-import { ChatController } from './chat/chat.controller';
-import { ChatService } from './chat/chat.service';
+import { QuickLinksController } from './quick-links/quick-links.controller';
+import { QuickLinksService } from './quick-links/quick-links.service';
+import { MemberDocumentsController } from './member-documents/member-documents.controller';
+import { SuperadminMemberDocumentsController } from './member-documents/superadmin-member-documents.controller';
+import { SuperadminDocumentTypesController } from './member-documents/superadmin-document-types.controller';
+import { MemberDocumentsService } from './member-documents/member-documents.service';
 import { MemberLedgerController } from './ledger/member-ledger.controller';
 import { AccountantLedgerController } from './ledger/accountant-ledger.controller';
 import { SuperadminLedgerController } from './ledger/superadmin-ledger.controller';
@@ -105,7 +109,10 @@ import { LandingMediaService } from './landing-media/landing-media.service';
     AccountantNotificationsController,
     MemberNotificationsController,
     SuperadminAuditController,
-    ChatController,
+    QuickLinksController,
+    MemberDocumentsController,
+    SuperadminMemberDocumentsController,
+    SuperadminDocumentTypesController,
     MemberLedgerController,
     AccountantLedgerController,
     SuperadminLedgerController,
@@ -138,7 +145,8 @@ import { LandingMediaService } from './landing-media/landing-media.service';
     NotificationsService,
     ResendService,
     AuditService,
-    ChatService,
+    QuickLinksService,
+    MemberDocumentsService,
     LedgerService,
     LandingService,
     LandingPeopleService,

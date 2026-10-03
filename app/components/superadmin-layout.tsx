@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, Briefcase, CalendarClock, ChevronDown, ChevronRight, ClipboardList, FileText, Globe2, Handshake, Images, LayoutDashboard, LogOut, Landmark, MessageCircle, Newspaper, Receipt, UserCircle, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, Briefcase, CalendarClock, ChevronDown, ChevronRight, ClipboardList, FileText, Globe2, Handshake, IdCard, Images, LayoutDashboard, Link2, LogOut, Landmark, Newspaper, Receipt, UserCircle, Users } from "lucide-react";
 import Dashboard from "./dashboard";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
@@ -20,7 +20,8 @@ type SuperadminLayoutProps = {
     | "ledger-totals"
     | "receipts"
     | "audit"
-    | "chat"
+    | "links"
+    | "members"
     | "landing"
     | "landing-team"
     | "landing-board"
@@ -49,6 +50,7 @@ function labelClass(collapsed: boolean) {
 
 const links = [
   ["overview", "Control center", "/superadmin", LayoutDashboard],
+  ["members", "Members", "/superadmin/members", IdCard],
   ["meetings", "Meetings", "/superadmin/meetings", CalendarClock],
   ["certificates", "Issue certificate", "/superadmin/certificates", Award],
   ["my-certificates", "My certificates", "/superadmin/my-certificates", BadgeCheck],
@@ -56,7 +58,7 @@ const links = [
   ["ledger-totals", "Org totals", "/superadmin/ledger/totals", Landmark],
   ["receipts", "Receipt approvals", "/superadmin/receipts", Receipt],
   ["audit", "Activity log", "/superadmin/audit", ClipboardList],
-  ["chat", "Chat", "/superadmin/chat", MessageCircle],
+  ["links", "Quick links", "/superadmin/links", Link2],
   ["landing", "Landing page", "/superadmin/landing", Globe2],
   ["landing-team", "Our team", "/superadmin/landing/team", Users],
   ["landing-board", "Board & direction", "/superadmin/landing/board", Landmark],

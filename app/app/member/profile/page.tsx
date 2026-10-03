@@ -2,7 +2,9 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import MemberLayout from "../../../components/member-layout";
+import MemberDocumentsPanel from "../../../components/member-documents-panel";
 import { getMemberProfile, MemberProfile, updateMemberProfile } from "../../../lib/auth";
+import { formatBsDate } from "../../../lib/bs-date";
 
 function initialsFor(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -12,6 +14,11 @@ function initialsFor(fullName: string) {
 
 function memberSince(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function joiningDate(isoString: string) {
+  const ad = new Date(isoString).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+  return `${ad} · ${formatBsDate(isoString)}`;
 }
 
 export default function ProfilePage() {
@@ -104,6 +111,8 @@ export default function ProfilePage() {
               <label className="text-[#53665c] text-[11px] font-bold">Email address<input className={fieldInput + " bg-[#f5f7f6] text-[#8b9992]"} type="email" value={profile.email ?? ""} readOnly /></label>
               <label className="text-[#53665c] text-[11px] font-bold">Phone number<input className={fieldInput} value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
               <label className="text-[#53665c] text-[11px] font-bold">Occupation<input className={fieldInput} value={occupation} onChange={(event) => setOccupation(event.target.value)} /></label>
+              <label className="text-[#53665c] text-[11px] font-bold">Member number<input className={fieldInput + " bg-[#f5f7f6] text-[#8b9992]"} value={profile.memberNumber} readOnly /></label>
+              <label className="text-[#53665c] text-[11px] font-bold">Date of joining <span className="text-[#9aa8a1] text-[10px] font-normal">Set by the WAFA office</span><input className={fieldInput + " bg-[#f5f7f6] text-[#8b9992]"} value={joiningDate(profile.joinedAt)} readOnly /></label>
               <label className="text-[#53665c] text-[11px] font-bold col-span-2 max-[780px]:col-span-1">Address<textarea className={fieldInput + " h-20 pt-[10px] resize-y"} value={address} onChange={(event) => setAddress(event.target.value)} /></label>
             </div>
             {saveError && <p className="m-0 mt-4 text-[11px] text-[#ae4d44]" role="alert">{saveError}</p>}
@@ -115,6 +124,11 @@ export default function ProfilePage() {
               </button>
             </div>
           </form>
+        )}
+        {profile && (
+          <div className="mt-5">
+            <MemberDocumentsPanel description="Upload your citizenship and any other documents WAFA asks for. Only you and the super admin can see them." />
+          </div>
         )}
         </div>
       </main>

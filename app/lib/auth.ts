@@ -152,6 +152,8 @@ export interface CreateUserRequest {
   fullName?: string;
   memberNumber?: string;
   phone?: string;
+  /** Date of joining (YYYY-MM-DD). Required when role is "member". */
+  joinedAt?: string;
 }
 
 export async function createUser(input: CreateUserRequest) {
@@ -614,32 +616,58 @@ export interface AuditLogFilters {
   offset?: number;
 }
 
-export interface ChatMessage {
+export interface QuickLink {
   id: string;
-  senderId: string;
-  senderName: string;
-  senderRole: UserRole;
-  content: string;
+  title: string;
+  url: string;
+  description: string | null;
+  createdByName: string | null;
   createdAt: string;
+  /** Only present for superadmins/admins. Empty means shared with everyone. */
+  recipientIds?: string[];
 }
 
-export async function listChatMessages(after?: string): Promise<ChatMessage[]> {
-  const query = after ? `?after=${encodeURIComponent(after)}` : "";
-  const response = await apiFetch(`${apiUrl}/api/chat${query}`);
+export interface SaveQuickLinkInput {
+  title: string;
+  url: string;
+  description?: string;
+  recipientIds?: string[];
+  notify?: boolean;
+}
+
+export async function listQuickLinks(): Promise<QuickLink[]> {
+  const response = await apiFetch(`${apiUrl}/api/quick-links`);
   const body = await response.json().catch(() => []);
-  if (!response.ok) throw new Error(body.message ?? "Unable to load chat messages.");
-  return body as ChatMessage[];
+  if (!response.ok) throw new Error(body.message ?? "Unable to load quick links.");
+  return body as QuickLink[];
 }
 
-export async function sendChatMessage(content: string): Promise<ChatMessage> {
-  const response = await apiFetch(`${apiUrl}/api/chat`, {
+export async function createQuickLink(input: SaveQuickLinkInput): Promise<QuickLink> {
+  const response = await apiFetch(`${apiUrl}/api/quick-links`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(input),
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message ?? "Unable to send this message.");
-  return body as ChatMessage;
+  if (!response.ok) throw new Error(body.message ?? "Unable to share this link.");
+  return body as QuickLink;
+}
+
+export async function updateQuickLink(id: string, input: Partial<SaveQuickLinkInput>): Promise<QuickLink> {
+  const response = await apiFetch(`${apiUrl}/api/quick-links/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this link.");
+  return body as QuickLink;
+}
+
+export async function deleteQuickLink(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/quick-links/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this link.");
 }
 
 export interface LandingHero {
@@ -1009,6 +1037,143 @@ export async function uploadLandingMedia(file: File): Promise<{ url: string }> {
   return body as { url: string };
 }
 
+export interface MemberDocumentType {
+  id: string;
+  name: string;
+  description: string | null;
+  isRequired: boolean;
+  sortOrder: number;
+  /** Superadmin listing only: how many members have uploaded this type. */
+  uploadCount?: number;
+}
 
+export interface SaveDocumentTypeInput {
+  name: string;
+  description?: string;
+  isRequired?: boolean;
+  sortOrder?: number;
+}
 
+export interface MemberDocument {
+  id: string;
+  documentNumber: string | null;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedAt: string;
+}
 
+export interface MemberDocumentSlot {
+  type: MemberDocumentType;
+  document: MemberDocument | null;
+}
+
+export async function listDocumentTypes(): Promise<MemberDocumentType[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/document-types`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load document types.");
+  return body as MemberDocumentType[];
+}
+
+export async function createDocumentType(input: SaveDocumentTypeInput): Promise<MemberDocumentType> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/document-types`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to create this document type.");
+  return body as MemberDocumentType;
+}
+
+export async function updateDocumentType(id: string, input: Partial<SaveDocumentTypeInput>): Promise<MemberDocumentType> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/document-types/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this document type.");
+  return body as MemberDocumentType;
+}
+
+export async function deleteDocumentType(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/document-types/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this document type.");
+}
+
+/** Whose documents a request is for: the signed-in member, or a member managed by the superadmin. */
+export type MemberDocumentsOwner = { kind: "self" } | { kind: "member"; memberId: string };
+
+function memberDocumentsBase(owner: MemberDocumentsOwner) {
+  return owner.kind === "self"
+    ? `${apiUrl}/api/member/documents`
+    : `${apiUrl}/api/superadmin/members/${owner.memberId}/documents`;
+}
+
+export async function listMemberDocuments(owner: MemberDocumentsOwner): Promise<MemberDocumentSlot[]> {
+  const response = await apiFetch(memberDocumentsBase(owner));
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load documents.");
+  return body as MemberDocumentSlot[];
+}
+
+export async function uploadMemberDocument(
+  owner: MemberDocumentsOwner,
+  typeId: string,
+  file: File,
+  documentNumber?: string,
+): Promise<MemberDocumentSlot> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (documentNumber?.trim()) formData.append("documentNumber", documentNumber.trim());
+  const response = await apiFetch(`${memberDocumentsBase(owner)}/${typeId}`, { method: "POST", body: formData });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to upload this document.");
+  return body as MemberDocumentSlot;
+}
+
+export async function deleteMemberDocument(owner: MemberDocumentsOwner, typeId: string): Promise<void> {
+  const response = await apiFetch(`${memberDocumentsBase(owner)}/${typeId}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to remove this document.");
+}
+
+export async function getMemberDocumentFile(owner: MemberDocumentsOwner, typeId: string): Promise<{ fileUrl: string; fileName: string }> {
+  const response = await apiFetch(`${memberDocumentsBase(owner)}/${typeId}/file`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to open this document.");
+  return body as { fileUrl: string; fileName: string };
+}
+
+export interface MemberDirectoryEntry {
+  id: string;
+  memberNumber: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  joinedAt: string;
+  documentsUploaded: number;
+  documentsTotal: number;
+  missingRequired: string[];
+}
+
+export async function listMemberDirectory(): Promise<MemberDirectoryEntry[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/members/directory`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load members.");
+  return body as MemberDirectoryEntry[];
+}
+
+export async function updateMemberJoinedAt(memberId: string, joinedAt: string): Promise<{ id: string; joinedAt: string }> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/members/${memberId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ joinedAt }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update the date of joining.");
+  return body as { id: string; joinedAt: string };
+}

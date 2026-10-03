@@ -1,5 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
+import { CurrentProfile } from '../auth/current-profile.decorator';
 import { Roles } from '../auth/roles.decorator';
 import { MembersService } from './members.service';
 
@@ -12,5 +13,19 @@ export class SuperadminMembersController {
   @Get()
   list() {
     return this.members.listActive();
+  }
+
+  @Get('directory')
+  directory() {
+    return this.members.directory();
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentProfile() profile: { id: string; role: string },
+    @Param('id') id: string,
+    @Body() body: { joinedAt: string },
+  ) {
+    return this.members.updateJoinedAt(profile, id, body?.joinedAt);
   }
 }

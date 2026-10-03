@@ -28,6 +28,7 @@ type CreateUserBody = {
   fullName?: string;
   memberNumber?: string;
   phone?: string;
+  joinedAt?: string;
 };
 
 @Controller('auth')
