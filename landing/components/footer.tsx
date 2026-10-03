@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Globe, Link2, Mail, MapPin, Phone } from "lucide-react";
 import type { LandingContact, LandingSocialLink } from "@/lib/content";
+import { CLUSTERS, PILLAR, clusterPath } from "@/lib/clusters";
 import type { SVGProps } from "react";
 
 // lucide-react no longer ships brand/social icons, so these are small
@@ -60,7 +61,13 @@ const FOOTER_LINKS = [
   { href: "/#board", label: "Board & Direction" },
   { href: "/#news", label: "News & Notices" },
   { href: "/#documents", label: "Documents" },
+  { href: "/#faq", label: "FAQs" },
   { href: "/#contact", label: "Contact" },
+];
+
+const SERVICE_LINKS = [
+  ...CLUSTERS.map((cluster) => ({ href: clusterPath(cluster.slug), label: cluster.navLabel })),
+  { href: PILLAR.path, label: PILLAR.navLabel },
 ];
 
 type IconComponent = (props: SVGProps<SVGSVGElement>) => ReturnType<typeof FacebookIcon>;
@@ -88,7 +95,7 @@ export default function Footer({
 }) {
   return (
     <footer className="border-t border-line bg-cream-soft px-6 pb-8 pt-16">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 sm:grid-cols-[1.2fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-3">
             <span className="relative block h-10 w-10 overflow-hidden rounded-xl ring-1 ring-brand/15">
@@ -106,6 +113,22 @@ export default function Footer({
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink">Explore</p>
           <ul className="mt-4 space-y-2.5">
             {FOOTER_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-xs text-muted transition-colors hover:text-brand"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink">Services</p>
+          <ul className="mt-4 space-y-2.5">
+            {SERVICE_LINKS.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}

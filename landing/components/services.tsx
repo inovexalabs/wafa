@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "motion/react";
 import {
+  ArrowUpRight,
   Award,
   BookOpenText,
   CalendarClock,
@@ -73,6 +75,16 @@ export default function Services({ services }: { services: LandingServiceItem[] 
               </motion.div>
             );
           })}
+        </div>
+
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+          >
+            Read the services guide
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </div>
     </section>

@@ -20,7 +20,7 @@ function fileExtension(fileName: string) {
   return fileName.split(".").pop()?.toLowerCase() ?? "";
 }
 
-const paymentTypeLabels: Record<ReceiptPaymentType, string> = {
+export const paymentTypeLabels: Record<ReceiptPaymentType, string> = {
   monthly_deposit: "Monthly deposit",
   share_contribution: "Share contribution",
   loan_payment: "Loan payment",

@@ -748,6 +748,7 @@ export interface LandingAbout {
 export interface LandingServiceItem { title: string; text: string }
 export interface LandingStep { title: string; text: string }
 export interface LandingTestimonial { quote: string; name: string; role: string }
+export interface LandingFaq { question: string; answer: string }
 export interface LandingCta { heading: string; body: string }
 export interface LandingContact { email: string; phone: string; address: string; website: string }
 export interface LandingSocialLink { platform: string; url: string }
@@ -760,6 +761,7 @@ export interface LandingContent {
   services: LandingServiceItem[];
   steps: LandingStep[];
   testimonials: LandingTestimonial[];
+  faqs: LandingFaq[];
   cta: LandingCta;
   contact: LandingContact;
   socialLinks: LandingSocialLink[];

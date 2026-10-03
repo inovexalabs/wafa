@@ -6,6 +6,7 @@ import SuperadminLayout from "../../../components/superadmin-layout";
 import {
   getLandingContent,
   LandingContent,
+  LandingFaq,
   LandingSocialLink,
   updateLandingContent,
   uploadLandingMedia,
@@ -271,6 +272,11 @@ export default function SuperadminLandingPage() {
               </button>
             </section>
 
+            <FaqEditor
+              items={content.faqs}
+              onChange={(items) => patch((d) => ({ ...d, faqs: items }))}
+            />
+
             <section className={card}>
               <h2 className={sectionTitle}>Closing call-to-action</h2>
               <label className={label + " block mt-4"}>
@@ -409,6 +415,43 @@ function SocialLinksEditor({
       </div>
       <button type="button" onClick={() => onChange([...items, { platform: "", url: "" }])} className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold text-brand bg-transparent border-0 cursor-pointer">
         <Plus size={14} /> Add social link
+      </button>
+    </section>
+  );
+}
+
+function FaqEditor({
+  items,
+  onChange,
+}: {
+  items: LandingFaq[];
+  onChange: (items: LandingFaq[]) => void;
+}) {
+  return (
+    <section className={card}>
+      <h2 className={sectionTitle}>FAQs</h2>
+      <p className={sectionHint}>Questions and answers shown above the contact section. They are also published to search engines as structured data, so keep answers factual. Remove every question to hide the section.</p>
+      <div className="flex flex-col gap-4 mt-4">
+        {items.map((item, i) => (
+          <div key={i} className="p-4 border border-[#edf1ee] rounded-lg">
+            <div className="flex items-end gap-[10px]">
+              <label className={label + " flex-1"}>
+                Question
+                <input className={fieldInput} value={item.question} onChange={(e) => onChange(items.map((x, idx) => (idx === i ? { ...x, question: e.target.value } : x)))} />
+              </label>
+              <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="h-[42px] w-[42px] grid place-items-center rounded-md border border-[#f3d6d3] text-[#ae4d44] bg-transparent cursor-pointer">
+                <Trash2 size={15} />
+              </button>
+            </div>
+            <label className={label + " block mt-3"}>
+              Answer
+              <textarea rows={3} className={fieldTextarea} value={item.answer} onChange={(e) => onChange(items.map((x, idx) => (idx === i ? { ...x, answer: e.target.value } : x)))} />
+            </label>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => onChange([...items, { question: "", answer: "" }])} className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold text-brand bg-transparent border-0 cursor-pointer">
+        <Plus size={14} /> Add question
       </button>
     </section>
   );

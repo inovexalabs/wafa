@@ -37,9 +37,9 @@ export default function Navbar() {
             : "border-transparent bg-transparent"
         }`}
       >
-        <a
-          href="#top"
-          onClick={(event) => smoothScrollTo(event, "#top")}
+        <Link
+          href="/#top"
+          onClick={(event) => smoothScrollTo(event, "/#top")}
           className="flex items-center gap-3"
         >
           <span className="relative block h-10 w-10 overflow-hidden rounded-xl ring-1 ring-brand/15">
@@ -53,7 +53,7 @@ export default function Navbar() {
               We Are For All
             </span>
           </span>
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => {
@@ -90,7 +90,7 @@ export default function Navbar() {
                         className="absolute left-1/2 top-full mt-3 w-60 -translate-x-1/2 rounded-2xl border border-line bg-cream-soft p-2 shadow-[0_20px_50px_-20px_rgba(20,32,27,0.3)]"
                       >
                         {link.children.map((child) => (
-                          <a
+                          <Link
                             key={child.href}
                             href={child.href}
                             onClick={(event) => {
@@ -100,7 +100,7 @@ export default function Navbar() {
                             className="block rounded-xl px-3.5 py-2.5 text-xs font-medium text-ink/75 transition-colors hover:bg-brand/10 hover:text-brand"
                           >
                             {child.label}
-                          </a>
+                          </Link>
                         ))}
                       </motion.div>
                     )}
@@ -109,24 +109,11 @@ export default function Navbar() {
               );
             }
 
-            if (link.href.startsWith("#")) {
-              return (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={(event) => smoothScrollTo(event, link.href)}
-                  className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
-                >
-                  {link.label}
-                  <span className="absolute -bottom-1 left-0 h-px w-0 bg-brand transition-all duration-300 group-hover:w-full" />
-                </a>
-              );
-            }
-
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={(event) => smoothScrollTo(event, link.href)}
                 className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
               >
                 {link.label}
@@ -197,7 +184,7 @@ export default function Navbar() {
                           >
                             <div className="flex flex-col gap-1 py-1 pl-3">
                               {link.children.map((child) => (
-                                <a
+                                <Link
                                   key={child.href}
                                   href={child.href}
                                   onClick={(event) => {
@@ -207,7 +194,7 @@ export default function Navbar() {
                                   className="block py-2.5 text-sm text-ink/70"
                                 >
                                   {child.label}
-                                </a>
+                                </Link>
                               ))}
                             </div>
                           </motion.div>
@@ -217,27 +204,14 @@ export default function Navbar() {
                   );
                 }
 
-                if (link.href.startsWith("#")) {
-                  return (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      onClick={(event) => {
-                        smoothScrollTo(event, link.href);
-                        closeMobileMenu();
-                      }}
-                      className="border-b border-line/70 py-3 text-sm font-medium text-ink/80 last:border-none"
-                    >
-                      {link.label}
-                    </a>
-                  );
-                }
-
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    onClick={closeMobileMenu}
+                    onClick={(event) => {
+                      smoothScrollTo(event, link.href);
+                      closeMobileMenu();
+                    }}
                     className="border-b border-line/70 py-3 text-sm font-medium text-ink/80 last:border-none"
                   >
                     {link.label}

@@ -27,6 +27,7 @@ export type LandingContent = {
   services: { title: string; text: string }[];
   steps: { title: string; text: string }[];
   testimonials: { quote: string; name: string; role: string }[];
+  faqs: { question: string; answer: string }[];
   cta: { heading: string; body: string };
   contact: { email: string; phone: string; address: string; website: string };
   socialLinks: { platform: string; url: string }[];
@@ -133,6 +134,38 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
       role: 'Finance team',
     },
   ],
+  faqs: [
+    {
+      question: 'What is WAFA Group?',
+      answer:
+        'WAFA Group ("We Are For All") is a member-owned savings and credit cooperative in Nepal, established in 2080 B.S. Members save together, borrow responsibly from the pooled savings, and share in the cooperative’s growth.',
+    },
+    {
+      question: 'How do I become a member?',
+      answer:
+        'Get in touch with us by phone or email to start your application. Once your identity documents, such as your citizenship certificate, are verified, you receive your own secure login to the WAFA member workspace.',
+    },
+    {
+      question: 'How are my deposits recorded?',
+      answer:
+        'Upload the receipt for each monthly deposit, share contribution or loan payment in your member workspace. An accountant reviews it, and once approved it appears in your savings ledger.',
+    },
+    {
+      question: 'Can I take a loan from WAFA?',
+      answer:
+        'Yes. Loans are a member service, reviewed transparently against your savings and repayment history. Contact us for current loan terms before you apply.',
+    },
+    {
+      question: 'How do I check my savings balance?',
+      answer:
+        'Sign in to the member workspace at any time to see your savings ledger, verified receipts, payment schedule and certificates.',
+    },
+    {
+      question: 'Is my information kept private?',
+      answer:
+        'Yes. The member workspace uses secure login and role-based access: members see their own records, only authorized accountants and administrators manage financial data, and activity is logged for accountability.',
+    },
+  ],
   cta: {
     heading: 'Want to know more about WAFA?',
     body: 'Reach out to learn how to join the cooperative, or sign in if you are already a member.',
@@ -171,6 +204,8 @@ function mergeContent(partial: Partial<LandingContent> | null | undefined): Land
     testimonials: source.testimonials?.length
       ? source.testimonials
       : DEFAULT_LANDING_CONTENT.testimonials,
+    // Unlike the other lists, an empty FAQ list is kept so the section can be hidden.
+    faqs: Array.isArray(source.faqs) ? source.faqs : DEFAULT_LANDING_CONTENT.faqs,
     cta: { ...DEFAULT_LANDING_CONTENT.cta, ...source.cta },
     contact: { ...DEFAULT_LANDING_CONTENT.contact, ...source.contact },
     socialLinks: source.socialLinks?.length ? source.socialLinks : DEFAULT_LANDING_CONTENT.socialLinks,

@@ -12,6 +12,8 @@ import Career from "@/components/career";
 import News from "@/components/news";
 import Documents from "@/components/documents";
 import Testimonials from "@/components/testimonials";
+import Faq from "@/components/faq";
+import JsonLd from "@/components/json-ld";
 import Contact from "@/components/contact";
 import Cta from "@/components/cta";
 import Footer from "@/components/footer";
@@ -23,6 +25,14 @@ import {
   getNewsPosts,
   getPublicDocuments,
 } from "@/lib/content";
+import {
+  absoluteUrl,
+  faqSchema,
+  graph,
+  organizationSchema,
+  publishableFaqs,
+  websiteSchema,
+} from "@/lib/seo";
 
 export default async function Home() {
   const [content, team, board, partners, investments, gallery, news, career, documents] =
@@ -38,8 +48,17 @@ export default async function Home() {
       getPublicDocuments(),
     ]);
 
+  const faqs = publishableFaqs(content.faqs);
+
   return (
     <>
+      <JsonLd
+        data={graph([
+          organizationSchema(content),
+          websiteSchema(),
+          faqSchema(faqs, absoluteUrl("/")),
+        ])}
+      />
       <Navbar />
       <main className="flex-1">
         <Hero content={content.hero} />
@@ -55,6 +74,7 @@ export default async function Home() {
         <News posts={news} />
         <Documents documents={documents} />
         <Testimonials testimonials={content.testimonials} />
+        <Faq faqs={faqs} />
         <Contact contact={content.contact} />
         <Cta content={content.cta} />
       </main>

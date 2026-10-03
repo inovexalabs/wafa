@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { getLandingContent } from "@/lib/content";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy",
-};
+  path: "/privacy",
+});
 
 export default async function PrivacyPolicyPage() {
   const content = await getLandingContent();
