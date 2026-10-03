@@ -2,7 +2,8 @@
 
 import { ReactNode, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { getSessionSnapshot, restoreSession, signOut, subscribeSession, UserRole } from "../lib/auth";
+import { getSessionSnapshot, isSigningOut, restoreSession, signOut, subscribeSession, UserRole } from "../lib/auth";
+import LoadingScreen from "./loading-screen";
 
 const labels: Record<UserRole, string> = {
 	superadmin: "Superadmin",
@@ -16,6 +17,7 @@ type DashboardProps = { role: UserRole; children?: ReactNode; fullPage?: boolean
 export default function Dashboard({ role, children, fullPage = false }: DashboardProps) {
 	const router = useRouter();
 	const session = useSyncExternalStore(subscribeSession, getSessionSnapshot, () => undefined);
+	const signingOut = useSyncExternalStore(subscribeSession, isSigningOut, () => false);
 
 	useEffect(() => {
 		if (session === undefined) void restoreSession();
@@ -23,11 +25,7 @@ export default function Dashboard({ role, children, fullPage = false }: Dashboar
 	}, [router, session]);
 
 	if (session === undefined || session === null)
-		return (
-			<main className="min-h-screen px-[clamp(24px,6vw,90px)] py-[42px] bg-cream">
-				<p>Loading workspace...</p>
-			</main>
-		);
+		return signingOut ? <LoadingScreen message="Signing you out…" detail="Ending your session securely." /> : <LoadingScreen />;
 
 	if (session.user.role !== role)
 		return (

@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { dashboardFor, restoreSession, saveSession, signIn } from "../lib/auth";
+import { dashboardFor, isSigningOut, restoreSession, saveSession, signIn } from "../lib/auth";
+import LoadingScreen from "../components/loading-screen";
 
 const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL;
 
@@ -15,6 +16,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+  // Captured on arrival so the message holds steady until the logout finishes and the form appears.
+  const [arrivedSigningOut] = useState(isSigningOut);
 
   useEffect(() => {
     let active = true;
@@ -47,11 +50,7 @@ export default function Home() {
   }
 
   if (isCheckingSession) {
-    return (
-      <main className="min-h-screen px-[clamp(24px,6vw,90px)] py-[42px] bg-cream">
-        <p>Loading workspace...</p>
-      </main>
-    );
+    return arrivedSigningOut ? <LoadingScreen message="Signing you out…" detail="Ending your session securely." /> : <LoadingScreen />;
   }
 
   return (

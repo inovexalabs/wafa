@@ -34,6 +34,15 @@
   height: calc(100dvh - var(--mobile-nav-h));
 }
 
+@keyframes loading-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
 @keyframes breadcrumb-in {
   from {
     opacity: 0;

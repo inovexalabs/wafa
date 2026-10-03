@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, CalendarDays, CalendarX2, CheckCircle2, Clock, MapPin, Plus, Settings, Timer, Video } from "lucide-react";
 import { toast } from "sonner";
 import AdminLayout from "../../../components/admin-layout";
+import LoadingScreen from "../../../components/loading-screen";
 import Modal from "../../../components/modal";
 import RecipientPicker, { toggleRecipient, toggleRecipientGroup, useMeetingRecipients } from "../../../components/recipient-picker";
 import {
@@ -452,7 +453,7 @@ function AdminMeetingsPageContent() {
 
 export default function AdminMeetingsPage() {
 	return (
-		<Suspense fallback={<main className="max-w-[1190px] mx-auto px-6 pt-20 pb-2 min-h-[calc(100vh-76px)]"><p>Loading...</p></main>}>
+		<Suspense fallback={<LoadingScreen />}>
 			<AdminMeetingsPageContent />
 		</Suspense>
 	);

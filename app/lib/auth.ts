@@ -21,6 +21,7 @@ let sessionCache: WafaSession | null | undefined;
 let refreshInFlight: Promise<WafaSession | null> | null = null;
 let signOutInFlight: Promise<void> | null = null;
 let signOutGeneration = 0;
+let signingOut = false;
 const listeners = new Set<() => void>();
 
 function clearLegacySession() {
@@ -28,16 +29,22 @@ function clearLegacySession() {
   window.sessionStorage.removeItem(legacySessionKey);
 }
 
+function isSession(value: unknown): value is WafaSession {
+  return typeof (value as Partial<WafaSession> | null)?.user?.role === 'string';
+}
+
 function readUserSnapshot(): WafaSession | null {
   const raw = window.sessionStorage.getItem(userSnapshotKey);
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw) as WafaSession;
+    const snapshot: unknown = JSON.parse(raw);
+    if (isSession(snapshot)) return snapshot;
   } catch {
-    window.sessionStorage.removeItem(userSnapshotKey);
-    return null;
+    // Unreadable snapshot; drop it below.
   }
+  window.sessionStorage.removeItem(userSnapshotKey);
+  return null;
 }
 
 function publish(session: WafaSession | null) {
@@ -52,9 +59,10 @@ function publish(session: WafaSession | null) {
 
 class SessionAuthError extends Error {}
 
-async function requestSession(path: string, options?: RequestInit) {
+async function postAuth(path: string, options?: RequestInit) {
   const response = await fetch(`${apiUrl}/api/auth/${path}`, {
     ...options,
+    method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
@@ -62,7 +70,14 @@ async function requestSession(path: string, options?: RequestInit) {
   const body = await response.json().catch(() => ({}));
   if (response.status === 401) throw new SessionAuthError(body.message ?? 'Your session has expired.');
   if (!response.ok) throw new Error(body.message ?? 'Unable to reach WAFA right now. Please try again.');
-  return body as WafaSession;
+  return body;
+}
+
+async function requestSession(path: 'login' | 'refresh', options?: RequestInit): Promise<WafaSession> {
+  const body: unknown = await postAuth(path, options);
+  // Never publish a session without a user; every screen reads session.user.role.
+  if (!isSession(body)) throw new Error('Unexpected response from the WAFA server. Please try again.');
+  return body;
 }
 
 export async function signIn(userId: string, password: string, rememberMe: boolean): Promise<WafaSession> {
@@ -145,7 +160,7 @@ async function requestLogout() {
   // if it is briefly unreachable rather than leave a working refresh token.
   for (let attempt = 1; ; attempt++) {
     try {
-      await requestSession('logout', { method: 'POST' });
+      await postAuth('logout');
       return;
     } catch (error) {
       if (attempt === 3) throw error;
@@ -157,6 +172,7 @@ async function requestLogout() {
 export function signOut(): Promise<void> {
   if (signOutInFlight) return signOutInFlight;
   signOutGeneration++;
+  signingOut = true;
   clearLegacySession();
   window.localStorage.removeItem(rememberedSessionKey);
   publish(null);
@@ -169,10 +185,16 @@ export function signOut(): Promise<void> {
     await requestLogout();
   })().finally(() => {
     signOutInFlight = null;
+    signingOut = false;
     publish(null);
   });
 
   return signOutInFlight;
+}
+
+/** True while signOut() is clearing the session; changes are announced through subscribeSession. */
+export function isSigningOut() {
+  return signingOut;
 }
 
 export function dashboardFor(role: UserRole) {
