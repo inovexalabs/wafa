@@ -12,7 +12,7 @@ export default function Hero({ content }: { content: LandingHero }) {
   return (
     <section
       id="top"
-      className="relative flex h-screen flex-col justify-end overflow-hidden pt-20 pb-10 sm:pb-14"
+      className="relative flex min-h-screen flex-col justify-end overflow-hidden pt-20 pb-10 sm:pb-14 md:h-screen"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-40 -right-32 h-[520px] w-[520px] animate-drift rounded-full bg-brand/15 blur-3xl" />
@@ -21,7 +21,7 @@ export default function Hero({ content }: { content: LandingHero }) {
           style={{ animationDelay: "-4s" }}
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(20,32,27,0.06)_1px,transparent_0)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_20%,transparent_75%)]" />
-        <div className="absolute inset-0 overflow-hidden opacity-[0.22] mix-blend-multiply [mask-image:radial-gradient(circle_at_50%_50%,#000_45%,transparent_78%)]">
+        <div className="absolute inset-0 hidden overflow-hidden opacity-[0.22] mix-blend-multiply [mask-image:radial-gradient(circle_at_50%_50%,#000_45%,transparent_78%)] md:block">
           <Image
             src="/logo.jpeg"
             alt=""
@@ -33,12 +33,12 @@ export default function Hero({ content }: { content: LandingHero }) {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-[96rem] grid-cols-1 items-center gap-16 px-6 sm:px-10 lg:grid-cols-2 lg:gap-10 xl:gap-24 2xl:px-20">
+      <div className="mx-auto grid w-full max-w-[96rem] grid-cols-1 items-center gap-10 px-6 sm:gap-16 sm:px-10 lg:grid-cols-2 lg:gap-10 xl:gap-24 2xl:px-20">
         <div className="flex max-w-xl flex-col justify-center">
-          <p className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-line/70 bg-cream-soft/70 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-brand backdrop-blur-sm">
-            {content.eyebrow}
-          </p>
-          <h1 className="font-display text-balance text-[clamp(2.1rem,5vw,3.6rem)] font-bold leading-[1.05] tracking-[-0.03em] text-ink">
+          <div className="relative -mt-6 mb-8 h-72 w-[80%] self-center opacity-[0.3] mix-blend-multiply sm:h-80 lg:hidden">
+            <Image src="/logo.jpeg" alt="" fill className="object-contain" priority aria-hidden="true" />
+          </div>
+          <h1 className="font-display text-balance text-[clamp(2.4rem,6vw,4.2rem)] font-bold leading-[1.15] tracking-[-0.02em] text-ink">
             {headline.map((line, i) => (
               <motion.span
                 key={line}
@@ -49,7 +49,7 @@ export default function Hero({ content }: { content: LandingHero }) {
                   delay: 0.15 + i * 0.12,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="block overflow-hidden"
+                className="block overflow-hidden pb-1"
               >
                 {i === 1 ? (
                   <span className="bg-gradient-to-r from-brand via-brand-light to-sky bg-clip-text text-transparent">
@@ -100,7 +100,7 @@ export default function Hero({ content }: { content: LandingHero }) {
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-md rounded-[2rem] bg-cream-soft/60 p-1.5 shadow-[0_40px_90px_-30px_rgba(20,32,27,0.35)] ring-1 ring-line/70 lg:ml-auto"
+          className="relative hidden w-full max-w-md rounded-[2rem] bg-cream-soft/60 p-1.5 shadow-[0_40px_90px_-30px_rgba(20,32,27,0.35)] ring-1 ring-line/70 lg:ml-auto lg:block"
         >
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[1.7rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]">
             <Image

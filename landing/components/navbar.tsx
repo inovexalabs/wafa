@@ -149,7 +149,7 @@ export default function Navbar() {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-ink md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-ink md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -174,7 +174,7 @@ export default function Navbar() {
                         type="button"
                         onClick={() => setOpenMobileGroup(isOpen ? null : link.label)}
                         aria-expanded={isOpen}
-                        className="flex w-full items-center justify-between py-1.5 text-sm font-medium text-ink/80"
+                        className="flex w-full items-center justify-between py-3 text-sm font-medium text-ink/80"
                       >
                         {link.label}
                         <ChevronDown
@@ -198,7 +198,7 @@ export default function Navbar() {
                                   key={child.href}
                                   href={child.href}
                                   onClick={closeMobileMenu}
-                                  className="py-1.5 text-sm text-ink/70"
+                                  className="block py-2.5 text-sm text-ink/70"
                                 >
                                   {child.label}
                                 </Link>

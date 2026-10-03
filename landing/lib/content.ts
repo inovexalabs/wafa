@@ -54,7 +54,7 @@ export type LandingContent = {
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
   hero: {
     eyebrow: 'Estd. 2080 · A cooperative for everyone',
-    headline: ['Save together.', 'Grow together.', 'Rise together.'],
+    headline: ['Your savings.', 'Our strength.', "Everyone's future."],
     subtext:
       "WAFA Group is a member-owned savings and credit cooperative. We pool discipline into savings, turn savings into fair loans, and turn fair loans into opportunity — for every member, every time.",
     primaryCta: 'About WAFA',
