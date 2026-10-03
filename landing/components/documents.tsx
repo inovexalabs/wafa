@@ -3,6 +3,9 @@
 import { motion } from "motion/react";
 import { Download, FileText } from "lucide-react";
 import type { PublicDocument } from "@/lib/content";
+import { useShowMore } from "@/lib/use-show-more";
+
+const LIMIT = 6;
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -11,6 +14,8 @@ function formatFileSize(bytes: number) {
 }
 
 export default function Documents({ documents }: { documents: PublicDocument[] }) {
+  const { visible, hasMore, showAll, setShowAll } = useShowMore(documents, LIMIT);
+
   return (
     <section id="documents" className="px-6 py-16 sm:py-24">
       <div className="mx-auto max-w-4xl">
@@ -28,7 +33,7 @@ export default function Documents({ documents }: { documents: PublicDocument[] }
           <p className="mt-14 text-center text-sm text-muted">No documents published yet.</p>
         ) : (
           <div className="mt-14 flex flex-col divide-y divide-line border-y border-line">
-            {documents.map((doc, i) => (
+            {visible.map((doc, i) => (
               <motion.div
                 key={doc.id}
                 initial={{ opacity: 0, y: 16 }}
@@ -65,6 +70,18 @@ export default function Documents({ documents }: { documents: PublicDocument[] }
             ))}
           </div>
         )}
+
+        {hasMore ? (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+            >
+              {showAll ? "Show less" : `View all (${documents.length})`}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

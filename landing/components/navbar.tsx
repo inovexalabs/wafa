@@ -90,14 +90,17 @@ export default function Navbar() {
                         className="absolute left-1/2 top-full mt-3 w-60 -translate-x-1/2 rounded-2xl border border-line bg-cream-soft p-2 shadow-[0_20px_50px_-20px_rgba(20,32,27,0.3)]"
                       >
                         {link.children.map((child) => (
-                          <Link
+                          <a
                             key={child.href}
                             href={child.href}
-                            onClick={() => setOpenDropdown(null)}
+                            onClick={(event) => {
+                              smoothScrollTo(event, child.href);
+                              setOpenDropdown(null);
+                            }}
                             className="block rounded-xl px-3.5 py-2.5 text-xs font-medium text-ink/75 transition-colors hover:bg-brand/10 hover:text-brand"
                           >
                             {child.label}
-                          </Link>
+                          </a>
                         ))}
                       </motion.div>
                     )}
@@ -194,14 +197,17 @@ export default function Navbar() {
                           >
                             <div className="flex flex-col gap-1 py-1 pl-3">
                               {link.children.map((child) => (
-                                <Link
+                                <a
                                   key={child.href}
                                   href={child.href}
-                                  onClick={closeMobileMenu}
+                                  onClick={(event) => {
+                                    smoothScrollTo(event, child.href);
+                                    closeMobileMenu();
+                                  }}
                                   className="block py-2.5 text-sm text-ink/70"
                                 >
                                   {child.label}
-                                </Link>
+                                </a>
                               ))}
                             </div>
                           </motion.div>

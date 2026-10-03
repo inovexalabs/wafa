@@ -3,8 +3,13 @@
 import { motion } from "motion/react";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import type { CareerOpening } from "@/lib/content";
+import { useShowMore } from "@/lib/use-show-more";
+
+const LIMIT = 5;
 
 export default function Career({ openings }: { openings: CareerOpening[] }) {
+  const { visible, hasMore, showAll, setShowAll } = useShowMore(openings, LIMIT);
+
   return (
     <section id="career" className="px-6 py-16 sm:py-24">
       <div className="mx-auto max-w-4xl">
@@ -24,7 +29,7 @@ export default function Career({ openings }: { openings: CareerOpening[] }) {
           </p>
         ) : (
           <div className="mt-14 flex flex-col divide-y divide-line border-y border-line">
-            {openings.map((opening, i) => (
+            {visible.map((opening, i) => (
               <motion.div
                 key={opening.id}
                 initial={{ opacity: 0, y: 16 }}
@@ -67,6 +72,18 @@ export default function Career({ openings }: { openings: CareerOpening[] }) {
             ))}
           </div>
         )}
+
+        {hasMore ? (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+            >
+              {showAll ? "Show less" : `View all (${openings.length})`}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

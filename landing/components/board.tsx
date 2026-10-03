@@ -3,8 +3,13 @@
 import Image from "next/image";
 import { motion } from "motion/react";
 import type { LandingPerson } from "@/lib/content";
+import { useShowMore } from "@/lib/use-show-more";
+
+const LIMIT = 6;
 
 export default function Board({ people }: { people: LandingPerson[] }) {
+  const { visible, hasMore, showAll, setShowAll } = useShowMore(people, LIMIT);
+
   if (people.length === 0) return null;
 
   return (
@@ -21,7 +26,7 @@ export default function Board({ people }: { people: LandingPerson[] }) {
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {people.map((person, i) => (
+          {visible.map((person, i) => (
             <motion.div
               key={person.id}
               initial={{ opacity: 0, y: 24 }}
@@ -47,6 +52,18 @@ export default function Board({ people }: { people: LandingPerson[] }) {
             </motion.div>
           ))}
         </div>
+
+        {hasMore ? (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+            >
+              {showAll ? "Show less" : `View all (${people.length})`}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

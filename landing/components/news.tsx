@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { motion } from "motion/react";
 import type { NewsPost } from "@/lib/content";
+import { useShowMore } from "@/lib/use-show-more";
+
+const LIMIT = 4;
 
 function excerpt(body: string, length = 150) {
   const clean = body.trim();
@@ -18,6 +21,8 @@ function formatDate(value: string) {
 }
 
 export default function News({ posts }: { posts: NewsPost[] }) {
+  const { visible, hasMore, showAll, setShowAll } = useShowMore(posts, LIMIT);
+
   return (
     <section id="news" className="bg-cream-soft px-6 py-16 sm:py-24">
       <div className="mx-auto max-w-5xl">
@@ -37,7 +42,7 @@ export default function News({ posts }: { posts: NewsPost[] }) {
           </p>
         ) : (
           <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {posts.map((post, i) => (
+            {visible.map((post, i) => (
               <motion.article
                 key={post.id}
                 initial={{ opacity: 0, y: 24 }}
@@ -69,6 +74,18 @@ export default function News({ posts }: { posts: NewsPost[] }) {
             ))}
           </div>
         )}
+
+        {hasMore ? (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+            >
+              {showAll ? "Show less" : `View all (${posts.length})`}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );
