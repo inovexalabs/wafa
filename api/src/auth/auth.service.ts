@@ -2,6 +2,7 @@
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
@@ -25,6 +26,8 @@ interface CreateUserInput {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly supabase: SupabaseService,
     private readonly audit: AuditService,
@@ -162,7 +165,10 @@ export class AuthService {
       data: { user },
     } = await client.auth.getUser(accessToken);
     if (!user) return;
-    await client.auth.admin.signOut(user.id, 'global');
+    // admin.signOut takes the session's JWT, not the user id.
+    const { error } = await client.auth.admin.signOut(accessToken, 'global');
+    if (error)
+      this.logger.warn(`Failed to revoke session on logout: ${error.message}`);
     await this.audit.log({
       actor: { userId: user.id },
       action: 'auth.logout',

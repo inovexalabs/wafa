@@ -19,6 +19,8 @@ const userSnapshotKey = 'wafa_user_snapshot';
 const rememberedSessionKey = 'wafa_remembered';
 let sessionCache: WafaSession | null | undefined;
 let refreshInFlight: Promise<WafaSession | null> | null = null;
+let signOutInFlight: Promise<void> | null = null;
+let signOutGeneration = 0;
 const listeners = new Set<() => void>();
 
 function clearLegacySession() {
@@ -58,7 +60,8 @@ async function requestSession(path: string, options?: RequestInit) {
   });
 
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new SessionAuthError(body.message ?? 'Your session has expired.');
+  if (response.status === 401) throw new SessionAuthError(body.message ?? 'Your session has expired.');
+  if (!response.ok) throw new Error(body.message ?? 'Unable to reach WAFA right now. Please try again.');
   return body as WafaSession;
 }
 
@@ -71,19 +74,27 @@ export async function signIn(userId: string, password: string, rememberMe: boole
 
 export function refreshSession(): Promise<WafaSession | null> {
   if (refreshInFlight) return refreshInFlight;
+  const generation = signOutGeneration;
 
-  refreshInFlight = requestSession('refresh', { method: 'POST' })
-    .then((session) => {
+  refreshInFlight = (async () => {
+    // A refresh that overlaps a sign-out gets fresh tokens before the logout
+    // revokes them and signs the user straight back in, so wait for it.
+    if (signOutInFlight) await signOutInFlight.catch(() => undefined);
+    try {
+      const session = await requestSession('refresh', { method: 'POST' });
+      if (generation !== signOutGeneration) return null;
       publish(session);
       return session;
-    })
-    .catch((error) => {
-      if (error instanceof SessionAuthError) publish(null);
+    } catch (error) {
+      // Only a 401 means the session is gone. Network errors and 5xx (an API
+      // deploy or cold start) keep the user signed in, unless there is no
+      // session to fall back on yet.
+      if (error instanceof SessionAuthError || sessionCache === undefined) publish(null);
       return null;
-    })
-    .finally(() => {
-      refreshInFlight = null;
-    });
+    }
+  })().finally(() => {
+    refreshInFlight = null;
+  });
 
   return refreshInFlight;
 }
@@ -129,15 +140,39 @@ export function getSessionSnapshot() {
   return sessionCache;
 }
 
-export async function signOut() {
+async function requestLogout() {
+  // The session cookies are httpOnly, so only the API can clear them; retry
+  // if it is briefly unreachable rather than leave a working refresh token.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await requestSession('logout', { method: 'POST' });
+      return;
+    } catch (error) {
+      if (attempt === 3) throw error;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+    }
+  }
+}
+
+export function signOut(): Promise<void> {
+  if (signOutInFlight) return signOutInFlight;
+  signOutGeneration++;
   clearLegacySession();
   window.localStorage.removeItem(rememberedSessionKey);
   publish(null);
-  try {
-    await requestSession('logout', { method: 'POST' });
-  } finally {
+
+  const pendingRefresh = refreshInFlight;
+  signOutInFlight = (async () => {
+    // Let a refresh already on the wire land first so the logout response is
+    // the last one to touch the cookies.
+    if (pendingRefresh) await pendingRefresh;
+    await requestLogout();
+  })().finally(() => {
+    signOutInFlight = null;
     publish(null);
-  }
+  });
+
+  return signOutInFlight;
 }
 
 export function dashboardFor(role: UserRole) {

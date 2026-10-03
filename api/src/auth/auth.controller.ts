@@ -118,11 +118,16 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    await this.authService.logout(
-      this.getCookie(request, accessCookie),
-      requestMeta(request),
-    );
-    this.clearSessionCookies(response);
+    try {
+      await this.authService.logout(
+        this.getCookie(request, accessCookie),
+        requestMeta(request),
+      );
+    } finally {
+      // Clear the cookies even if revoking the Supabase session fails, or the
+      // browser keeps a refresh token that signs the user straight back in.
+      this.clearSessionCookies(response);
+    }
   }
 
   @Post('superadmin/users')

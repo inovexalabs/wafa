@@ -186,7 +186,7 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
                     <button
                       role="menuitem"
                       type="button"
-                      className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#286c54] bg-white cursor-pointer text-xs font-bold hover:bg-[#f0f7f0]"
+                      className="flex items-center gap-[10px] w-full px-4 py-3 border-0 border-t border-[#edf1ee] text-[#ae4d44] bg-white cursor-pointer text-xs font-bold hover:bg-[#fdf3f2]"
                       onClick={() => { setMenuOpen(false); handleSignOut(); }}
                     >
                       <LogOut size={15} /> Sign out
