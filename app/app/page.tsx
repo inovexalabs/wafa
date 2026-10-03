@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { dashboardFor, isSigningOut, restoreSession, saveSession, signIn } from "../lib/auth";
+import { dashboardFor, hasSessionHint, isSigningOut, restoreSession, saveSession, signIn } from "../lib/auth";
 import LoadingScreen from "../components/loading-screen";
 
 const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL;
+const noSubscription = () => () => {};
 
 export default function Home() {
   const router = useRouter();
@@ -18,6 +19,10 @@ export default function Home() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   // Captured on arrival so the message holds steady until the logout finishes and the form appears.
   const [arrivedSigningOut] = useState(isSigningOut);
+  // Only hold the form behind the loading screen for visitors who look signed in;
+  // everyone else gets the form at once while the check below runs. The server
+  // snapshot is false so the prerendered page is the form, not "Loading your workspace".
+  const likelySignedIn = useSyncExternalStore(noSubscription, hasSessionHint, () => false);
 
   useEffect(() => {
     let active = true;
@@ -49,7 +54,7 @@ export default function Home() {
     }
   }
 
-  if (isCheckingSession) {
+  if (isCheckingSession && (arrivedSigningOut || likelySignedIn)) {
     return arrivedSigningOut ? <LoadingScreen message="Signing you out…" detail="Ending your session securely." /> : <LoadingScreen />;
   }
 

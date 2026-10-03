@@ -111,6 +111,18 @@ export function refreshSession(): Promise<WafaSession | null> {
   return refreshInFlight;
 }
 
+/**
+ * Whether this browser shows signs of a signed-in user: a user snapshot in
+ * this tab, or "Keep me signed in". The session cookies are httpOnly, so this
+ * is only a hint — refreshSession() is the real check.
+ */
+export function hasSessionHint() {
+  return (
+    window.sessionStorage.getItem(userSnapshotKey) !== null ||
+    window.localStorage.getItem(rememberedSessionKey) === '1'
+  );
+}
+
 export async function restoreSession(): Promise<WafaSession | null> {
   clearLegacySession();
   const snapshot = readUserSnapshot();
