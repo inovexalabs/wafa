@@ -81,10 +81,7 @@ async function requestSession(path: 'login' | 'refresh', options?: RequestInit):
 }
 
 export async function signIn(userId: string, password: string, rememberMe: boolean): Promise<WafaSession> {
-  return requestSession('login', {
-    method: 'POST',
-    body: JSON.stringify({ userId, password, rememberMe }),
-  });
+  return requestSession('login', { body: JSON.stringify({ userId, password, rememberMe }) });
 }
 
 export function refreshSession(): Promise<WafaSession | null> {
@@ -96,7 +93,7 @@ export function refreshSession(): Promise<WafaSession | null> {
     // revokes them and signs the user straight back in, so wait for it.
     if (signOutInFlight) await signOutInFlight.catch(() => undefined);
     try {
-      const session = await requestSession('refresh', { method: 'POST' });
+      const session = await requestSession('refresh');
       if (generation !== signOutGeneration) return null;
       publish(session);
       return session;
