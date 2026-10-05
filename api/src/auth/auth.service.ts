@@ -114,7 +114,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid user ID or password.');
     }
     const { data, error } = await this.supabase
-      .getAdminClient()
+      .createSessionClient()
       .auth.signInWithPassword({ email: profile.email, password });
     if (error || !data.session || !data.user) {
       await this.audit.log({
@@ -147,7 +147,7 @@ export class AuthService {
     if (!refreshToken)
       throw new UnauthorizedException('Refresh token is required.');
     const { data, error } = await this.supabase
-      .getAdminClient()
+      .createSessionClient()
       .auth.refreshSession({ refresh_token: refreshToken });
     if (error || !data.session || !data.user)
       throw new UnauthorizedException('Session expired. Please sign in again.');
