@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "html2canvas-pro": "^2.4.4",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.47.0",
     "nepali-date-converter": "^3.4.0",

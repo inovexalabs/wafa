@@ -14,6 +14,8 @@ export const actionOptions = [
   { value: "profile.updated", label: "Profile updated" },
   { value: "member.profile_updated", label: "Member profile updated" },
   { value: "receipt.submitted", label: "Receipt submitted" },
+  { value: "certificate.issued", label: "Certificate issued" },
+  { value: "certificate.deleted", label: "Certificate deleted" },
 ];
 
 export const actionLabels: Record<string, string> = Object.fromEntries(actionOptions.filter((o) => o.value).map((o) => [o.value, o.label]));
@@ -31,6 +33,8 @@ export const actionTone: Record<string, string> = {
   "profile.updated": "text-[#b26a2c] bg-[#fbeddb]",
   "member.profile_updated": "text-[#b26a2c] bg-[#fbeddb]",
   "receipt.submitted": "text-[#2f7a5c] bg-[#e4f4ec]",
+  "certificate.issued": "text-[#2f7a5c] bg-[#e4f4ec]",
+  "certificate.deleted": "text-[#ae4d44] bg-[#fdf3f2]",
 };
 
 export function actorLabel(entry: AuditLogEntry) {

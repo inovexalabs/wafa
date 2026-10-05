@@ -5,25 +5,24 @@ import { Award, Eye, AwardIcon } from "lucide-react";
 import AccountantLayout from "../../../components/accountant-layout";
 import Modal from "../../../components/modal";
 import CertificateView from "../../../components/certificate-view";
-import { Certificate, getStaffProfile, listMyAccountantCertificates } from "../../../lib/auth";
+import { Certificate, listMyAccountantCertificates } from "../../../lib/auth";
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function PreviewModal({ certificate, userName, onClose }: { certificate: Certificate; userName: string; onClose: () => void }) {
+function PreviewModal({ certificate, onClose }: { certificate: Certificate; onClose: () => void }) {
   return (
     <Modal title={`Certificate · ${certificate.certificateNumber}`} onClose={onClose} wide>
       <CertificateView
-        templateHtml={certificate.templateHtml}
-        tokens={{
-          name: userName || "Certificate Holder",
-          title: certificate.title,
-          certificateNumber: certificate.certificateNumber,
-          date: formatDate(certificate.issuedAt),
-          description: certificate.description || "",
-        }}
-        fileName={`${certificate.certificateNumber}`}
+        certificate={certificate}
+        fileName={certificate.certificateNumber}
+        header={
+          <div className="min-w-0">
+            <p className="m-0 text-sm font-semibold text-ink truncate">{certificate.title}</p>
+            <p className="m-0 text-xs text-muted truncate">Issued {formatDate(certificate.issuedAt)}</p>
+          </div>
+        }
       />
     </Modal>
   );
@@ -34,17 +33,12 @@ export default function AccountantCertificatesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [previewCertificate, setPreviewCertificate] = useState<Certificate | null>(null);
-  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     listMyAccountantCertificates()
       .then(setCertificates)
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Unable to load your certificates."))
       .finally(() => setIsLoading(false));
-  }, []);
-
-  useEffect(() => {
-    getStaffProfile("accountant").then((p) => setUserName(p.fullName ?? p.userId)).catch(() => {});
   }, []);
 
   return (
@@ -110,7 +104,7 @@ export default function AccountantCertificatesPage() {
       </main>
 
       {previewCertificate && (
-        <PreviewModal certificate={previewCertificate} userName={userName} onClose={() => setPreviewCertificate(null)} />
+        <PreviewModal certificate={previewCertificate} onClose={() => setPreviewCertificate(null)} />
       )}
     </AccountantLayout>
   );

@@ -1,8 +1,23 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentProfile } from '../auth/current-profile.decorator';
 import { Roles } from '../auth/roles.decorator';
-import { CertificatesService } from './certificates.service';
+import {
+  CertificatesService,
+  maxCertificateBytes,
+} from './certificates.service';
 import type { CreateCertificateInput } from './certificates.service';
 
 @Controller('admin/certificates')
@@ -27,7 +42,25 @@ export class AdminCertificatesController {
   }
 
   @Post()
-  create(@CurrentProfile() profile: { id: string; role: string }, @Body() body: CreateCertificateInput) {
-    return this.certificates.issue(profile, body);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: maxCertificateBytes },
+    }),
+  )
+  create(
+    @CurrentProfile() profile: { id: string; role: string },
+    @Body() body: CreateCertificateInput,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.certificates.issue(profile, body, file);
+  }
+
+  @Delete(':id')
+  remove(
+    @CurrentProfile() profile: { id: string; role: string },
+    @Param('id') id: string,
+  ) {
+    return this.certificates.remove(profile, id);
   }
 }

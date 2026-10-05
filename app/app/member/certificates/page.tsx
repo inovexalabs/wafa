@@ -5,25 +5,24 @@ import { Award, Eye, AwardIcon } from "lucide-react";
 import MemberLayout from "../../../components/member-layout";
 import Modal from "../../../components/modal";
 import CertificateView from "../../../components/certificate-view";
-import { Certificate, getMemberProfile, listMyCertificates } from "../../../lib/auth";
+import { Certificate, listMyCertificates } from "../../../lib/auth";
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function PreviewModal({ certificate, userName, onClose }: { certificate: Certificate; userName: string; onClose: () => void }) {
+function PreviewModal({ certificate, onClose }: { certificate: Certificate; onClose: () => void }) {
   return (
     <Modal title={`Certificate · ${certificate.certificateNumber}`} onClose={onClose} wide>
       <CertificateView
-        templateHtml={certificate.templateHtml}
-        tokens={{
-          name: userName || "Certificate Holder",
-          title: certificate.title,
-          certificateNumber: certificate.certificateNumber,
-          date: formatDate(certificate.issuedAt),
-          description: certificate.description || "",
-        }}
-        fileName={`${certificate.certificateNumber}`}
+        certificate={certificate}
+        fileName={certificate.certificateNumber}
+        header={
+          <div className="min-w-0">
+            <p className="m-0 text-sm font-semibold text-ink truncate">{certificate.title}</p>
+            <p className="m-0 text-xs text-muted truncate">Issued {formatDate(certificate.issuedAt)}</p>
+          </div>
+        }
       />
     </Modal>
   );
@@ -34,17 +33,12 @@ export default function CertificatesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [previewCertificate, setPreviewCertificate] = useState<Certificate | null>(null);
-  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     listMyCertificates()
       .then(setCertificates)
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Unable to load your certificates."))
       .finally(() => setIsLoading(false));
-  }, []);
-
-  useEffect(() => {
-    getMemberProfile().then((p) => setUserName(p.fullName)).catch(() => {});
   }, []);
 
   return (
@@ -110,7 +104,7 @@ export default function CertificatesPage() {
       </main>
 
       {previewCertificate && (
-        <PreviewModal certificate={previewCertificate} userName={userName} onClose={() => setPreviewCertificate(null)} />
+        <PreviewModal certificate={previewCertificate} onClose={() => setPreviewCertificate(null)} />
       )}
     </MemberLayout>
   );

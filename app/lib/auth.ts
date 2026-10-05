@@ -534,7 +534,10 @@ export interface Certificate {
   certificateNumber: string;
   title: string;
   description: string | null;
-  templateHtml: string;
+  originalFilename: string | null;
+  fileSize: number | null;
+  /** Short-lived signed URL for the certificate PNG; null for certificates issued before PNG uploads. */
+  imageUrl: string | null;
   issuedAt: string;
 }
 
@@ -547,7 +550,7 @@ export interface IssueCertificateRequest {
   recipientId: string;
   title: string;
   description?: string;
-  templateHtml: string;
+  file: File;
 }
 
 export type CertificateIssuerRole = "admin" | "superadmin";
@@ -566,15 +569,22 @@ export async function listIssuedCertificates(role: CertificateIssuerRole = "admi
   return body as AdminCertificate[];
 }
 
-export async function issueCertificate(input: IssueCertificateRequest, role: CertificateIssuerRole = "admin"): Promise<AdminCertificate & { certificateNumber: string }> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/certificates`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+export async function issueCertificate(input: IssueCertificateRequest, role: CertificateIssuerRole = "admin"): Promise<Certificate> {
+  const formData = new FormData();
+  formData.append("recipientId", input.recipientId);
+  formData.append("title", input.title);
+  if (input.description) formData.append("description", input.description);
+  formData.append("file", input.file);
+  const response = await apiFetch(`${apiUrl}/api/${role}/certificates`, { method: "POST", body: formData });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to issue this certificate.");
-  return body as AdminCertificate & { certificateNumber: string };
+  return body as Certificate;
+}
+
+export async function deleteCertificate(id: string, role: CertificateIssuerRole = "admin"): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/certificates/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this certificate.");
 }
 
 export async function listMyCertificates(): Promise<Certificate[]> {
