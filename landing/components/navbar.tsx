@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useState } from "react";
 import { Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
-import { APP_URL, NAV_LINKS, smoothScrollTo } from "@/lib/site";
+import { APP_URL, NAV_LINKS } from "@/lib/site";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -31,15 +31,14 @@ export default function Navbar() {
     >
       {/* Full-width bar at the top of the page; shrinks into the floating pill once scrolled. */}
       <div
-        className={`flex w-full items-center justify-between border backdrop-blur-xl transition-all duration-500 ${
+        className={`flex w-full items-center justify-between border backdrop-blur-2xl backdrop-saturate-150 transition-all duration-500 ${
           scrolled
-            ? "max-w-6xl rounded-2xl border-line/80 bg-cream-soft/90 px-4 py-2.5 shadow-[0_10px_40px_-18px_rgba(20,32,27,0.25)] sm:px-6"
-            : "max-w-full rounded-none border-transparent border-b-line/70 bg-cream-soft/70 px-6 py-3.5 sm:px-10"
+            ? "max-w-6xl rounded-2xl border-white/70 bg-white/45 px-4 py-2.5 shadow-[0_12px_40px_-16px_rgba(20,32,27,0.3),inset_0_1px_0_rgba(255,255,255,0.8)] sm:px-6"
+            : "max-w-full rounded-none border-transparent border-b-white/60 bg-white/30 px-6 py-3.5 shadow-[0_1px_0_rgba(20,32,27,0.06),inset_0_1px_0_rgba(255,255,255,0.6)] sm:px-10"
         }`}
       >
         <Link
           href="/#top"
-          onClick={(event) => smoothScrollTo(event, "/#top")}
           className="flex items-center gap-3"
         >
           <span className="relative block h-10 w-10 overflow-hidden rounded-xl ring-1 ring-brand/15">
@@ -93,10 +92,7 @@ export default function Navbar() {
                           <Link
                             key={child.href}
                             href={child.href}
-                            onClick={(event) => {
-                              smoothScrollTo(event, child.href);
-                              setOpenDropdown(null);
-                            }}
+                            onClick={() => setOpenDropdown(null)}
                             className="block rounded-xl px-3.5 py-2.5 text-xs font-medium text-ink/75 transition-colors hover:bg-brand/10 hover:text-brand"
                           >
                             {child.label}
@@ -113,7 +109,6 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={(event) => smoothScrollTo(event, link.href)}
                 className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
               >
                 {link.label}
@@ -187,10 +182,7 @@ export default function Navbar() {
                                 <Link
                                   key={child.href}
                                   href={child.href}
-                                  onClick={(event) => {
-                                    smoothScrollTo(event, child.href);
-                                    closeMobileMenu();
-                                  }}
+                                  onClick={closeMobileMenu}
                                   className="block py-2.5 text-sm text-ink/70"
                                 >
                                   {child.label}
@@ -208,10 +200,7 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    onClick={(event) => {
-                      smoothScrollTo(event, link.href);
-                      closeMobileMenu();
-                    }}
+                    onClick={closeMobileMenu}
                     className="border-b border-line/70 py-3 text-sm font-medium text-ink/80 last:border-none"
                   >
                     {link.label}

@@ -1,4 +1,3 @@
-import type { MouseEvent } from "react";
 import { PILLAR } from "@/lib/clusters";
 
 export const APP_URL =
@@ -11,8 +10,8 @@ export type NavLink =
   | { label: string; href: string }
   | { label: string; children: { label: string; href: string }[] };
 
-// Section links are written as "/#id" so they also work from other pages;
-// on the homepage smoothScrollTo intercepts them and scrolls in place.
+// Section links are written as "/#id" so they still work without JavaScript;
+// SectionLinks intercepts them and scrolls smoothly without a hash in the URL.
 export const NAV_LINKS: NavLink[] = [
   {
     label: "About",
@@ -33,22 +32,20 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Contact", href: "/#contact" },
 ];
 
-export function isSectionLink(href: string) {
-  return href.startsWith("#") || href.startsWith("/#");
+// "/#id" or "#id" -> "id"; anything else -> null.
+export function sectionIdFromHref(href: string) {
+  if (href.startsWith("/#")) return href.slice(2) || null;
+  if (href.startsWith("#")) return href.slice(1) || null;
+  return null;
 }
 
-export function smoothScrollTo(
-  event: MouseEvent<HTMLAnchorElement>,
-  href: string,
-) {
-  if (!isSectionLink(href)) return;
-  const hash = href.slice(href.indexOf("#"));
-  // Off the homepage the section doesn't exist, so let the link navigate.
-  const target = document.getElementById(hash.slice(1));
-  if (!target) return;
-  event.preventDefault();
+// Smoothly scrolls to a homepage section; false if it isn't on this page.
+export function scrollToSection(id: string) {
+  const target = document.getElementById(id);
+  if (!target) return false;
   target.scrollIntoView({
     behavior: "smooth",
-    block: hash === "#impact" ? "center" : "start",
+    block: id === "impact" ? "center" : "start",
   });
+  return true;
 }

@@ -5,7 +5,6 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { ArrowUpRight, Plus } from "lucide-react";
 import type { LandingFaq } from "@/lib/content";
-import { smoothScrollTo } from "@/lib/site";
 
 export default function Faq({
   faqs,
@@ -40,7 +39,6 @@ export default function Faq({
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Link
                   href="/#contact"
-                  onClick={(event) => smoothScrollTo(event, "/#contact")}
                   className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-xs font-semibold text-white transition-colors duration-300 hover:bg-brand-dark"
                 >
                   Contact us

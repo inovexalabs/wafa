@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { APP_URL, smoothScrollTo } from "@/lib/site";
+import { APP_URL } from "@/lib/site";
 import type { LandingHero } from "@/lib/content";
 
 export default function Hero({ content }: { content: LandingHero }) {
@@ -80,7 +80,6 @@ export default function Hero({ content }: { content: LandingHero }) {
           >
             <a
               href="#about"
-              onClick={(event) => smoothScrollTo(event, "#about")}
               className="group inline-flex items-center gap-2.5 rounded-full bg-brand py-1.5 pl-7 pr-1.5 text-sm font-semibold text-white shadow-[0_16px_35px_-14px_rgba(31,103,82,0.75)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
             >
               {content.primaryCta}

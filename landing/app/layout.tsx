@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import Navbar from "@/components/navbar";
 import ScrollProgress from "@/components/scroll-progress";
+import SectionLinks from "@/components/section-links";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <ScrollProgress />
+        <SectionLinks />
         {/* Lives here, not in each page, so it stays mounted across navigations
             instead of replaying its entrance animation on every page change. */}
         <Navbar />
