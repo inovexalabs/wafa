@@ -7,12 +7,12 @@ import { useShowMore } from "@/lib/use-show-more";
 
 const LIMIT = 4;
 
-function excerpt(body: string, length = 150) {
+export function excerpt(body: string, length = 150) {
   const clean = body.trim();
   return clean.length > length ? `${clean.slice(0, length).trim()}…` : clean;
 }
 
-function formatDate(value: string) {
+export function formatDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",

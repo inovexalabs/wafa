@@ -3,12 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BellRing } from "lucide-react";
+import { excerpt, formatDate } from "@/components/news";
 import { APP_URL } from "@/lib/site";
-import type { LandingHero } from "@/lib/content";
+import type { LandingHero, NewsPost } from "@/lib/content";
 
-export default function Hero({ content }: { content: LandingHero }) {
+const NOTICE_LIMIT = 4;
+
+export default function Hero({ content, notices }: { content: LandingHero; notices: NewsPost[] }) {
   const headline = content.headline;
+  const latestNotices = notices.slice(0, NOTICE_LIMIT);
   return (
     <section
       id="top"
@@ -96,24 +100,66 @@ export default function Hero({ content }: { content: LandingHero }) {
           </motion.div>
         </div>
 
-        <motion.div
+        <motion.aside
+          aria-labelledby="hero-notices-title"
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="relative hidden w-full max-w-sm rounded-[2rem] bg-cream-soft/60 p-1.5 shadow-[0_40px_90px_-30px_rgba(20,32,27,0.35)] ring-1 ring-line/70 lg:ml-auto lg:block xl:max-w-md"
+          className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/40 shadow-[0_30px_80px_-30px_rgba(20,32,27,0.3),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-2xl backdrop-saturate-150 max-lg:mx-auto lg:ml-auto lg:max-w-sm"
         >
-          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[1.7rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]">
-            <Image
-              src="https://picsum.photos/seed/wafa-cooperative/900/1125"
-              alt="WAFA members at a cooperative savings meeting"
-              fill
-              sizes="(max-width: 1024px) 90vw, 480px"
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-transparent" />
+          {/* Same green-to-sky gradient as the "Grow together." line. */}
+          <div className="h-1 bg-gradient-to-r from-brand via-brand-light to-sky" aria-hidden="true" />
+          <div className="flex flex-col p-6 sm:p-7 lg:min-h-[34rem]">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand ring-1 ring-brand/15">
+                <BellRing className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand">
+                  Stay informed
+                </p>
+                <p id="hero-notices-title" className="font-display text-lg font-bold leading-tight text-ink">
+                  Notice board
+                </p>
+              </div>
+            </div>
+
+            {latestNotices.length === 0 ? (
+              <p className="mt-6 flex flex-1 items-center justify-center rounded-2xl border border-dashed border-brand/20 bg-white/30 px-5 py-8 text-center text-sm leading-relaxed text-muted">
+                No notices right now. Official announcements will appear here.
+              </p>
+            ) : (
+              <ul className="mt-5 divide-y divide-ink/10 border-y border-ink/10">
+                {latestNotices.map((notice) => (
+                  <li key={notice.id}>
+                    <Link href="/#news" className="group block py-5">
+                      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand">
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand-light" aria-hidden="true" />
+                        {formatDate(notice.publishedAt)}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-sm font-semibold text-ink transition-colors duration-300 group-hover:text-brand">
+                        {notice.title}
+                      </p>
+                      <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-muted">
+                        {excerpt(notice.body, 160)}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-auto pt-6">
+              <Link
+                href="/#news"
+                className="group inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-white/50 px-4 py-2 text-xs font-semibold text-brand transition-colors duration-300 hover:bg-brand hover:text-white"
+              >
+                View all news & notices
+                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </Link>
+            </div>
           </div>
-        </motion.div>
+        </motion.aside>
       </div>
     </section>
   );

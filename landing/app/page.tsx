@@ -48,6 +48,7 @@ export default async function Home() {
     ]);
 
   const faqs = publishableFaqs(content.faqs);
+  const notices = news.filter((post) => post.category === "notice");
 
   return (
     <>
@@ -59,7 +60,7 @@ export default async function Home() {
         ])}
       />
       <main className="flex-1">
-        <Hero content={content.hero} />
+        <Hero content={content.hero} notices={notices} />
         <About content={content.about} />
         <Team people={team} />
         <Board people={board} />
