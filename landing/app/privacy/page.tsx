@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { getLandingContent } from "@/lib/content";
 import { pageMetadata } from "@/lib/seo";
@@ -15,7 +14,6 @@ export default async function PrivacyPolicyPage() {
 
   return (
     <>
-      <Navbar />
       <main className="flex-1 px-6 pb-28 pt-40">
         <div className="mx-auto max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">Legal</p>

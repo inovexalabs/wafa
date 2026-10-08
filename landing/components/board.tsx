@@ -37,7 +37,7 @@ export default function Board({ people }: { people: LandingPerson[] }) {
             >
               <span className="relative block h-20 w-20 overflow-hidden rounded-2xl bg-cream ring-1 ring-brand/15">
                 {person.photoUrl ? (
-                  <Image src={person.photoUrl} alt={person.name} fill className="object-cover" />
+                  <Image src={person.photoUrl} alt={person.name} fill sizes="80px" className="object-cover" />
                 ) : null}
               </span>
               <p className="mt-4 font-display text-base font-bold text-ink">{person.name}</p>

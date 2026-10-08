@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { CLUSTERS, PILLAR, clusterPath } from "@/lib/clusters";
+import { PILLAR } from "@/lib/clusters";
 
 export const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -26,14 +26,7 @@ export const NAV_LINKS: NavLink[] = [
       { label: "Investments & Projects", href: "/#investments" },
     ],
   },
-  {
-    label: "Services",
-    children: [
-      { label: "What we offer", href: "/#services" },
-      ...CLUSTERS.map((cluster) => ({ label: cluster.navLabel, href: clusterPath(cluster.slug) })),
-      { label: PILLAR.navLabel, href: PILLAR.path },
-    ],
-  },
+  { label: "Services", href: PILLAR.path },
   { label: "How it works", href: "/#how-it-works" },
   { label: "News & Notices", href: "/#news" },
   { label: "Documents", href: "/#documents" },

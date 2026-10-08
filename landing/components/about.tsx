@@ -174,7 +174,7 @@ export default function About({ content }: { content: LandingAbout }) {
                     <div className="flex items-center gap-4">
                       <span className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-cream ring-1 ring-brand/15">
                         {leader.photoUrl ? (
-                          <Image src={leader.photoUrl} alt={leader.name} fill className="object-cover" />
+                          <Image src={leader.photoUrl} alt={leader.name} fill sizes="64px" className="object-cover" />
                         ) : null}
                       </span>
                       <div>

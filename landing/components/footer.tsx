@@ -99,7 +99,7 @@ export default function Footer({
         <div>
           <div className="flex items-center gap-3">
             <span className="relative block h-10 w-10 overflow-hidden rounded-xl ring-1 ring-brand/15">
-              <Image src="/logo.jpeg" alt="WAFA Group" fill className="object-cover" />
+              <Image src="/logo.jpeg" alt="WAFA Group" fill sizes="40px" className="object-cover" />
             </span>
             <span className="font-display text-lg font-bold text-ink">WAFA Group</span>
           </div>

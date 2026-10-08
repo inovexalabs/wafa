@@ -53,7 +53,7 @@ export default function News({ posts }: { posts: NewsPost[] }) {
               >
                 {post.coverImageUrl ? (
                   <div className="relative aspect-[16/9] w-full">
-                    <Image src={post.coverImageUrl} alt={post.title} fill className="object-cover" />
+                    <Image src={post.coverImageUrl} alt={post.title} fill sizes="(max-width: 640px) 100vw, 500px" className="object-cover" />
                   </div>
                 ) : null}
                 <div className="p-6">

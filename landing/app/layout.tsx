@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
+import Navbar from "@/components/navbar";
 import ScrollProgress from "@/components/scroll-progress";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${dmSans.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
@@ -74,6 +76,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <ScrollProgress />
+        {/* Lives here, not in each page, so it stays mounted across navigations
+            instead of replaying its entrance animation on every page change. */}
+        <Navbar />
         <div className="grain-overlay" aria-hidden="true" />
         {children}
       </body>

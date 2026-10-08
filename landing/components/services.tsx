@@ -11,6 +11,7 @@ import {
   PiggyBank,
   ReceiptText,
 } from "lucide-react";
+import { CLUSTERS, PILLAR, clusterPath } from "@/lib/clusters";
 import type { LandingServiceItem } from "@/lib/content";
 
 const ICON_STYLE = [
@@ -77,12 +78,22 @@ export default function Services({ services }: { services: LandingServiceItem[] 
           })}
         </div>
 
-        <div className="mt-12 flex justify-center">
+        <div className="mt-12 flex flex-wrap justify-center gap-3">
+          {CLUSTERS.map((cluster) => (
+            <Link
+              key={cluster.slug}
+              href={clusterPath(cluster.slug)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-cream px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+            >
+              {cluster.navLabel}
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          ))}
           <Link
-            href="/services"
-            className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors duration-300 hover:bg-brand/10 hover:text-brand"
+            href={PILLAR.path}
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-xs font-semibold text-white transition-colors duration-300 hover:bg-brand-dark"
           >
-            Read the services guide
+            View all services
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>

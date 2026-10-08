@@ -42,6 +42,7 @@ export default function Partners({ items }: { items: LandingItem[] }) {
                       src={item.imageUrl}
                       alt={item.title ?? "Partner logo"}
                       fill
+                      sizes="56px"
                       className="object-contain p-2"
                     />
                   ) : null}

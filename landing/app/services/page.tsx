@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import Cta from "@/components/cta";
-import Breadcrumbs from "@/components/breadcrumbs";
 import JsonLd from "@/components/json-ld";
 import { getLandingContent } from "@/lib/content";
 import { CLUSTERS, PILLAR, clusterPath } from "@/lib/clusters";
@@ -59,11 +57,9 @@ export default async function ServicesGuidePage() {
           breadcrumbSchema(crumbs, pageUrl),
         ])}
       />
-      <Navbar />
       <main className="flex-1">
         <div className="mx-auto max-w-6xl px-6 pb-12 pt-36">
-          <Breadcrumbs crumbs={crumbs} />
-          <div className="mt-8 max-w-3xl">
+          <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">{PILLAR.eyebrow}</p>
             <h1 className="mt-3 text-balance font-display text-[clamp(1.9rem,4.2vw,2.9rem)] font-bold leading-tight tracking-tight text-ink">
               {PILLAR.title}

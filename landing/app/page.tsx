@@ -1,4 +1,3 @@
-import Navbar from "@/components/navbar";
 import Hero from "@/components/hero";
 import About from "@/components/about";
 import Team from "@/components/team";
@@ -59,7 +58,6 @@ export default async function Home() {
           faqSchema(faqs, absoluteUrl("/")),
         ])}
       />
-      <Navbar />
       <main className="flex-1">
         <Hero content={content.hero} />
         <About content={content.about} />

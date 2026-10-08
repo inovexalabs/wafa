@@ -42,6 +42,7 @@ export default function Investments({ items }: { items: LandingItem[] }) {
                     src={item.imageUrl}
                     alt={item.title ?? "Investment"}
                     fill
+                    sizes="(max-width: 640px) 100vw, 560px"
                     className="object-cover"
                   />
                 ) : null}
