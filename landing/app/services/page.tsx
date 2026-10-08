@@ -75,7 +75,7 @@ export default async function ServicesGuidePage() {
                 <Link
                   key={cluster.slug}
                   href={clusterPath(cluster.slug)}
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-cream-soft p-7 transition-shadow duration-300 hover:shadow-[0_25px_60px_-30px_rgba(20,32,27,0.4)]"
+                  className="group flex h-full flex-col rounded-2xl border border-line bg-cream-soft p-6 transition-shadow sm:p-7 sm:odd:last:col-span-2 duration-300 hover:shadow-[0_25px_60px_-30px_rgba(20,32,27,0.4)]"
                 >
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
                     {cluster.eyebrow}

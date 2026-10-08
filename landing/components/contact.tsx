@@ -26,7 +26,7 @@ export default function Contact({ contact }: { contact: LandingContact }) {
           transition={{ duration: 0.6 }}
           className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[0.8fr_1.2fr]"
         >
-          <ul className="flex flex-col gap-5">
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:flex lg:flex-col">
             <li className="flex items-start gap-3.5 rounded-2xl border border-line bg-cream p-5">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
               <div>
@@ -38,7 +38,7 @@ export default function Contact({ contact }: { contact: LandingContact }) {
               <Mail className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink">Email</p>
-                <p className="mt-1 text-sm text-muted">{contact.email}</p>
+                <p className="mt-1 text-sm text-muted [overflow-wrap:anywhere]">{contact.email}</p>
               </div>
             </li>
             <li className="flex items-start gap-3.5 rounded-2xl border border-line bg-cream p-5">

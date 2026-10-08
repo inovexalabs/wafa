@@ -15,7 +15,7 @@ export default function ServicesSidebar({ currentSlug }: { currentSlug?: string 
   ];
 
   return (
-    <aside className="lg:sticky lg:top-28 lg:self-start">
+    <aside className="md:grid md:grid-cols-2 md:items-start md:gap-6 lg:sticky lg:top-28 lg:block lg:self-start">
       <nav aria-label="Cooperative services" className="rounded-2xl border border-line bg-cream-soft p-5">
         <p className="px-3 text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
           Our services
@@ -40,7 +40,7 @@ export default function ServicesSidebar({ currentSlug }: { currentSlug?: string 
         </ul>
       </nav>
 
-      <div className="mt-6 rounded-2xl bg-brand p-6 text-white">
+      <div className="mt-6 rounded-2xl bg-brand p-6 text-white md:mt-0 lg:mt-6">
         <p className="font-display text-base font-bold">Have a question?</p>
         <p className="mt-2 text-xs leading-relaxed text-white/80">
           Our team can walk you through membership, savings and loans.

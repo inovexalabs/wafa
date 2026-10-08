@@ -31,9 +31,8 @@ export default function HowItWorks({ steps }: { steps: LandingStep[] }) {
           </motion.h2>
         </div>
 
-        <div className="relative mt-20">
-          <div className="absolute left-6 top-6 hidden h-[calc(100%-3rem)] w-px bg-line lg:left-1/2 lg:block" />
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-4 lg:gap-6">
+        <div className="relative mt-14 sm:mt-20">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, i) => {
               const Icon = ICONS[i % ICONS.length];
               return (

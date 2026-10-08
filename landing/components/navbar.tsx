@@ -41,10 +41,10 @@ export default function Navbar() {
           href="/#top"
           className="flex items-center gap-3"
         >
-          <span className="relative block h-10 w-10 overflow-hidden rounded-xl ring-1 ring-brand/15">
+          <span className="relative block h-10 w-10 shrink-0 overflow-hidden rounded-xl ring-1 ring-brand/15">
             <Image src="/logo.jpeg" alt="WAFA Group" fill sizes="40px" className="object-cover" priority />
           </span>
-          <span className="flex flex-col leading-none">
+          <span className="flex flex-col whitespace-nowrap leading-none">
             <span className="font-display text-base font-bold tracking-tight text-ink">
               WAFA Group
             </span>
@@ -54,7 +54,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
           {NAV_LINKS.map((link) => {
             if ("children" in link) {
               const isOpen = openDropdown === link.label;
@@ -70,7 +70,7 @@ export default function Navbar() {
                     onFocus={() => setOpenDropdown(link.label)}
                     onClick={() => setOpenDropdown(isOpen ? null : link.label)}
                     aria-expanded={isOpen}
-                    className="group flex items-center gap-1 text-xs font-medium text-ink/75 transition-colors hover:text-ink"
+                    className="group flex items-center gap-1 whitespace-nowrap text-xs font-medium text-ink/75 transition-colors hover:text-ink"
                   >
                     {link.label}
                     <ChevronDown
@@ -109,7 +109,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="group relative text-xs font-medium text-ink/75 transition-colors hover:text-ink"
+                className="group relative whitespace-nowrap text-xs font-medium text-ink/75 transition-colors hover:text-ink"
               >
                 {link.label}
                 <span className="absolute -bottom-1 left-0 h-px w-0 bg-brand transition-all duration-300 group-hover:w-full" />
@@ -118,10 +118,10 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Link
             href={APP_URL}
-            className="group inline-flex items-center gap-2 rounded-full bg-brand py-1.5 pl-5 pr-1.5 text-sm font-semibold text-white shadow-[0_10px_25px_-10px_rgba(31,103,82,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_14px_30px_-10px_rgba(31,103,82,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
+            className="group inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-brand py-1.5 pl-5 pr-1.5 text-sm font-semibold text-white shadow-[0_10px_25px_-10px_rgba(31,103,82,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_14px_30px_-10px_rgba(31,103,82,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
           >
             Member Login
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
@@ -134,7 +134,7 @@ export default function Navbar() {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
-          className="flex h-11 w-11 items-center justify-center rounded-full text-ink md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-ink lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -147,7 +147,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.98 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute left-4 right-4 top-[74px] max-h-[75vh] overflow-y-auto rounded-2xl border border-line bg-cream-soft p-5 shadow-xl md:hidden"
+            className="absolute left-4 right-4 top-[74px] max-h-[75vh] overflow-y-auto rounded-2xl border border-line bg-cream-soft p-5 shadow-xl lg:hidden"
           >
             <nav className="flex flex-col gap-1">
               {NAV_LINKS.map((link) => {
