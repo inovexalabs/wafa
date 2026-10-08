@@ -36,7 +36,7 @@ export default function Hero({ content }: { content: LandingHero }) {
 
       <div className="mx-auto grid w-full max-w-[96rem] grid-cols-1 items-center gap-10 px-6 sm:gap-16 sm:px-10 lg:grid-cols-2 lg:gap-10 xl:gap-24 2xl:px-20">
         <div className="flex max-w-xl flex-col justify-center">
-          <div className="relative -mt-6 mb-8 h-72 w-[80%] self-center opacity-[0.3] mix-blend-multiply sm:h-80 lg:hidden">
+          <div className="relative -mt-6 mb-8 h-72 w-[80%] self-center opacity-[0.3] mix-blend-multiply sm:h-80 md:hidden">
             <Image src="/logo.jpeg" alt="" fill sizes="80vw" className="object-contain" priority aria-hidden="true" />
           </div>
           <h1 className="font-display text-balance text-[clamp(2.4rem,6vw,4.2rem)] font-bold leading-[1.15] tracking-[-0.02em] text-ink">
