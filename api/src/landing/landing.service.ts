@@ -4,6 +4,8 @@ import { AuditService } from '../audit/audit.service';
 
 type Profile = { id: string; role: string };
 
+type LeaderMessage = { photoUrl: string; name: string; role: string; message: string };
+
 export type LandingContent = {
   hero: {
     eyebrow: string;
@@ -22,7 +24,7 @@ export type LandingContent = {
     vision: string;
     mission: string;
     values: { title: string; text: string }[];
-    chairmanMessage: { photoUrl: string; name: string; role: string; message: string };
+    leaderMessages: LeaderMessage[];
   };
   services: { title: string; text: string }[];
   steps: { title: string; text: string }[];
@@ -56,19 +58,34 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     body: "WAFA Group started with a simple belief: when people save and lend to each other honestly, everyone rises together. Today that belief runs through a digital workspace — savings ledgers, receipts, loan certificates, meetings and dividends — all visible to the members it serves.",
     quote: '"We Are For All"',
     quoteCaption: 'The idea our name was built on, since 2080.',
-    vision: 'A placeholder vision statement. Replace this with WAFA’s real vision before publishing.',
-    mission: 'A placeholder mission statement. Replace this with WAFA’s real mission before publishing.',
+    vision:
+      'To become a trusted, member-owned cooperative group that turns the collective savings of ordinary people into lasting prosperity — through fair finance, responsible investment, and community-led enterprise across Nepal.',
+    mission:
+      'To help every member save with discipline, borrow fairly, and share in the returns of carefully chosen projects and businesses — while running the cooperative with complete transparency, sound governance, and a commitment to the communities we serve.',
     values: [
+      { title: 'Integrity', text: 'We act honestly, keep our promises, and put members’ interests first.' },
       { title: 'Transparency', text: 'Every ledger, receipt, and decision stays visible to the members it affects.' },
       { title: 'Trust', text: 'We grow only as fast as the trust between members allows.' },
-      { title: 'Community', text: 'We are for all — every member matters, every contribution counts.' },
+      { title: 'Partnership', text: 'We grow together through teamwork, respect, and strong relationships.' },
+      { title: 'Sustainable Growth', text: 'We choose responsible investments that create value for years, not months.' },
+      { title: 'Community Commitment', text: 'We are for all — we invest in the people and places our members call home.' },
     ],
-    chairmanMessage: {
-      photoUrl: '',
-      name: 'Chairman’s name',
-      role: 'Chairman, WAFA Group',
-      message: 'A placeholder message from the chairman. Replace this with a real message before publishing.',
-    },
+    leaderMessages: [
+      {
+        photoUrl: '',
+        name: 'Chairman’s name',
+        role: 'Chairman, WAFA Group',
+        message:
+          'Welcome to WAFA Group. Our cooperative was founded on a simple promise — We Are For All. Every member who saves with us is an owner, and every rupee we hold is held in trust. We are building a cooperative that is transparent in its books, fair in its lending, and careful in every investment it makes. I sincerely thank our members, board, and staff for their continued trust. Together, we will build a stronger and brighter future for every family that is part of WAFA.',
+      },
+      {
+        photoUrl: '',
+        name: 'CEO’s name',
+        role: 'Chief Executive Officer, WAFA Group',
+        message:
+          'At WAFA Group, we believe real success is built on discipline, integrity, and service. Our team works every day to make saving simple, lending fair, and every transaction visible to the members it belongs to. As we grow into new projects and opportunities, we will keep professionalism and accountability at the heart of every decision. Thank you to our members and partners for walking this journey with us — your trust is what moves WAFA forward.',
+      },
+    ],
   },
   services: [
     {
@@ -185,19 +202,31 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   },
 };
 
+// Content saved before leaderMessages existed holds a single chairmanMessage;
+// carry it over as the first leader so an existing chairman entry isn't lost.
+function mergeLeaderMessages(
+  leaderMessages: LeaderMessage[] | undefined,
+  chairmanMessage: Partial<LeaderMessage> | undefined,
+): LeaderMessage[] {
+  const defaults = DEFAULT_LANDING_CONTENT.about.leaderMessages;
+  if (Array.isArray(leaderMessages)) return leaderMessages;
+  if (chairmanMessage) return [{ ...defaults[0], ...chairmanMessage }, ...defaults.slice(1)];
+  return defaults;
+}
+
 function mergeContent(partial: Partial<LandingContent> | null | undefined): LandingContent {
   const source = partial ?? {};
+  const { chairmanMessage, ...about } = (source.about ?? {}) as Partial<LandingContent['about']> & {
+    chairmanMessage?: Partial<LeaderMessage>;
+  };
   return {
     hero: { ...DEFAULT_LANDING_CONTENT.hero, ...source.hero },
     stats: source.stats?.length ? source.stats : DEFAULT_LANDING_CONTENT.stats,
     about: {
       ...DEFAULT_LANDING_CONTENT.about,
-      ...source.about,
-      values: source.about?.values?.length ? source.about.values : DEFAULT_LANDING_CONTENT.about.values,
-      chairmanMessage: {
-        ...DEFAULT_LANDING_CONTENT.about.chairmanMessage,
-        ...source.about?.chairmanMessage,
-      },
+      ...about,
+      values: about.values?.length ? about.values : DEFAULT_LANDING_CONTENT.about.values,
+      leaderMessages: mergeLeaderMessages(about.leaderMessages, chairmanMessage),
     },
     services: source.services?.length ? source.services : DEFAULT_LANDING_CONTENT.services,
     steps: source.steps?.length ? source.steps : DEFAULT_LANDING_CONTENT.steps,

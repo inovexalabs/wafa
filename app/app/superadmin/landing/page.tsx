@@ -7,6 +7,7 @@ import {
   getLandingContent,
   LandingContent,
   LandingFaq,
+  LandingLeaderMessage,
   LandingSocialLink,
   updateLandingContent,
   uploadLandingMedia,
@@ -30,7 +31,6 @@ export default function SuperadminLandingPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [isUploadingChairmanPhoto, setIsUploadingChairmanPhoto] = useState(false);
 
   useEffect(() => {
     getLandingContent()
@@ -174,49 +174,11 @@ export default function SuperadminLandingPage() {
               emptyItem={{ title: "New value", text: "" }}
             />
 
-            <section className={card}>
-              <h2 className={sectionTitle}>Chairman&apos;s message</h2>
-              <p className={sectionHint}>A photo and message from the chairman shown on the landing page.</p>
-              <label className={label + " block mt-4"}>
-                Photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  className={fieldInput + " py-2"}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setIsUploadingChairmanPhoto(true);
-                    try {
-                      const { url } = await uploadLandingMedia(file);
-                      patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, photoUrl: url } } }));
-                    } catch (error) {
-                      setSaveError(error instanceof Error ? error.message : "Unable to upload this photo.");
-                    } finally {
-                      setIsUploadingChairmanPhoto(false);
-                    }
-                  }}
-                />
-              </label>
-              {isUploadingChairmanPhoto && <p className="mt-2 text-[11px] text-[#8b9992]">Uploading…</p>}
-              {content.about.chairmanMessage.photoUrl && (
-                <img src={content.about.chairmanMessage.photoUrl} alt="" className="mt-3 h-20 w-20 rounded-lg object-cover border border-[#edf1ee]" />
-              )}
-              <div className="grid grid-cols-2 gap-[16px] mt-4 max-[650px]:grid-cols-1">
-                <label className={label}>
-                  Name
-                  <input className={fieldInput} value={content.about.chairmanMessage.name} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, name: e.target.value } } }))} />
-                </label>
-                <label className={label}>
-                  Role
-                  <input className={fieldInput} value={content.about.chairmanMessage.role} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, role: e.target.value } } }))} />
-                </label>
-              </div>
-              <label className={label + " block mt-4"}>
-                Message
-                <textarea rows={5} className={fieldTextarea} value={content.about.chairmanMessage.message} onChange={(e) => patch((d) => ({ ...d, about: { ...d.about, chairmanMessage: { ...d.about.chairmanMessage, message: e.target.value } } }))} />
-              </label>
-            </section>
+            <LeaderMessagesEditor
+              items={content.about.leaderMessages}
+              onChange={(items) => patch((d) => ({ ...d, about: { ...d.about, leaderMessages: items } }))}
+              onError={setSaveError}
+            />
 
             <SocialLinksEditor
               items={content.socialLinks}
@@ -380,6 +342,82 @@ function ListEditor({
       </div>
       <button type="button" onClick={() => onChange([...items, emptyItem])} className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold text-brand bg-transparent border-0 cursor-pointer">
         <Plus size={14} /> {addLabel}
+      </button>
+    </section>
+  );
+}
+
+function LeaderMessagesEditor({
+  items,
+  onChange,
+  onError,
+}: {
+  items: LandingLeaderMessage[];
+  onChange: (items: LandingLeaderMessage[]) => void;
+  onError: (message: string) => void;
+}) {
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+
+  function update(index: number, changes: Partial<LandingLeaderMessage>) {
+    onChange(items.map((x, idx) => (idx === index ? { ...x, ...changes } : x)));
+  }
+
+  return (
+    <section className={card}>
+      <h2 className={sectionTitle}>Words from our leaders</h2>
+      <p className={sectionHint}>A photo and message from each leader, e.g. the chairman and CEO.</p>
+      <div className="flex flex-col gap-4 mt-4">
+        {items.map((item, i) => (
+          <div key={i} className="p-4 border border-[#edf1ee] rounded-lg">
+            <div className="flex items-end gap-[10px]">
+              <label className={label + " flex-1"}>
+                Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={fieldInput + " py-2"}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploadingIndex(i);
+                    try {
+                      const { url } = await uploadLandingMedia(file);
+                      update(i, { photoUrl: url });
+                    } catch (error) {
+                      onError(error instanceof Error ? error.message : "Unable to upload this photo.");
+                    } finally {
+                      setUploadingIndex(null);
+                    }
+                  }}
+                />
+              </label>
+              <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="h-[42px] w-[42px] grid place-items-center rounded-md border border-[#f3d6d3] text-[#ae4d44] bg-transparent cursor-pointer">
+                <Trash2 size={15} />
+              </button>
+            </div>
+            {uploadingIndex === i && <p className="mt-2 text-[11px] text-[#8b9992]">Uploading…</p>}
+            {item.photoUrl && (
+              <img src={item.photoUrl} alt="" className="mt-3 h-20 w-20 rounded-lg object-cover border border-[#edf1ee]" />
+            )}
+            <div className="grid grid-cols-2 gap-[16px] mt-4 max-[650px]:grid-cols-1">
+              <label className={label}>
+                Name
+                <input className={fieldInput} value={item.name} onChange={(e) => update(i, { name: e.target.value })} />
+              </label>
+              <label className={label}>
+                Role
+                <input className={fieldInput} value={item.role} onChange={(e) => update(i, { role: e.target.value })} />
+              </label>
+            </div>
+            <label className={label + " block mt-4"}>
+              Message
+              <textarea rows={5} className={fieldTextarea} value={item.message} onChange={(e) => update(i, { message: e.target.value })} />
+            </label>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => onChange([...items, { photoUrl: "", name: "", role: "", message: "" }])} className="inline-flex items-center gap-1.5 mt-4 text-[11px] font-bold text-brand bg-transparent border-0 cursor-pointer">
+        <Plus size={14} /> Add leader
       </button>
     </section>
   );

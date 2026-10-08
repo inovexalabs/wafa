@@ -10,6 +10,7 @@ import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
 import { getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
+import { useSidebarScroll } from "../lib/use-sidebar-scroll";
 
 type AdminLayoutProps = { active: "overview" | "meetings" | "certificates" | "my-certificates" | "ledger" | "ledger-totals" | "links" | "profile"; children: ReactNode };
 
@@ -40,6 +41,7 @@ const links = [
 export default function AdminLayout({ active, children }: AdminLayoutProps) {
   const router = useRouter();
   const { collapsed, toggle } = useSidebarCollapsed();
+  const sidebarRef = useSidebarScroll("admin");
   const [fullName, setFullName] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,7 @@ export default function AdminLayout({ active, children }: AdminLayoutProps) {
     <Dashboard role="admin" fullPage>
       <div className="min-h-screen bg-cream">
         <aside
+          ref={sidebarRef}
           className={
             "flex flex-col fixed top-0 left-0 z-10 h-dvh py-7 overflow-y-auto overflow-x-hidden text-[#d9e9df] bg-[#164b3c] transition-[width] duration-300 ease-in-out max-[650px]:hidden " +
             (collapsed ? "w-[72px] px-4" : "w-[238px] px-4 max-[900px]:w-[205px]")

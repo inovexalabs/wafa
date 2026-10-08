@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "motion/react";
-import { HeartHandshake, Landmark, Users } from "lucide-react";
+import { Eye, HeartHandshake, Landmark, Quote, Target, Users } from "lucide-react";
 import type { LandingAbout } from "@/lib/content";
 
 const PILLARS = [
@@ -112,20 +112,33 @@ export default function About({ content }: { content: LandingAbout }) {
           ))}
         </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-10 border-b border-line pb-16 sm:grid-cols-2">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Our Vision</p>
-            <p className="mt-3 text-sm leading-relaxed text-muted">{content.vision}</p>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Our Mission</p>
-            <p className="mt-3 text-sm leading-relaxed text-muted">{content.mission}</p>
-          </div>
+        <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {[
+            { icon: Eye, title: "Our Vision", text: content.vision },
+            { icon: Target, title: "Our Mission", text: content.mission },
+          ].map((item, i) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.55, delay: i * 0.1 }}
+              className="rounded-2xl border border-line bg-cream-soft p-7 sm:p-8"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                <item.icon className="h-5 w-5" />
+              </span>
+              <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-brand">
+                {item.title}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{item.text}</p>
+            </motion.div>
+          ))}
         </div>
 
         <div className="mt-16">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">Our Values</p>
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {content.values.map((value) => (
               <div
                 key={value.title}
@@ -138,34 +151,49 @@ export default function About({ content }: { content: LandingAbout }) {
           </div>
         </div>
 
-        <div className="mt-16 rounded-[2.25rem] bg-cream-soft/60 p-1.5 shadow-[0_30px_80px_-30px_rgba(20,32,27,0.3)] ring-1 ring-line/70">
-          <div className="overflow-hidden rounded-[1.9rem] bg-cream-soft p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] sm:p-10">
+        {content.leaderMessages.length > 0 ? (
+          <div className="mt-16">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">
-              Chairman&apos;s Message
+              Words from Our Leaders
             </p>
-            <div className="mt-6 flex flex-col items-start gap-6 sm:flex-row">
-              <span className="relative block h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-cream ring-1 ring-brand/15">
-                {content.chairmanMessage.photoUrl ? (
-                  <Image
-                    src={content.chairmanMessage.photoUrl}
-                    alt={content.chairmanMessage.name}
-                    fill
-                    className="object-cover"
-                  />
-                ) : null}
-              </span>
-              <div>
-                <p className="font-display text-lg italic leading-relaxed text-ink">
-                  &ldquo;{content.chairmanMessage.message}&rdquo;
-                </p>
-                <p className="mt-4 text-sm font-semibold text-ink">
-                  {content.chairmanMessage.name}
-                </p>
-                <p className="text-xs text-muted">{content.chairmanMessage.role}</p>
-              </div>
+            <div
+              className={`mt-6 grid grid-cols-1 gap-6 ${
+                content.leaderMessages.length > 1 ? "lg:grid-cols-2" : ""
+              }`}
+            >
+              {content.leaderMessages.map((leader, i) => (
+                <motion.div
+                  key={`${leader.role}-${i}`}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.55, delay: (i % 2) * 0.1 }}
+                  className="rounded-[2.25rem] bg-cream-soft/60 p-1.5 shadow-[0_30px_80px_-30px_rgba(20,32,27,0.3)] ring-1 ring-line/70"
+                >
+                  <div className="flex h-full flex-col overflow-hidden rounded-[1.9rem] bg-cream-soft p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] sm:p-10">
+                    <div className="flex items-center gap-4">
+                      <span className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-cream ring-1 ring-brand/15">
+                        {leader.photoUrl ? (
+                          <Image src={leader.photoUrl} alt={leader.name} fill className="object-cover" />
+                        ) : null}
+                      </span>
+                      <div>
+                        <p className="font-display text-base font-bold text-ink">{leader.name}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand">
+                          {leader.role}
+                        </p>
+                      </div>
+                    </div>
+                    <Quote className="mt-6 h-6 w-6 text-brand/30" />
+                    <p className="mt-3 text-sm italic leading-relaxed text-ink/80">
+                      {leader.message}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </section>
   );

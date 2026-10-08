@@ -755,7 +755,7 @@ export interface LandingHero {
 }
 export interface LandingStat { value: number; suffix: string; label: string }
 export interface LandingValue { title: string; text: string }
-export interface LandingChairmanMessage { photoUrl: string; name: string; role: string; message: string }
+export interface LandingLeaderMessage { photoUrl: string; name: string; role: string; message: string }
 export interface LandingAbout {
   eyebrow: string;
   heading: string;
@@ -765,7 +765,7 @@ export interface LandingAbout {
   vision: string;
   mission: string;
   values: LandingValue[];
-  chairmanMessage: LandingChairmanMessage;
+  leaderMessages: LandingLeaderMessage[];
 }
 export interface LandingServiceItem { title: string; text: string }
 export interface LandingStep { title: string; text: string }
