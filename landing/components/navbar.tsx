@@ -24,17 +24,17 @@ export default function Navbar() {
   }
 
   return (
-    <motion.header
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4"
+    <header
+      className={`fixed inset-x-0 top-0 z-50 flex justify-center transition-[padding] duration-500 ${
+        scrolled ? "px-4 pt-4" : "px-0 pt-0"
+      }`}
     >
+      {/* Full-width bar at the top of the page; shrinks into the floating pill once scrolled. */}
       <div
-        className={`flex w-full max-w-6xl items-center justify-between rounded-2xl border px-4 py-2.5 transition-all duration-500 sm:px-6 ${
+        className={`flex w-full items-center justify-between border backdrop-blur-xl transition-all duration-500 ${
           scrolled
-            ? "border-line/80 bg-cream-soft/90 shadow-[0_10px_40px_-18px_rgba(20,32,27,0.25)] backdrop-blur-xl"
-            : "border-transparent bg-transparent"
+            ? "max-w-6xl rounded-2xl border-line/80 bg-cream-soft/90 px-4 py-2.5 shadow-[0_10px_40px_-18px_rgba(20,32,27,0.25)] sm:px-6"
+            : "max-w-full rounded-none border-transparent border-b-line/70 bg-cream-soft/70 px-6 py-3.5 sm:px-10"
         }`}
       >
         <Link
@@ -230,6 +230,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   );
 }
