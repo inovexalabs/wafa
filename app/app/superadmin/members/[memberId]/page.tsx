@@ -119,7 +119,7 @@ export default function SuperadminMemberDetailPage() {
               {saveError && <p className="m-0 mt-3 text-[11px] text-[#ae4d44]" role="alert">{saveError}</p>}
             </section>
 
-            <MemberDocumentsPanel memberId={member.id} description="Review, upload, or replace this member's documents. Files are private to the member and super admins." />
+            <MemberDocumentsPanel owner={{ kind: "member", memberId: member.id }} description="Review, upload, or replace this member's documents. Files are private to the member and super admins." />
           </div>
         )}
       </main>

@@ -2,8 +2,8 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, MapPin, Receipt as ReceiptIcon, Video, type LucideIcon } from "lucide-react";
-import type { Meeting, QuickLink, ReviewReceipt } from "../lib/auth";
+import { ArrowUpRight, ChevronRight, MapPin, Receipt as ReceiptIcon, Video, type LucideIcon } from "lucide-react";
+import { prefetchReceiptFile, type Meeting, type QuickLink, type ReceiptReviewerRole, type ReviewReceipt } from "../lib/auth";
 import { paymentTypeLabels } from "./receipts-review";
 
 // Shared building blocks for the role overview dashboards, styled to match the member overview.
@@ -113,8 +113,18 @@ export function OverviewAction({ href, icon: Icon, children }: { href: string; i
   );
 }
 
-export function StatGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-4 gap-4 mt-[25px] max-[1100px]:grid-cols-2 max-[480px]:gap-3">{children}</div>;
+/**
+ * Open (unboxed) stat row: each stat gets a left rule, and the grid is pulled left under an
+ * overflow-hidden wrapper so the first column's rule is clipped whatever the column count.
+ */
+export function StatGrid({ className = "grid-cols-4 max-[1100px]:grid-cols-2", children }: { className?: string; children: ReactNode }) {
+  return (
+    <div className="mt-[25px] pb-7 border-b border-line">
+      <div className="overflow-hidden">
+        <div className={"grid gap-x-6 gap-y-6 -ml-[25px] " + className}>{children}</div>
+      </div>
+    </div>
+  );
 }
 
 export function StatCard({ icon: Icon, tone, label, value, hint, href, title }: { icon: LucideIcon; tone: keyof typeof tones; label: string; value: ReactNode; hint?: ReactNode; href?: string; title?: string }) {
@@ -123,14 +133,14 @@ export function StatCard({ icon: Icon, tone, label, value, hint, href, title }: 
       <span className={"grid place-items-center shrink-0 w-[37px] h-[37px] rounded-[9px] " + tones[tone]}><Icon size={17} /></span>
       <div className="min-w-0">
         <small className="block text-[#7a8982] text-[11px]">{label}</small>
-        <strong className="block my-[5px] text-[25px] leading-tight truncate max-[480px]:text-[22px]" title={title}>{value}</strong>
+        <strong className="block my-[5px] text-[25px] leading-tight truncate transition-colors group-hover:text-brand max-[480px]:text-[22px]" title={title}>{value}</strong>
         {hint && <span className="block text-[#9aa8a2] text-[10px]">{hint}</span>}
       </div>
     </>
   );
-  const className = "flex gap-[14px] p-5 border border-[#e1e9e4] rounded-[10px] bg-white max-[480px]:flex-col max-[480px]:gap-3 max-[480px]:p-4";
+  const className = "flex gap-[14px] min-w-0 pl-6 border-l border-line max-[480px]:flex-col max-[480px]:gap-3";
   return href ? (
-    <Link href={href} className={className + " no-underline text-inherit transition-colors hover:border-brand/30"}>{body}</Link>
+    <Link href={href} className={className + " group no-underline text-inherit"}>{body}</Link>
   ) : (
     <article className={className}>{body}</article>
   );
@@ -138,7 +148,7 @@ export function StatCard({ icon: Icon, tone, label, value, hint, href, title }: 
 
 export function Panel({ title, subtitle, href, linkLabel = "View all", children }: { title: string; subtitle: string; href?: string; linkLabel?: string; children: ReactNode }) {
   return (
-    <section className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white max-[500px]:px-4 max-[500px]:py-[19px]">
+    <section className="min-w-0">
       <div className="flex justify-between gap-3">
         <div>
           <h2 className="m-0 font-display font-bold text-[23px]">{title}</h2>
@@ -176,16 +186,33 @@ export function statHint<T>(state: Loadable<T>, render: (data: T) => ReactNode) 
   return state.status === "ready" ? render(state.data) : undefined;
 }
 
-export function MeetingRow({ meeting }: { meeting: Meeting }) {
-  return (
-    <div className="flex items-center gap-3 min-h-[67px] border-b border-[#edf1ee] last:border-b-0">
+/**
+ * Meeting row; with `href` the row opens that meeting's record, while "Join" stays its own link.
+ * `onPrefetch` runs on hover/focus to warm whatever the record page needs.
+ */
+export function MeetingRow({ meeting, href, onPrefetch }: { meeting: Meeting; href?: string; onPrefetch?: () => void }) {
+  const summary = (
+    <>
       <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#376b57] bg-[#e9f4e8] shrink-0">
         {meeting.meeting_type === "online" ? <Video size={16} /> : <MapPin size={16} />}
       </span>
       <div className="flex-1 min-w-0">
-        <strong className="block text-[#30423a] text-xs truncate">{meeting.title}</strong>
+        <strong className="block text-[#30423a] text-xs truncate group-hover:text-brand">{meeting.title}</strong>
         <span className="block mt-1 text-[#9ba7a1] text-[10px]">{formatDate(meeting.scheduled_at)} · {formatTime(meeting.scheduled_at)} · {meeting.duration_minutes} min</span>
       </div>
+    </>
+  );
+  const summaryClass = "flex flex-1 items-center gap-3 min-w-0 self-stretch";
+  return (
+    <div className="flex items-center gap-3 min-h-[67px] border-b border-[#edf1ee] last:border-b-0">
+      {href ? (
+        <Link className={summaryClass + " group no-underline text-inherit"} href={href} onPointerEnter={onPrefetch} onFocus={onPrefetch}>
+          {summary}
+          <ChevronRight size={14} className="shrink-0 text-[#9aa8a1] group-hover:text-brand" />
+        </Link>
+      ) : (
+        <div className={summaryClass}>{summary}</div>
+      )}
       {meeting.meeting_url && (
         <a className="shrink-0 text-[#286c54] text-[10px] font-bold no-underline" href={meeting.meeting_url} target="_blank" rel="noreferrer">Join →</a>
       )}
@@ -212,16 +239,24 @@ export function QuickLinkRow({ link }: { link: QuickLink }) {
   );
 }
 
-export function ReceiptRow({ receipt }: { receipt: ReviewReceipt }) {
+/** Receipt row that opens the receipt on the review page; hovering it warms the receipt file. */
+export function ReceiptRow({ receipt, role }: { receipt: ReviewReceipt; role: ReceiptReviewerRole }) {
+  const prefetch = () => prefetchReceiptFile(role, receipt.id);
   return (
-    <div className="flex items-center gap-3 py-[13px] border-t border-[#edf1ee] first:border-t-0">
+    <Link
+      className="flex items-center gap-3 py-[13px] border-t border-[#edf1ee] first:border-t-0 no-underline text-inherit group"
+      href={`/${role}/receipts?receiptId=${receipt.id}`}
+      onPointerEnter={prefetch}
+      onFocus={prefetch}
+    >
       <span className="grid place-items-center w-[33px] h-[33px] rounded-lg shrink-0 text-[#a26e36] bg-[#faecd9]"><ReceiptIcon size={15} /></span>
       <div className="flex-1 min-w-0">
-        <strong className="block text-[11px] truncate">{receipt.memberName}</strong>
+        <strong className="block text-[11px] truncate group-hover:text-brand">{receipt.memberName}</strong>
         <span className="block mt-1 text-[#99a49f] text-[9px] truncate">{paymentTypeLabels[receipt.paymentType]} · submitted {formatDate(receipt.submittedAt)}</span>
       </div>
       <b className="shrink-0 text-xs">{formatAmount(receipt.amount)}</b>
-    </div>
+      <ChevronRight size={14} className="shrink-0 text-[#9aa8a1] group-hover:text-brand" />
+    </Link>
   );
 }
 
@@ -245,6 +280,16 @@ export function AmountList({ rows, total }: { rows: [string, number][]; total?: 
   );
 }
 
-export function PanelGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-[1.5fr_1fr] gap-[18px] mt-5 max-[900px]:grid-cols-1">{children}</div>;
+/**
+ * Open (unboxed) section row: panels are split by a vertical rule side by side and a horizontal
+ * rule when stacked. Every child carries both rules; the pulled-in grid clips the outer ones.
+ */
+export function PanelGrid({ className = "grid-cols-[1.5fr_1fr]", children }: { className?: string; children: ReactNode }) {
+  return (
+    <div className="py-8 border-b border-line last:border-b-0">
+      <div className="overflow-hidden">
+        <div className={"grid gap-8 -ml-[33px] -mt-[33px] *:min-w-0 *:pl-8 *:pt-8 *:border-l *:border-t *:border-line max-[900px]:grid-cols-1 " + className}>{children}</div>
+      </div>
+    </div>
+  );
 }

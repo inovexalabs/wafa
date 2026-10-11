@@ -94,7 +94,7 @@ function AccountantWorkspace() {
                 .slice()
                 .sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime())
                 .slice(0, 4)
-                .map((receipt) => <ReceiptRow key={receipt.id} receipt={receipt} />)
+                .map((receipt) => <ReceiptRow key={receipt.id} receipt={receipt} role="accountant" />)
             }
           </PanelBody>
         </Panel>
@@ -120,7 +120,7 @@ function AccountantWorkspace() {
       <PanelGrid>
         <Panel title="Upcoming meetings" subtitle="Stay prepared for what's next." href="/accountant/meetings">
           <PanelBody state={meetings} isEmpty={(data) => data.length === 0} empty="No upcoming meetings right now.">
-            {(data) => <div className="grid">{data.slice(0, 3).map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} />)}</div>}
+            {(data) => <div className="grid">{data.slice(0, 3).map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} href={`/accountant/meetings?meetingId=${meeting.id}`} />)}</div>}
           </PanelBody>
         </Panel>
         <Panel title="Quick links" subtitle="Forms and portals shared with you." href="/accountant/links">

@@ -8,6 +8,7 @@ import SuperadminMembersTabs from "../../../../components/superadmin-members-tab
 import {
   createDocumentType,
   deleteDocumentType,
+  DocumentAudience,
   listDocumentTypes,
   MemberDocumentType,
   SaveDocumentTypeInput,
@@ -23,7 +24,13 @@ const card = "p-[24px] border border-[#e1e9e4] rounded-[10px] bg-white max-[500p
 const sectionTitle = "m-0 font-display font-bold text-lg text-ink";
 const sectionHint = "m-0 mt-1 text-[#8b9992] text-[11px]";
 
-const emptyForm: SaveDocumentTypeInput = { name: "", description: "", isRequired: false, sortOrder: 0 };
+const emptyForm: SaveDocumentTypeInput = { name: "", description: "", isRequired: false, sortOrder: 0, appliesTo: "everyone" };
+
+const audienceLabels: Record<DocumentAudience, string> = {
+  everyone: "Everyone",
+  members: "Members only",
+  staff: "Staff only",
+};
 
 function sortTypes(types: MemberDocumentType[]) {
   return [...types].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
@@ -48,7 +55,7 @@ export default function SuperadminDocumentTypesPage() {
 
   function startEdit(type: MemberDocumentType) {
     setEditingId(type.id);
-    setForm({ name: type.name, description: type.description ?? "", isRequired: type.isRequired, sortOrder: type.sortOrder });
+    setForm({ name: type.name, description: type.description ?? "", isRequired: type.isRequired, sortOrder: type.sortOrder, appliesTo: type.appliesTo });
     setSaveError("");
   }
 
@@ -87,7 +94,7 @@ export default function SuperadminDocumentTypesPage() {
   async function remove(type: MemberDocumentType) {
     const uploads = type.uploadCount ?? 0;
     const warning = uploads
-      ? `Delete "${type.name}"? ${uploads} member upload${uploads === 1 ? "" : "s"} of this document will be permanently deleted too.`
+      ? `Delete "${type.name}"? ${uploads} upload${uploads === 1 ? "" : "s"} of this document will be permanently deleted too.`
       : `Delete "${type.name}"?`;
     if (!window.confirm(warning)) return;
     try {
@@ -106,7 +113,7 @@ export default function SuperadminDocumentTypesPage() {
         <div className="mb-6">
           <p className="mb-[13px] text-[11px] font-bold tracking-[.18em] uppercase text-brand">People</p>
           <h1 className="m-0 font-display font-bold text-[clamp(28px,4vw,42px)] leading-[1.1]">Members</h1>
-          <p className="mt-[9px] mb-6 text-muted text-sm">Choose which documents members upload to their profile.</p>
+          <p className="mt-[9px] mb-6 text-muted text-sm">Choose which documents members and staff upload to their profile.</p>
           <SuperadminMembersTabs active="document-types" />
         </div>
 
@@ -118,11 +125,19 @@ export default function SuperadminDocumentTypesPage() {
           <div className="flex flex-col gap-6">
             <form onSubmit={save} className={card}>
               <h2 className={sectionTitle}>{editingId ? "Edit document type" : "Add document type"}</h2>
-              <p className={sectionHint}>Members see every type on their profile. Required types are flagged until uploaded.</p>
-              <div className="grid grid-cols-[1fr_140px] gap-[16px] mt-4 max-[650px]:grid-cols-1">
+              <p className={sectionHint}>Each type shows on the profile of everyone it applies to. Required types are flagged until uploaded.</p>
+              <div className="grid grid-cols-[1fr_160px_120px] gap-[16px] mt-4 max-[650px]:grid-cols-1">
                 <label className={label}>
                   Name
                   <input className={fieldInput} value={form.name} maxLength={100} placeholder="e.g. PAN card" onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+                </label>
+                <label className={label}>
+                  Applies to
+                  <select className={fieldInput} value={form.appliesTo ?? "everyone"} onChange={(e) => setForm((f) => ({ ...f, appliesTo: e.target.value as DocumentAudience }))}>
+                    {(Object.keys(audienceLabels) as DocumentAudience[]).map((audience) => (
+                      <option key={audience} value={audience}>{audienceLabels[audience]}</option>
+                    ))}
+                  </select>
                 </label>
                 <label className={label}>
                   Sort order
@@ -135,12 +150,12 @@ export default function SuperadminDocumentTypesPage() {
                 </label>
               </div>
               <label className={label + " block mt-4"}>
-                Instructions for members <span className="text-[#9aa8a1] text-[10px] font-normal">Optional</span>
+                Instructions <span className="text-[#9aa8a1] text-[10px] font-normal">Optional</span>
                 <textarea rows={2} className={fieldTextarea} placeholder="e.g. Front and back in one PDF." value={form.description ?? ""} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
               </label>
               <label className={label + " flex items-center gap-2 mt-4"}>
                 <input type="checkbox" checked={form.isRequired ?? false} onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />
-                Required for every member
+                Required for everyone it applies to
               </label>
 
               {saveError && <p className="m-0 mt-3 text-[11px] text-[#ae4d44]" role="alert">{saveError}</p>}
@@ -168,6 +183,7 @@ export default function SuperadminDocumentTypesPage() {
                       <div className="flex items-center gap-2">
                         <p className="m-0 text-sm font-bold text-ink truncate">{type.name}</p>
                         {type.isRequired && <span className="px-[6px] py-px rounded text-[9px] font-bold uppercase tracking-wide text-[#9a5a22] bg-[#fbeddb]">Required</span>}
+                        {type.appliesTo !== "everyone" && <span className="px-[6px] py-px rounded text-[9px] font-bold uppercase tracking-wide text-[#6a5fae] bg-[#ede9fb]">{audienceLabels[type.appliesTo]}</span>}
                       </div>
                       <p className="m-0 mt-[3px] text-[11px] text-[#8b9992] truncate">
                         {type.uploadCount ?? 0} upload{type.uploadCount === 1 ? "" : "s"}

@@ -30,8 +30,7 @@ type NotifyInput = {
 };
 
 const BRAND_COLOR = '#1f6752';
-const FRONTEND_ORIGIN =
-  process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
 
 function escapeHtml(value: string) {
   return value.replace(
@@ -107,6 +106,26 @@ function emailHtml(input: NotifyInput) {
         <p style="margin:0;font-size:11px;color:#71807a">© ${new Date().getFullYear()} WAFA · We Are For All · Authorized users only</p>
       </div>
     </div>`;
+}
+
+// Plain-text alternative sent alongside the HTML; HTML-only mail scores worse
+// with spam filters.
+function emailText(input: NotifyInput) {
+  return [
+    input.title,
+    '',
+    input.message,
+    input.actionUrl
+      ? `\n${input.actionLabel ?? 'View details'}: ${input.actionUrl}`
+      : '',
+    input.secondaryUrl
+      ? `${input.secondaryLabel ?? 'Open WAFA app'}: ${input.secondaryUrl}`
+      : '',
+    '',
+    `© ${new Date().getFullYear()} WAFA · We Are For All · Authorized users only`,
+  ]
+    .filter((line, index, lines) => line !== '' || lines[index - 1] !== '')
+    .join('\n');
 }
 
 @Injectable()
@@ -230,6 +249,7 @@ export class NotificationsService {
               email,
               input.title,
               emailHtml(input),
+              emailText(input),
             );
             await client.from('notification_deliveries').insert({
               notification_id: notification.id,

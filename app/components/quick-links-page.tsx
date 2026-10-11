@@ -24,8 +24,8 @@ function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-type FormState = { title: string; url: string; description: string; audience: "everyone" | "selected"; recipientIds: string[]; notify: boolean };
-const emptyForm: FormState = { title: "", url: "", description: "", audience: "everyone", recipientIds: [], notify: true };
+type FormState = { title: string; url: string; description: string; audience: "everyone" | "selected"; recipientIds: string[] };
+const emptyForm: FormState = { title: "", url: "", description: "", audience: "everyone", recipientIds: [] };
 
 function LinkCard({ link, audience, onEdit, onDelete }: { link: QuickLink; audience?: string; onEdit?: () => void; onDelete?: () => void }) {
   const host = hostnameOf(link.url);
@@ -93,7 +93,6 @@ function LinkFormModal({
           description: editing.description ?? "",
           audience: editing.recipientIds?.length ? "selected" : "everyone",
           recipientIds: editing.recipientIds ?? [],
-          notify: false,
         }
       : emptyForm,
   );
@@ -115,7 +114,7 @@ function LinkFormModal({
       recipientIds: form.audience === "everyone" ? [] : form.recipientIds,
     };
     try {
-      const saved = editing ? await updateQuickLink(editing.id, input) : await createQuickLink({ ...input, notify: form.notify });
+      const saved = editing ? await updateQuickLink(editing.id, input) : await createQuickLink(input);
       onSaved(saved);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save this link.");
@@ -178,12 +177,11 @@ function LinkFormModal({
             )}
           </div>
         )}
-        {!editing && (
-          <label className="flex items-center gap-2 text-[11px] text-[#53665c]">
-            <input type="checkbox" checked={form.notify} onChange={(e) => setForm((f) => ({ ...f, notify: e.target.checked }))} />
-            Notify them (in-app and email)
-          </label>
-        )}
+        <p className="m-0 text-[11px] text-[#8b9992]">
+          {editing
+            ? "Anyone newly added gets an in-app notification and an email with the link."
+            : "Everyone it's shared with gets an in-app notification and an email with the link."}
+        </p>
         {error && <p className="m-0 text-[11px] text-[#ae4d44]" role="alert">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="border-0 text-[#286c54] bg-transparent cursor-pointer text-[11px] font-bold p-[10px]">Cancel</button>

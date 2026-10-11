@@ -27,7 +27,7 @@ export class SuperadminMemberDocumentsController {
 
   @Get()
   list(@Param('memberId') memberId: string) {
-    return this.documents.listForMember(memberId);
+    return this.documents.listFor({ kind: 'member', memberId });
   }
 
   @Post(':typeId')
@@ -44,7 +44,13 @@ export class SuperadminMemberDocumentsController {
     @Body() body: { documentNumber?: string },
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.documents.upload(profile, memberId, typeId, body, file);
+    return this.documents.upload(
+      profile,
+      { kind: 'member', memberId },
+      typeId,
+      body,
+      file,
+    );
   }
 
   @Delete(':typeId')
@@ -53,11 +59,11 @@ export class SuperadminMemberDocumentsController {
     @Param('memberId') memberId: string,
     @Param('typeId') typeId: string,
   ) {
-    return this.documents.remove(profile, memberId, typeId);
+    return this.documents.remove(profile, { kind: 'member', memberId }, typeId);
   }
 
   @Get(':typeId/file')
   file(@Param('memberId') memberId: string, @Param('typeId') typeId: string) {
-    return this.documents.fileUrl(memberId, typeId);
+    return this.documents.fileUrl({ kind: 'member', memberId }, typeId);
   }
 }

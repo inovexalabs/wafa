@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Award, CalendarClock, Landmark, Plus, Users } from "lucide-react";
+import Link from "next/link";
+import { Award, CalendarClock, ChevronRight, Landmark, Plus, Users } from "lucide-react";
 import AdminLayout from "../../components/admin-layout";
 import {
   AmountList,
@@ -25,7 +26,7 @@ import {
   upcomingMeetings,
   useLoadable,
 } from "../../components/overview";
-import { getStaffProfile, listIssuedCertificates, listMeetingRecipients, listMeetings, listQuickLinks } from "../../lib/auth";
+import { getStaffProfile, listIssuedCertificates, listMeetingRecipients, listMeetings, listQuickLinks, prefetchMeetingShares } from "../../lib/auth";
 import { getLedgerOrgTotals } from "../../lib/ledger";
 
 function AdminWorkspace() {
@@ -85,7 +86,7 @@ function AdminWorkspace() {
       <PanelGrid>
         <Panel title="Upcoming meetings" subtitle="What's next on the calendar." href="/admin/meetings">
           <PanelBody state={meetings} isEmpty={(data) => data.length === 0} empty="No upcoming meetings. Schedule one to get started.">
-            {(data) => <div className="grid">{data.slice(0, 3).map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} />)}</div>}
+            {(data) => <div className="grid">{data.slice(0, 3).map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} href={`/admin/meetings?meetingId=${meeting.id}`} onPrefetch={() => prefetchMeetingShares("admin", meeting.id)} />)}</div>}
           </PanelBody>
         </Panel>
         <Panel title="Savings snapshot" subtitle="Organization totals, all years." href="/admin/ledger/totals" linkLabel="Details">
@@ -110,14 +111,15 @@ function AdminWorkspace() {
           <PanelBody state={certificates} isEmpty={(data) => data.length === 0} empty="No certificates issued yet.">
             {(data) =>
               data.slice(0, 3).map((cert) => (
-                <div key={cert.id} className="flex items-center gap-3 py-[13px] border-t border-[#edf1ee] first:border-t-0">
+                <Link key={cert.id} href={`/admin/certificates?certificateId=${cert.id}`} className="group flex items-center gap-3 py-[13px] border-t border-[#edf1ee] first:border-t-0 no-underline text-inherit">
                   <span className="grid place-items-center w-[33px] h-[33px] rounded-lg shrink-0 text-[#b56f36] bg-[#f9ebdc]"><Award size={15} /></span>
                   <div className="flex-1 min-w-0">
-                    <strong className="block text-[11px] truncate">{cert.title}</strong>
+                    <strong className="block text-[11px] truncate group-hover:text-brand">{cert.title}</strong>
                     <span className="block mt-1 text-[#99a49f] text-[9px] truncate">{cert.recipientName} · {cert.certificateNumber}</span>
                   </div>
                   <span className="shrink-0 text-[#99a49f] text-[10px]">{formatDate(cert.issuedAt)}</span>
-                </div>
+                  <ChevronRight size={14} className="shrink-0 text-[#9aa8a1] group-hover:text-brand" />
+                </Link>
               ))
             }
           </PanelBody>

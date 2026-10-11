@@ -23,6 +23,12 @@ type ReceiptReviewFilters = {
   status?: string;
   memberId?: string;
 };
+type EditReceiptInput = {
+  amount?: string | number;
+  paymentType?: PaymentType;
+  paymentDate?: string;
+};
+type EditorRef = { full_name?: string | null; email?: string | null };
 type MemberRef = {
   full_name?: string | null;
   email?: string | null;
@@ -38,6 +44,15 @@ const allowedMimeTypes = new Set([
 ]);
 const maxFileSizeBytes = 10 * 1024 * 1024;
 const signedUrlTtlSeconds = 60 * 10;
+const paymentTypes = new Set<PaymentType>([
+  'monthly_deposit',
+  'share_contribution',
+  'loan_payment',
+  'other',
+]);
+const memberReceiptColumns =
+  'id, receipt_number, amount, payment_type, payment_date, status, submitted_at, rejection_reason, file_key, edited_at, editor:edited_by ( full_name, email )';
+const reviewReceiptColumns = `${memberReceiptColumns}, reviewed_at, member_id, members:member_id ( full_name, email, auth_user_id )`;
 
 @Injectable()
 export class ReceiptsService {
@@ -93,6 +108,8 @@ export class ReceiptsService {
 
   private async withSignedUrl(receipt: Record<string, unknown>) {
     const fileKey = receipt.file_key as string;
+    const editorField = receipt.editor as EditorRef | EditorRef[] | null;
+    const editor = Array.isArray(editorField) ? editorField[0] : editorField;
     return {
       id: receipt.id,
       receiptNumber: receipt.receipt_number,
@@ -102,6 +119,10 @@ export class ReceiptsService {
       status: receipt.status,
       submittedAt: receipt.submitted_at,
       rejectionReason: receipt.rejection_reason,
+      editedAt: (receipt.edited_at as string | null) ?? null,
+      editedByName: receipt.edited_at
+        ? editor?.full_name || editor?.email || 'Unknown user'
+        : null,
       fileName: this.fileNameFrom(fileKey),
       fileUrl: await this.signedUrlFor(fileKey),
     };
@@ -125,9 +146,7 @@ export class ReceiptsService {
     const { data, error } = await this.supabase
       .getAdminClient()
       .from('payment_receipts')
-      .select(
-        'id, receipt_number, amount, payment_type, payment_date, status, submitted_at, rejection_reason, file_key',
-      )
+      .select(memberReceiptColumns)
       .eq('member_id', memberId)
       .order('submitted_at', { ascending: false });
     if (error)
@@ -182,9 +201,7 @@ export class ReceiptsService {
         file_key: fileKey,
         status: 'pending',
       })
-      .select(
-        'id, receipt_number, amount, payment_type, payment_date, status, submitted_at, rejection_reason, file_key',
-      )
+      .select(memberReceiptColumns)
       .single();
 
     if (error) {
@@ -207,9 +224,7 @@ export class ReceiptsService {
     const client = this.supabase.getAdminClient();
     let query = client
       .from('payment_receipts')
-      .select(
-        'id, receipt_number, amount, payment_type, payment_date, status, submitted_at, reviewed_at, rejection_reason, file_key, member_id, members:member_id ( full_name, email, auth_user_id )',
-      )
+      .select(reviewReceiptColumns)
       .order('submitted_at', { ascending: false });
     if (filters?.status) query = query.eq('status', filters.status);
     if (filters?.memberId) query = query.eq('member_id', filters.memberId);
@@ -240,6 +255,90 @@ export class ReceiptsService {
         'Unable to generate a link for this file.',
       );
     return { fileUrl, fileName: this.fileNameFrom(fileKey) };
+  }
+
+  async edit(profile: Profile, receiptId: string, input: EditReceiptInput) {
+    const client = this.supabase.getAdminClient();
+    const { data: existing, error: fetchError } = await client
+      .from('payment_receipts')
+      .select('id, status, amount, payment_type, payment_date')
+      .eq('id', receiptId)
+      .maybeSingle();
+    if (fetchError)
+      throw new InternalServerErrorException('Unable to load the receipt.');
+    if (!existing) throw new NotFoundException('Receipt not found.');
+    // Approval has already posted this receipt to the ledger, deposits and
+    // savings ledger, so its details are locked once approved.
+    if (existing.status === 'approved')
+      throw new BadRequestException(
+        'Approved receipts can no longer be edited.',
+      );
+
+    const changes: Record<string, unknown> = {};
+    const oldData: Record<string, unknown> = {};
+    const newData: Record<string, unknown> = {};
+
+    if (input.amount !== undefined) {
+      const amount = Number(input.amount);
+      if (!Number.isFinite(amount) || amount <= 0)
+        throw new BadRequestException(
+          'Enter a valid amount greater than zero.',
+        );
+      if (amount !== Number(existing.amount)) {
+        changes.amount = amount;
+        oldData.amount = Number(existing.amount);
+        newData.amount = amount;
+      }
+    }
+    if (input.paymentType !== undefined) {
+      if (!paymentTypes.has(input.paymentType))
+        throw new BadRequestException('Choose a valid payment type.');
+      if (input.paymentType !== existing.payment_type) {
+        changes.payment_type = input.paymentType;
+        oldData.paymentType = existing.payment_type;
+        newData.paymentType = input.paymentType;
+      }
+    }
+    if (input.paymentDate !== undefined) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.paymentDate))
+        throw new BadRequestException('Enter a valid payment date.');
+      if (input.paymentDate !== existing.payment_date) {
+        changes.payment_date = input.paymentDate;
+        oldData.paymentDate = existing.payment_date;
+        newData.paymentDate = input.paymentDate;
+      }
+    }
+    if (!Object.keys(changes).length)
+      throw new BadRequestException('Nothing was changed.');
+
+    const { data, error } = await client
+      .from('payment_receipts')
+      .update({
+        ...changes,
+        edited_at: new Date().toISOString(),
+        edited_by: profile.id,
+      })
+      .eq('id', receiptId)
+      // Guards against the receipt being approved between the read and this write.
+      .neq('status', 'approved')
+      .select(reviewReceiptColumns)
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data)
+      throw new BadRequestException(
+        'Approved receipts can no longer be edited.',
+      );
+
+    await this.audit.log({
+      actor: { userId: profile.id },
+      action: 'receipt.edited',
+      entityType: 'receipt',
+      entityId: receiptId,
+      oldData,
+      newData,
+    });
+
+    return this.withReviewFields(data);
   }
 
   async approve(profile: Profile, receiptId: string) {
@@ -345,9 +444,7 @@ export class ReceiptsService {
         ledger_entry_id: ledgerEntryId,
       })
       .eq('id', receiptId)
-      .select(
-        'id, receipt_number, amount, payment_type, payment_date, status, submitted_at, reviewed_at, rejection_reason, file_key, member_id, members:member_id ( full_name, email, auth_user_id )',
-      )
+      .select(reviewReceiptColumns)
       .single();
     if (error) throw new BadRequestException(error.message);
 

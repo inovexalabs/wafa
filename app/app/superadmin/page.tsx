@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { CircleAlert, Command, IdCard, Landmark, Receipt as ReceiptIcon } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, CircleAlert, Command, IdCard, Landmark, Receipt as ReceiptIcon } from "lucide-react";
 import SuperadminLayout from "../../components/superadmin-layout";
 import {
   MeetingRow,
@@ -23,7 +24,7 @@ import {
   upcomingMeetings,
   useLoadable,
 } from "../../components/overview";
-import { createUser, getStaffProfile, listAuditLogs, listMeetingRecipients, listMeetings, listMemberDirectory, listReceiptsForReview } from "../../lib/auth";
+import { auditLogPageSize, createUser, getStaffProfile, listAuditLogs, listMeetingRecipients, listMeetings, listMemberDirectory, listReceiptsForReview, prefetchMeetingShares } from "../../lib/auth";
 import { getLedgerOrgTotals } from "../../lib/ledger";
 import { actionLabels, actionTone, actorLabel } from "../../lib/audit-actions";
 
@@ -75,7 +76,7 @@ function CreateUserPanel({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <section className="p-[25px] border border-[#e0e9e3] rounded-[10px] bg-white max-[500px]:px-4 max-[500px]:py-[19px]">
+    <section>
       <div className="flex justify-between items-start">
         <div>
           <h2 className="m-0 font-display font-bold text-[23px]">Create a user</h2>
@@ -129,7 +130,7 @@ function SuperadminWorkspace() {
   const [refreshKey, setRefreshKey] = useState(0);
   const profile = useLoadable(() => getStaffProfile("superadmin"));
   const people = useLoadable(() => listMeetingRecipients("superadmin"), [refreshKey]);
-  const activity = useLoadable(() => listAuditLogs({ limit: 6 }), [refreshKey]);
+  const activity = useLoadable(() => listAuditLogs({ limit: auditLogPageSize }), [refreshKey]);
   const directory = useLoadable(listMemberDirectory, [refreshKey]);
   const pending = useLoadable(() => listReceiptsForReview("superadmin", { status: "pending" }));
   const totals = useLoadable(() => getLedgerOrgTotals("superadmin"));
@@ -175,32 +176,33 @@ function SuperadminWorkspace() {
         />
       </StatGrid>
 
-      <div className="grid grid-cols-[1.3fr_.7fr] gap-[18px] mt-5 max-[900px]:grid-cols-1">
+      <PanelGrid className="grid-cols-[1.3fr_.7fr]">
         <CreateUserPanel onCreated={() => setRefreshKey((key) => key + 1)} />
         <Panel title="Recent activity" subtitle="Sign-ins, changes and new accounts." href="/superadmin/audit" linkLabel="Activity log">
           <PanelBody state={activity} rows={5} isEmpty={(data) => data.items.length === 0} empty="No activity recorded yet.">
             {(data) =>
-              data.items.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-[10px] py-[11px] border-t border-[#edf1ee] first:border-t-0">
+              data.items.slice(0, 6).map((entry) => (
+                <Link key={entry.id} href={`/superadmin/audit?entryId=${entry.id}`} className="group flex items-center gap-[10px] py-[11px] border-t border-[#edf1ee] first:border-t-0 no-underline text-inherit">
                   <span className="grid place-items-center shrink-0 w-[31px] h-[31px] rounded-full text-[#2d7257] bg-[#e4f2e5] text-[9px] font-bold">{initialsFor(actorLabel(entry))}</span>
                   <div className="flex-1 min-w-0">
-                    <strong className="block text-[11px] truncate">{actorLabel(entry)}</strong>
+                    <strong className="block text-[11px] truncate group-hover:text-brand">{actorLabel(entry)}</strong>
                     <span className="block mt-[3px] text-[#9aa69f] text-[9px]">{formatRelativeTime(entry.created_at)}</span>
                   </div>
                   <span className={"shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold " + (actionTone[entry.action] ?? "text-[#6b7a72] bg-[#f1f3f1]")}>
                     {actionLabels[entry.action] ?? entry.action}
                   </span>
-                </div>
+                  <ChevronRight size={14} className="shrink-0 text-[#9aa8a1] group-hover:text-brand" />
+                </Link>
               ))
             }
           </PanelBody>
         </Panel>
-      </div>
+      </PanelGrid>
 
       <PanelGrid>
         <Panel title="Upcoming meetings" subtitle="What's next on the calendar." href="/superadmin/meetings">
           <PanelBody state={meetings} isEmpty={(data) => data.length === 0} empty="No upcoming meetings right now.">
-            {(data) => <div className="grid">{data.slice(0, 3).map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} />)}</div>}
+            {(data) => <div className="grid">{data.slice(0, 3).map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} href={`/superadmin/meetings?meetingId=${meeting.id}`} onPrefetch={() => prefetchMeetingShares("superadmin", meeting.id)} />)}</div>}
           </PanelBody>
         </Panel>
         <Panel title="Receipts to review" subtitle="Oldest submissions first." href="/superadmin/receipts" linkLabel="Review all">
@@ -210,7 +212,7 @@ function SuperadminWorkspace() {
                 .slice()
                 .sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime())
                 .slice(0, 3)
-                .map((receipt) => <ReceiptRow key={receipt.id} receipt={receipt} />)
+                .map((receipt) => <ReceiptRow key={receipt.id} receipt={receipt} role="superadmin" />)
             }
           </PanelBody>
         </Panel>

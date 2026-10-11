@@ -10,6 +10,8 @@ import LoadingScreen from "../../../components/loading-screen";
 import Modal from "../../../components/modal";
 import RecipientPicker, { toggleRecipient, toggleRecipientGroup, useMeetingRecipients } from "../../../components/recipient-picker";
 import {
+	cachedMeetings,
+	cachedMeetingShares,
 	cancelMeeting,
 	getMeetingRecipients,
 	listMeetings,
@@ -149,17 +151,34 @@ function MeetingCard({ meeting, now, onManage }: { meeting: Meeting; now: number
 	);
 }
 
+function meetingForm(meeting: Meeting) {
+	return {
+		title: meeting.title,
+		date: toDateInput(meeting.scheduled_at),
+		time: toTimeInput(meeting.scheduled_at),
+		durationMinutes: String(meeting.duration_minutes ?? 60),
+	};
+}
+
 function ManageMeetingModal({ meetingId, onClose, onUpdated, onCancelled }: { meetingId: string; onClose: () => void; onUpdated: (meeting: Meeting) => void; onCancelled: (meetingId: string) => void }) {
 	const { recipients, isLoading: isLoadingRecipients, error: recipientsError } = useMeetingRecipients("superadmin");
-	const [selection, setSelection] = useState<string[]>([]);
-	const [initialSelection, setInitialSelection] = useState<string[]>([]);
-	const [form, setForm] = useState({ title: "", date: "", time: "", durationMinutes: "60" });
-	const [isLoading, setIsLoading] = useState(true);
+	// Opens filled in when the meeting list (dashboard) and its shares (row hover prefetch) are cached.
+	const [cached] = useState(() => {
+		const meeting = cachedMeetings("superadmin")?.find((m) => m.id === meetingId);
+		const shares = cachedMeetingShares("superadmin", meetingId);
+		return meeting && shares ? { meeting, shares } : null;
+	});
+	const [selection, setSelection] = useState<string[]>(() => cached?.shares ?? []);
+	const [initialSelection, setInitialSelection] = useState<string[]>(() => cached?.shares ?? []);
+	const [form, setForm] = useState(() => (cached ? meetingForm(cached.meeting) : { title: "", date: "", time: "", durationMinutes: "60" }));
+	const [isLoading, setIsLoading] = useState(!cached);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isCancelling, setIsCancelling] = useState(false);
 	const [error, setError] = useState("");
 
 	useEffect(() => {
+		// Never reload over a form that opened from cache: the user may already be editing it.
+		if (cached) return;
 		let cancelled = false;
 		async function load() {
 			try {
@@ -176,12 +195,7 @@ function ManageMeetingModal({ meetingId, onClose, onUpdated, onCancelled }: { me
 					setError("Meeting not found.");
 					return;
 				}
-				setForm({
-					title: meeting.title,
-					date: toDateInput(meeting.scheduled_at),
-					time: toTimeInput(meeting.scheduled_at),
-					durationMinutes: String(meeting.duration_minutes ?? 60),
-				});
+				setForm(meetingForm(meeting));
 			} catch (loadError) {
 				if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Unable to load this meeting.");
 			} finally {
@@ -192,7 +206,7 @@ function ManageMeetingModal({ meetingId, onClose, onUpdated, onCancelled }: { me
 		return () => {
 			cancelled = true;
 		};
-	}, [meetingId]);
+	}, [meetingId, cached]);
 
 	function updateField(field: keyof typeof form, value: string) {
 		setForm((current) => ({ ...current, [field]: value }));
@@ -289,8 +303,8 @@ function SuperadminMeetingsPageContent() {
 	const searchParams = useSearchParams();
 	const manageMeetingId = searchParams.get("meetingId");
 
-	const [meetings, setMeetings] = useState<Meeting[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	const [meetings, setMeetings] = useState<Meeting[]>(() => cachedMeetings("superadmin") ?? []);
+	const [isLoading, setIsLoading] = useState(() => !cachedMeetings("superadmin"));
 	const [error, setError] = useState("");
 	const [now, setNow] = useState(() => Date.now());
 

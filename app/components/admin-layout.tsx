@@ -8,7 +8,7 @@ import { Award, ArrowLeft, ArrowRight, BadgeCheck, BookOpenCheck, CalendarClock,
 import Dashboard from "./dashboard";
 import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
-import { getStaffProfile, signOut } from "../lib/auth";
+import { cachedStaffProfile, getStaffProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 import { useSidebarScroll } from "../lib/use-sidebar-scroll";
 
@@ -42,7 +42,8 @@ export default function AdminLayout({ active, children }: AdminLayoutProps) {
   const router = useRouter();
   const { collapsed, toggle } = useSidebarCollapsed();
   const sidebarRef = useSidebarScroll("admin");
-  const [fullName, setFullName] = useState("");
+  // Cached from the previous page, so the name doesn't blink empty on every navigation.
+  const [fullName, setFullName] = useState(() => { const cached = cachedStaffProfile("admin"); return cached ? cached.fullName ?? cached.userId : ""; });
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

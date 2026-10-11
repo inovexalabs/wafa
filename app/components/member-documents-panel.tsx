@@ -143,15 +143,20 @@ function PreviewModal({ owner, slot, onClose }: { owner: MemberDocumentsOwner; s
   );
 }
 
-/** Omit memberId for the signed-in member's own documents; pass it for superadmin management. */
+const selfOwner: MemberDocumentsOwner = { kind: "self" };
+
+/** Whose documents to show; defaults to the signed-in member's own. */
 export default function MemberDocumentsPanel({
-  memberId,
+  owner: ownerProp = selfOwner,
   description,
 }: {
-  memberId?: string;
+  owner?: MemberDocumentsOwner;
   description: string;
 }) {
-  const owner = useMemo<MemberDocumentsOwner>(() => (memberId ? { kind: "member", memberId } : { kind: "self" }), [memberId]);
+  // Callers pass inline objects, so key on the contents to avoid refetching every render.
+  const ownerKey = JSON.stringify(ownerProp);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const owner = useMemo(() => ownerProp, [ownerKey]);
   const [slots, setSlots] = useState<MemberDocumentSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");

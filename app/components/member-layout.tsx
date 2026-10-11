@@ -8,7 +8,7 @@ import { Award, ArrowLeft, ArrowRight, BookOpenCheck, CalendarClock, ChevronDown
 import Dashboard from "./dashboard";
 import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
-import { getMemberProfile, signOut } from "../lib/auth";
+import { cachedMemberProfile, getMemberProfile, signOut } from "../lib/auth";
 import { useSidebarCollapsed } from "../lib/use-sidebar-collapsed";
 import { useSidebarScroll } from "../lib/use-sidebar-scroll";
 
@@ -42,7 +42,8 @@ export default function MemberLayout({ active, children }: MemberLayoutProps) {
   const router = useRouter();
   const { collapsed, toggle } = useSidebarCollapsed();
   const sidebarRef = useSidebarScroll("member");
-  const [fullName, setFullName] = useState("");
+  // Cached from the previous page, so the name doesn't blink empty on every navigation.
+  const [fullName, setFullName] = useState(() => cachedMemberProfile()?.fullName ?? "");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

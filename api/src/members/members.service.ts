@@ -48,8 +48,14 @@ export class MembersService {
         .from('members')
         .select('id, member_number, full_name, email, phone, status, joined_at')
         .order('full_name', { ascending: true }),
-      client.from('member_document_types').select('id, name, is_required'),
-      client.from('member_documents').select('member_id, document_type_id'),
+      client
+        .from('member_document_types')
+        .select('id, name, is_required')
+        .in('applies_to', ['everyone', 'members']),
+      client
+        .from('member_documents')
+        .select('member_id, document_type_id')
+        .not('member_id', 'is', null),
     ]);
     if (membersError || typesError || documentsError)
       throw new InternalServerErrorException('Unable to load members.');

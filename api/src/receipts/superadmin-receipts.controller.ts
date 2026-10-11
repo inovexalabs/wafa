@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -14,6 +15,12 @@ import { ReceiptsService } from './receipts.service';
 
 type ReviewProfile = { id: string; role: string };
 type RejectReceiptBody = { reason: string };
+type EditReceiptBody = {
+  amount?: string | number;
+  paymentType?:
+    'monthly_deposit' | 'share_contribution' | 'loan_payment' | 'other';
+  paymentDate?: string;
+};
 
 @Controller('superadmin/receipts')
 @UseGuards(AuthGuard)
@@ -29,6 +36,15 @@ export class SuperadminReceiptsController {
   @Get(':id/file')
   file(@Param('id') id: string) {
     return this.receipts.getFileUrl(id);
+  }
+
+  @Patch(':id')
+  edit(
+    @CurrentProfile() profile: ReviewProfile,
+    @Param('id') id: string,
+    @Body() body: EditReceiptBody,
+  ) {
+    return this.receipts.edit(profile, id, body);
   }
 
   @Post(':id/approve')

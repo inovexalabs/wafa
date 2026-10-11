@@ -27,7 +27,6 @@ export interface SaveQuickLinkInput {
   url: string;
   description?: string;
   recipientIds?: string[];
-  notify?: boolean;
 }
 
 type QuickLinkRow = {
@@ -134,24 +133,12 @@ export class QuickLinksService {
     }
 
     const names = await this.creatorNames([data]);
-    if (input.notify !== false) {
-      try {
-        await this.notifications.notifyRecipients(
-          recipientIds.length ? recipientIds : undefined,
-          {
-            type: 'system',
-            title: `New quick link: ${title}`,
-            message: `${names.get(profile.id) ?? 'An administrator'} shared "${title}" with you. Open Quick links in the WAFA app to use it.`,
-            referenceType: 'quick_link',
-            referenceId: data.id,
-            secondaryUrl: process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim(),
-            secondaryLabel: 'Open WAFA',
-          },
-        );
-      } catch {
-        // Notification delivery is best-effort and should never block sharing a link.
-      }
-    }
+    await this.notifyShared(
+      profile,
+      data,
+      names,
+      recipientIds.length ? recipientIds : await this.everyoneExcept([]),
+    );
 
     await this.audit.log({
       actor: { userId: profile.id },
@@ -192,9 +179,28 @@ export class QuickLinksService {
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('Quick link not found.');
 
+    const { data: previousShares, error: previousError } = await client
+      .from('quick_link_recipients')
+      .select('profile_id')
+      .eq('link_id', id);
+    if (previousError)
+      throw new InternalServerErrorException(
+        'Unable to load who this link is shared with.',
+      );
+    const previousIds = (previousShares ?? []).map(
+      (share) => share.profile_id as string,
+    );
+
     let recipientIds: string[];
+    let newlyShared: string[] = [];
     if (input.recipientIds !== undefined) {
       recipientIds = this.cleanRecipients(input.recipientIds);
+      // Only people who could not see the link before hear about it. A link
+      // shared with everyone (no rows) was already visible to all.
+      if (previousIds.length)
+        newlyShared = recipientIds.length
+          ? recipientIds.filter((pid) => !previousIds.includes(pid))
+          : await this.everyoneExcept(previousIds);
       const { error: clearError } = await client
         .from('quick_link_recipients')
         .delete()
@@ -212,15 +218,7 @@ export class QuickLinksService {
         if (shareError) throw new BadRequestException(shareError.message);
       }
     } else {
-      const { data: shares, error: sharesError } = await client
-        .from('quick_link_recipients')
-        .select('profile_id')
-        .eq('link_id', id);
-      if (sharesError)
-        throw new InternalServerErrorException(
-          'Unable to load who this link is shared with.',
-        );
-      recipientIds = (shares ?? []).map((share) => share.profile_id);
+      recipientIds = previousIds;
     }
 
     await this.audit.log({
@@ -237,6 +235,7 @@ export class QuickLinksService {
     });
 
     const names = await this.creatorNames([data]);
+    await this.notifyShared(profile, data, names, newlyShared);
     return { ...this.map(data, names), recipientIds };
   }
 
@@ -291,6 +290,53 @@ export class QuickLinksService {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
       throw new BadRequestException('Only http and https links can be shared.');
     return parsed.toString();
+  }
+
+  // Sends the in-app notification and email (with a button straight to the
+  // link) to everyone the link was just shared with, except whoever shared it.
+  private async notifyShared(
+    actor: Profile,
+    link: QuickLinkRow,
+    names: Map<string, string>,
+    recipientIds: string[],
+  ) {
+    const targets = recipientIds.filter((pid) => pid !== actor.id);
+    if (!targets.length) return;
+    const sharer = names.get(actor.id) ?? 'An administrator';
+    const description = link.description ? ` ${link.description}` : '';
+    try {
+      await this.notifications.notifyRecipients(targets, {
+        type: 'system',
+        title: `New quick link: ${link.title}`,
+        message: `${sharer} shared "${link.title}" with you.${description} You can also find it under Quick links in the WAFA app.`,
+        referenceType: 'quick_link',
+        referenceId: link.id,
+        actionUrl: link.url,
+        actionLabel: 'Open link',
+        secondaryUrl: process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim(),
+        secondaryLabel: 'Open WAFA',
+      });
+    } catch (error) {
+      // Notification delivery is best-effort and should never block sharing a link.
+      this.logger.warn(
+        `notifyShared: ${error instanceof Error ? error.message : error}`,
+      );
+    }
+  }
+
+  // "Everyone" is resolved to explicit ids so the sharer can be left out.
+  private async everyoneExcept(excludedIds: string[]) {
+    const { data, error } = await this.supabase
+      .getAdminClient()
+      .from('profiles')
+      .select('id');
+    if (error) {
+      this.logger.warn(`everyoneExcept: ${error.message}`);
+      return [];
+    }
+    return (data ?? [])
+      .map((row) => row.id as string)
+      .filter((pid) => !excludedIds.includes(pid));
   }
 
   private cleanRecipients(ids?: string[]) {

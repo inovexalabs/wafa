@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight, CalendarDays, CalendarX2, CheckCircle2, Clock, MapPin, Timer, Video } from "lucide-react";
 import MemberLayout from "../../../components/member-layout";
-import { listMeetings, Meeting } from "../../../lib/auth";
+import { linkedRecordClass, linkedRecordId, useLinkedRecord } from "../../../components/linked-record";
+import { cachedMeetings, listMeetings, Meeting } from "../../../lib/auth";
 
 const typeTone: Record<Meeting["meeting_type"], string> = {
 	online: "text-[#2f7a5c] bg-[#e4f4ec]",
@@ -52,9 +53,9 @@ function formatDate(isoString: string) {
 	return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function PastMeetingRow({ meeting }: { meeting: Meeting }) {
+function PastMeetingRow({ meeting, focused }: { meeting: Meeting; focused: boolean }) {
 	return (
-		<div className="flex items-center gap-4 py-4 border-t border-line first:border-t-0">
+		<div id={linkedRecordId(meeting.id)} className={"flex items-center gap-4 -mx-5 px-5 py-4 border-t border-line first:border-t-0 first:rounded-t-2xl last:rounded-b-2xl " + (focused ? linkedRecordClass : "")}>
 			<div className="flex flex-col items-center justify-center w-11 h-11 rounded-lg bg-[#f1f3f1] text-muted shrink-0">
 				<span className="text-sm font-bold leading-none">{formatDay(meeting.scheduled_at)}</span>
 				<span className="text-[8px] font-bold tracking-wider mt-0.5">{formatMonth(meeting.scheduled_at)}</span>
@@ -70,11 +71,11 @@ function PastMeetingRow({ meeting }: { meeting: Meeting }) {
 	);
 }
 
-function MeetingCard({ meeting, now }: { meeting: Meeting; now: number }) {
+function MeetingCard({ meeting, now, focused }: { meeting: Meeting; now: number; focused: boolean }) {
 	const TypeIcon = typeIcon[meeting.meeting_type];
 	const startable = hasStarted(meeting, now);
 	return (
-		<article className="group flex items-center gap-5 p-5 rounded-2xl border border-line bg-white transition-all hover:border-brand/30 hover:shadow-[0_8px_24px_-12px_rgba(31,103,82,0.25)] max-[560px]:flex-wrap max-[560px]:gap-x-4 max-[560px]:gap-y-3 max-[560px]:p-4">
+		<article id={linkedRecordId(meeting.id)} className={"group flex items-center gap-5 p-5 rounded-2xl border bg-white transition-all " + (focused ? "border-brand ring-2 ring-brand/20 " : "border-line ") + " hover:border-brand/30 hover:shadow-[0_8px_24px_-12px_rgba(31,103,82,0.25)] max-[560px]:flex-wrap max-[560px]:gap-x-4 max-[560px]:gap-y-3 max-[560px]:p-4"}>
 			<div className={"flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0 " + typeTone[meeting.meeting_type]}>
 				<span className="text-lg font-bold leading-none">{formatDay(meeting.scheduled_at)}</span>
 				<span className="text-[9px] font-bold tracking-wider mt-1">{formatMonth(meeting.scheduled_at)}</span>
@@ -112,10 +113,12 @@ function MeetingCard({ meeting, now }: { meeting: Meeting; now: number }) {
 }
 
 export default function MeetingsPage() {
-	const [meetings, setMeetings] = useState<Meeting[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	// Paints instantly from the list the dashboard already loaded, then refreshes in the background.
+	const [meetings, setMeetings] = useState<Meeting[]>(() => cachedMeetings("member") ?? []);
+	const [isLoading, setIsLoading] = useState(() => !cachedMeetings("member"));
 	const [error, setError] = useState("");
 	const [now, setNow] = useState(() => Date.now());
+	const focusId = useLinkedRecord("meetingId", !isLoading);
 
 	useEffect(() => {
 		listMeetings("member")
@@ -170,7 +173,7 @@ export default function MeetingsPage() {
 							<div className="p-5 rounded-2xl border border-dashed border-line bg-white text-center text-sm text-muted">No upcoming meetings right now.</div>
 						)}
 						{next && (
-							<section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-8 text-white shadow-[0_20px_40px_-20px_rgba(22,75,60,0.55)] max-[500px]:p-6">
+							<section id={linkedRecordId(next.id)} className={"relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-8 " + (next.id === focusId ? "ring-4 ring-brand/30 ring-offset-2 ring-offset-cream " : "") + " text-white shadow-[0_20px_40px_-20px_rgba(22,75,60,0.55)] max-[500px]:p-6"}>
 								<div className="absolute -right-16 -top-24 w-72 h-72 rounded-full bg-white/10 blur-[2px]" aria-hidden="true" />
 								<div className="absolute -right-6 -bottom-20 w-40 h-40 rounded-full border border-white/10" aria-hidden="true" />
 								<div className="relative">
@@ -207,7 +210,7 @@ export default function MeetingsPage() {
 								<h2 className="mb-4 text-xs font-bold uppercase tracking-[.14em] text-muted">Also coming up</h2>
 								<div className="space-y-3">
 									{rest.map((meeting) => (
-										<MeetingCard key={meeting.id} meeting={meeting} now={now} />
+										<MeetingCard key={meeting.id} meeting={meeting} now={now} focused={meeting.id === focusId} />
 									))}
 								</div>
 							</section>
@@ -218,7 +221,7 @@ export default function MeetingsPage() {
 								<h2 className="mb-4 text-xs font-bold uppercase tracking-[.14em] text-muted">Past meetings</h2>
 								<div className="rounded-2xl border border-line bg-white px-5">
 									{past.map((meeting) => (
-										<PastMeetingRow key={meeting.id} meeting={meeting} />
+										<PastMeetingRow key={meeting.id} meeting={meeting} focused={meeting.id === focusId} />
 									))}
 								</div>
 							</section>

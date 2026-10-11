@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { ClipboardList, Filter, RotateCcw } from "lucide-react";
 import SuperadminLayout from "../../../components/superadmin-layout";
-import { AuditLogEntry, listAuditLogs } from "../../../lib/auth";
+import { linkedRecordClass, linkedRecordId, useLinkedRecord } from "../../../components/linked-record";
+import { AuditLogEntry, auditLogPageSize, cachedAuditLogs, listAuditLogs } from "../../../lib/auth";
 import { actionLabels, actionOptions, actionTone, actorLabel } from "../../../lib/audit-actions";
 
-const pageSize = 25;
+const pageSize = auditLogPageSize;
 
 function formatDateTime(isoString: string) {
 	return new Date(isoString).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -23,14 +24,16 @@ function describeMetadata(entry: AuditLogEntry) {
 const inputClass = "h-[38px] border border-line rounded-md px-[11px] outline-none text-[#2d4037] bg-white text-xs focus:border-[#2b7358] focus:shadow-[0_0_0_3px_#2b73581a]";
 
 export default function AuditLogPage() {
-	const [entries, setEntries] = useState<AuditLogEntry[]>([]);
-	const [total, setTotal] = useState(0);
+	const [entries, setEntries] = useState<AuditLogEntry[]>(() => cachedAuditLogs({ limit: pageSize })?.items ?? []);
+	const [total, setTotal] = useState(() => cachedAuditLogs({ limit: pageSize })?.total ?? 0);
 	const [page, setPage] = useState(0);
 	const [action, setAction] = useState("");
 	const [from, setFrom] = useState("");
 	const [to, setTo] = useState("");
-	const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(() => !cachedAuditLogs({ limit: pageSize }));
 	const [error, setError] = useState("");
+	// Dashboard "Recent activity" rows link here; they are always among the newest, so on the first page.
+	const focusId = useLinkedRecord("entryId", !isLoading);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -129,7 +132,7 @@ export default function AuditLogPage() {
 						{entries.map((entry) => {
 							const details = describeMetadata(entry);
 							return (
-								<div key={entry.id} className="flex items-start gap-3 px-4 py-3 border-t border-[#edf1ee] first:border-t-0 max-[650px]:flex-wrap max-[650px]:gap-x-3 max-[650px]:gap-y-1.5">
+								<div key={entry.id} id={linkedRecordId(entry.id)} className={"flex items-start gap-3 px-4 py-3 border-t border-[#edf1ee] first:border-t-0 max-[650px]:flex-wrap max-[650px]:gap-x-3 max-[650px]:gap-y-1.5 " + (entry.id === focusId ? linkedRecordClass : "")}>
 									<div className="w-[150px] shrink-0 text-[10px] text-[#8b9992] pt-[3px] max-[650px]:order-4 max-[650px]:w-auto max-[650px]:pt-0">{formatDateTime(entry.created_at)}</div>
 									<div className="w-[160px] shrink-0 max-[650px]:order-1 max-[650px]:flex-1 max-[650px]:min-w-0">
 										<p className="m-0 text-[11px] font-bold text-[#2d4037]">{actorLabel(entry)}</p>

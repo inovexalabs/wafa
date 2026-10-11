@@ -2,7 +2,8 @@
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import MemberLayout from "../../../components/member-layout";
-import { listReceipts, Receipt, ReceiptPaymentType, submitReceipt } from "../../../lib/auth";
+import { linkedRecordClass, linkedRecordId, useLinkedRecord } from "../../../components/linked-record";
+import { cachedReceipts, listReceipts, Receipt, ReceiptPaymentType, submitReceipt } from "../../../lib/auth";
 
 const paymentTypeLabels: Record<ReceiptPaymentType, string> = {
   monthly_deposit: "Monthly deposit",
@@ -37,8 +38,9 @@ function formatAmount(amount: number) {
 }
 
 export default function ReceiptsPage() {
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Paints instantly from the list the dashboard already loaded, then refreshes in the background.
+  const [receipts, setReceipts] = useState<Receipt[]>(() => cachedReceipts() ?? []);
+  const [isLoading, setIsLoading] = useState(() => !cachedReceipts());
   const [loadError, setLoadError] = useState("");
 
   const [paymentType, setPaymentType] = useState<ReceiptPaymentType>("monthly_deposit");
@@ -49,6 +51,7 @@ export default function ReceiptsPage() {
   const [submitError, setSubmitError] = useState("");
   const [sent, setSent] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const focusId = useLinkedRecord("receiptId", !isLoading);
 
   useEffect(() => {
     listReceipts()
@@ -138,7 +141,7 @@ export default function ReceiptsPage() {
             ) : (
               <div>
                 {receipts.map((receipt) => (
-                  <div key={receipt.id} className="flex items-center gap-[10px] py-[14px] border-t border-[#edf1ee] first:border-t-0">
+                  <div key={receipt.id} id={linkedRecordId(receipt.id)} className={"flex items-center gap-[10px] -mx-3 px-3 py-[14px] rounded-lg border-t border-[#edf1ee] first:border-t-0 " + (receipt.id === focusId ? linkedRecordClass : "")}>
                     <span className="grid place-items-center w-8 h-[34px] rounded-md text-[#b05f4b] bg-[#fae9e3] text-[9px] font-bold shrink-0">{extensionLabel(receipt.fileName)}</span>
                     <p className="flex-1 min-w-0 m-0">
                       {receipt.fileUrl ? (
@@ -149,6 +152,9 @@ export default function ReceiptsPage() {
                       <small className="block mt-1 text-[#9ba7a1] text-[9px]">{formatAmount(receipt.amount)} · {formatDate(receipt.paymentDate)} · {paymentTypeLabels[receipt.paymentType]}</small>
                       {receipt.status === "rejected" && receipt.rejectionReason && (
                         <small className="block mt-1 text-[#b0473f] text-[9px]">{receipt.rejectionReason}</small>
+                      )}
+                      {receipt.editedAt && (
+                        <small className="block mt-1 text-[#7a6a9a] text-[9px]">Edited by {receipt.editedByName} · {formatDate(receipt.editedAt)}</small>
                       )}
                     </p>
                     <b className={"shrink-0 inline-block px-2 py-[5px] rounded text-[9px] font-bold " + statusStyles[receipt.status]}>{statusLabels[receipt.status]}</b>

@@ -1,4 +1,6 @@
-﻿export type UserRole = 'superadmin' | 'admin' | 'accountant' | 'member';
+﻿import { forget, recall, remember, shared } from "./query-cache";
+
+export type UserRole = 'superadmin' | 'admin' | 'accountant' | 'member';
 
 export interface WafaUser {
   id: string;
@@ -182,6 +184,7 @@ export function signOut(): Promise<void> {
   if (signOutInFlight) return signOutInFlight;
   signOutGeneration++;
   signingOut = true;
+  forget();
   clearLegacySession();
   window.localStorage.removeItem(rememberedSessionKey);
   publish(null);
@@ -254,12 +257,17 @@ export interface CreateMeetingRequest {
   recipientIds?: string[];
 }
 
+const meetingsPath = (role: UserRole) => `/api/${role}/meetings`;
+
 export async function listMeetings(role: UserRole): Promise<Meeting[]> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/meetings`);
+  const response = await apiFetch(`${apiUrl}${meetingsPath(role)}`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load meetings.");
-  return body as Meeting[];
+  return remember(meetingsPath(role), body as Meeting[]);
 }
+
+/** The last `listMeetings(role)` result this session, for an instant first paint. */
+export const cachedMeetings = (role: UserRole) => recall<Meeting[]>(meetingsPath(role));
 
 export async function createMeeting(role: "admin" | "superadmin", input: CreateMeetingRequest) {
   const response = await apiFetch(`${apiUrl}/api/${role}/meetings`, {
@@ -269,6 +277,7 @@ export async function createMeeting(role: "admin" | "superadmin", input: CreateM
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to create this meeting.");
+  forget("/meetings");
   return body as Meeting & { zoomMeetingId: string | null; hostUrl: string | null; sharedWithCount: number };
 }
 
@@ -280,18 +289,32 @@ export interface MeetingRecipient {
 }
 
 export async function listMeetingRecipients(role: "admin" | "superadmin"): Promise<MeetingRecipient[]> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/recipients`);
+  const path = `/api/${role}/meetings/recipients`;
+  const response = await apiFetch(`${apiUrl}${path}`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load recipients.");
-  return body as MeetingRecipient[];
+  return remember(path, body as MeetingRecipient[]);
 }
 
-export async function getMeetingRecipients(role: "admin" | "superadmin", meetingId: string): Promise<string[]> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}/recipients`);
-  const body = await response.json().catch(() => []);
-  if (!response.ok) throw new Error(body.message ?? "Unable to load who this meeting is shared with.");
-  return body as string[];
+export const cachedMeetingRecipients = (role: "admin" | "superadmin") => recall<MeetingRecipient[]>(`/api/${role}/meetings/recipients`);
+
+export function getMeetingRecipients(role: "admin" | "superadmin", meetingId: string): Promise<string[]> {
+  const path = `/api/${role}/meetings/${meetingId}/recipients`;
+  return shared(path, async () => {
+    const response = await apiFetch(`${apiUrl}${path}`);
+    const body = await response.json().catch(() => []);
+    if (!response.ok) throw new Error(body.message ?? "Unable to load who this meeting is shared with.");
+    return remember(path, body as string[]);
+  });
 }
+
+/** Warms who a meeting is shared with (e.g. on hover), so its manage form opens instantly. */
+export function prefetchMeetingShares(role: "admin" | "superadmin", meetingId: string) {
+  if (!cachedMeetingShares(role, meetingId)) getMeetingRecipients(role, meetingId).catch(() => {});
+}
+
+export const cachedMeetingShares = (role: "admin" | "superadmin", meetingId: string) =>
+  recall<string[]>(`/api/${role}/meetings/${meetingId}/recipients`);
 
 export async function setMeetingRecipients(role: "admin" | "superadmin", meetingId: string, recipientIds: string[]) {
   const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}/recipients`, {
@@ -301,6 +324,7 @@ export async function setMeetingRecipients(role: "admin" | "superadmin", meeting
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to update who this meeting is shared with.");
+  forget("/meetings");
   return body as { recipientIds: string[] };
 }
 
@@ -320,6 +344,7 @@ export async function updateMeeting(role: "admin" | "superadmin", meetingId: str
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to update this meeting.");
+  forget("/meetings");
   return body as Meeting;
 }
 
@@ -327,6 +352,7 @@ export async function cancelMeeting(role: "admin" | "superadmin", meetingId: str
   const response = await apiFetch(`${apiUrl}/api/${role}/meetings/${meetingId}`, { method: "DELETE" });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to cancel this meeting.");
+  forget("/meetings");
   return body as { id: string; status: string };
 }
 
@@ -355,8 +381,10 @@ export async function getMemberProfile(): Promise<MemberProfile> {
   const response = await apiFetch(`${apiUrl}/api/member/profile`);
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to load your profile.");
-  return body as MemberProfile;
+  return remember("/api/member/profile", body as MemberProfile);
 }
+
+export const cachedMemberProfile = () => recall<MemberProfile>("/api/member/profile");
 
 export async function updateMemberProfile(input: UpdateMemberProfileRequest): Promise<MemberProfile> {
   const response = await apiFetch(`${apiUrl}/api/member/profile`, {
@@ -366,7 +394,7 @@ export async function updateMemberProfile(input: UpdateMemberProfileRequest): Pr
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to save your profile.");
-  return body as MemberProfile;
+  return remember("/api/member/profile", body as MemberProfile);
 }
 
 export type StaffRole = "admin" | "superadmin" | "accountant";
@@ -390,8 +418,10 @@ export async function getStaffProfile(role: StaffRole): Promise<StaffProfile> {
   const response = await apiFetch(`${apiUrl}/api/${role}/profile`);
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to load your profile.");
-  return body as StaffProfile;
+  return remember(`/api/${role}/profile`, body as StaffProfile);
 }
+
+export const cachedStaffProfile = (role: StaffRole) => recall<StaffProfile>(`/api/${role}/profile`);
 
 export async function updateStaffProfile(role: StaffRole, input: UpdateStaffProfileRequest): Promise<StaffProfile> {
   const response = await apiFetch(`${apiUrl}/api/${role}/profile`, {
@@ -401,7 +431,7 @@ export async function updateStaffProfile(role: StaffRole, input: UpdateStaffProf
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to save your profile.");
-  return body as StaffProfile;
+  return remember(`/api/${role}/profile`, body as StaffProfile);
 }
 
 export type ReceiptPaymentType = "monthly_deposit" | "share_contribution" | "loan_payment" | "other";
@@ -416,6 +446,8 @@ export interface Receipt {
   status: ReceiptStatus;
   submittedAt: string;
   rejectionReason: string | null;
+  editedAt: string | null;
+  editedByName: string | null;
   fileName: string;
   fileUrl: string | null;
 }
@@ -431,8 +463,10 @@ export async function listReceipts(): Promise<Receipt[]> {
   const response = await apiFetch(`${apiUrl}/api/member/receipts`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load your receipts.");
-  return body as Receipt[];
+  return remember("/api/member/receipts", body as Receipt[]);
 }
+
+export const cachedReceipts = () => recall<Receipt[]>("/api/member/receipts");
 
 export async function submitReceipt(input: SubmitReceiptRequest): Promise<Receipt> {
   const formData = new FormData();
@@ -444,6 +478,7 @@ export async function submitReceipt(input: SubmitReceiptRequest): Promise<Receip
   const response = await apiFetch(`${apiUrl}/api/member/receipts`, { method: "POST", body: formData });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to submit this receipt.");
+  forget("/receipts");
   return body as Receipt;
 }
 
@@ -456,32 +491,72 @@ export interface ReviewReceipt extends Receipt {
   reviewedAt: string | null;
 }
 
-export async function listReceiptsForReview(
-  role: ReceiptReviewerRole,
-  filters?: { status?: ReceiptStatus | "all"; memberId?: string },
-): Promise<ReviewReceipt[]> {
+type ReviewReceiptFilters = { status?: ReceiptStatus | "all"; memberId?: string };
+
+function reviewReceiptsPath(role: ReceiptReviewerRole, filters?: ReviewReceiptFilters) {
   const params = new URLSearchParams();
   if (filters?.status && filters.status !== "all") params.set("status", filters.status);
   if (filters?.memberId) params.set("memberId", filters.memberId);
   const query = params.toString();
-  const response = await apiFetch(`${apiUrl}/api/${role}/receipts${query ? `?${query}` : ""}`);
+  return `/api/${role}/receipts${query ? `?${query}` : ""}`;
+}
+
+export async function listReceiptsForReview(role: ReceiptReviewerRole, filters?: ReviewReceiptFilters): Promise<ReviewReceipt[]> {
+  const path = reviewReceiptsPath(role, filters);
+  const response = await apiFetch(`${apiUrl}${path}`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load receipts.");
-  return body as ReviewReceipt[];
+  return remember(path, body as ReviewReceipt[]);
 }
+
+export const cachedReceiptsForReview = (role: ReceiptReviewerRole, filters?: ReviewReceiptFilters) =>
+  recall<ReviewReceipt[]>(reviewReceiptsPath(role, filters));
 
 export async function approveReceipt(role: ReceiptReviewerRole, receiptId: string): Promise<ReviewReceipt> {
   const response = await apiFetch(`${apiUrl}/api/${role}/receipts/${receiptId}/approve`, { method: "POST" });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to approve this receipt.");
+  forget("/receipts");
   return body as ReviewReceipt;
 }
 
-export async function getReceiptFile(role: ReceiptReviewerRole, receiptId: string): Promise<{ fileUrl: string; fileName: string }> {
-  const response = await apiFetch(`${apiUrl}/api/${role}/receipts/${receiptId}/file`);
+export type EditReceiptRequest = { amount: number; paymentType: ReceiptPaymentType; paymentDate: string };
+
+export async function editReceipt(role: ReceiptReviewerRole, receiptId: string, input: EditReceiptRequest): Promise<ReviewReceipt> {
+  const response = await apiFetch(`${apiUrl}/api/${role}/receipts/${receiptId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message ?? "Unable to load this receipt file.");
-  return body as { fileUrl: string; fileName: string };
+  if (!response.ok) throw new Error(body.message ?? "Unable to save this receipt.");
+  forget("/receipts");
+  return body as ReviewReceipt;
+}
+
+type ReceiptFile = { fileUrl: string; fileName: string };
+const receiptFileTtlMs = 5 * 60 * 1000;
+
+export function getReceiptFile(role: ReceiptReviewerRole, receiptId: string): Promise<ReceiptFile> {
+  const path = `/api/${role}/receipts/${receiptId}/file`;
+  return shared(path, async () => {
+    const response = await apiFetch(`${apiUrl}${path}`);
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.message ?? "Unable to load this receipt file.");
+    return remember(path, body as ReceiptFile, receiptFileTtlMs);
+  });
+}
+
+export const cachedReceiptFile = (role: ReceiptReviewerRole, receiptId: string) => recall<ReceiptFile>(`/api/${role}/receipts/${receiptId}/file`);
+
+/** Warms a receipt's signed URL and the file itself (e.g. on hover), so opening it is instant. */
+export function prefetchReceiptFile(role: ReceiptReviewerRole, receiptId: string) {
+  if (cachedReceiptFile(role, receiptId)) return;
+  getReceiptFile(role, receiptId)
+    .then(({ fileUrl, fileName }) => {
+      if (/\.(png|jpe?g|webp)$/i.test(fileName)) new Image().src = fileUrl;
+    })
+    .catch(() => {});
 }
 
 export async function rejectReceipt(role: ReceiptReviewerRole, receiptId: string, reason: string): Promise<ReviewReceipt> {
@@ -492,6 +567,7 @@ export async function rejectReceipt(role: ReceiptReviewerRole, receiptId: string
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to reject this receipt.");
+  forget("/receipts");
   return body as ReviewReceipt;
 }
 
@@ -566,8 +642,10 @@ export async function listIssuedCertificates(role: CertificateIssuerRole = "admi
   const response = await apiFetch(`${apiUrl}/api/${role}/certificates`);
   const body = await response.json().catch(() => []);
   if (!response.ok) throw new Error(body.message ?? "Unable to load certificates.");
-  return body as AdminCertificate[];
+  return remember(`/api/${role}/certificates`, body as AdminCertificate[]);
 }
+
+export const cachedIssuedCertificates = (role: CertificateIssuerRole) => recall<AdminCertificate[]>(`/api/${role}/certificates`);
 
 export async function issueCertificate(input: IssueCertificateRequest, role: CertificateIssuerRole = "admin"): Promise<Certificate> {
   const formData = new FormData();
@@ -578,6 +656,7 @@ export async function issueCertificate(input: IssueCertificateRequest, role: Cer
   const response = await apiFetch(`${apiUrl}/api/${role}/certificates`, { method: "POST", body: formData });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to issue this certificate.");
+  forget("/certificates");
   return body as Certificate;
 }
 
@@ -585,6 +664,7 @@ export async function deleteCertificate(id: string, role: CertificateIssuerRole 
   const response = await apiFetch(`${apiUrl}/api/${role}/certificates/${id}`, { method: "DELETE" });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message ?? "Unable to delete this certificate.");
+  forget("/certificates");
 }
 
 export async function listMyCertificates(): Promise<Certificate[]> {
@@ -708,7 +788,6 @@ export interface SaveQuickLinkInput {
   url: string;
   description?: string;
   recipientIds?: string[];
-  notify?: boolean;
 }
 
 export async function listQuickLinks(): Promise<QuickLink[]> {
@@ -808,7 +887,10 @@ export async function updateLandingContent(input: LandingContent): Promise<Landi
   return body as LandingContent;
 }
 
-export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ items: AuditLogEntry[]; total: number }> {
+/** Activity log page size; the superadmin dashboard loads this same first page so the log opens instantly. */
+export const auditLogPageSize = 25;
+
+function auditLogsPath(filters: AuditLogFilters) {
   const params = new URLSearchParams();
   if (filters.actorId) params.set("actorId", filters.actorId);
   if (filters.action) params.set("action", filters.action);
@@ -818,11 +900,18 @@ export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ it
   if (filters.limit) params.set("limit", String(filters.limit));
   if (filters.offset) params.set("offset", String(filters.offset));
   const query = params.toString();
-  const response = await apiFetch(`${apiUrl}/api/superadmin/audit-logs${query ? `?${query}` : ""}`);
+  return `/api/superadmin/audit-logs${query ? `?${query}` : ""}`;
+}
+
+export async function listAuditLogs(filters: AuditLogFilters = {}): Promise<{ items: AuditLogEntry[]; total: number }> {
+  const path = auditLogsPath(filters);
+  const response = await apiFetch(`${apiUrl}${path}`);
   const body = await response.json().catch(() => ({ items: [], total: 0 }));
   if (!response.ok) throw new Error(body.message ?? "Unable to load audit logs.");
-  return body as { items: AuditLogEntry[]; total: number };
+  return remember(path, body as { items: AuditLogEntry[]; total: number });
 }
+
+export const cachedAuditLogs = (filters: AuditLogFilters = {}) => recall<{ items: AuditLogEntry[]; total: number }>(auditLogsPath(filters));
 
 export type LandingPersonKind = "team" | "board";
 export interface LandingPerson {
@@ -1115,13 +1204,17 @@ export async function uploadLandingMedia(file: File): Promise<{ url: string }> {
   return body as { url: string };
 }
 
+/** Who uploads a document type: everyone, members only, or staff only. */
+export type DocumentAudience = "everyone" | "members" | "staff";
+
 export interface MemberDocumentType {
   id: string;
   name: string;
   description: string | null;
   isRequired: boolean;
   sortOrder: number;
-  /** Superadmin listing only: how many members have uploaded this type. */
+  appliesTo: DocumentAudience;
+  /** Superadmin listing only: how many members and staff have uploaded this type. */
   uploadCount?: number;
 }
 
@@ -1130,6 +1223,7 @@ export interface SaveDocumentTypeInput {
   description?: string;
   isRequired?: boolean;
   sortOrder?: number;
+  appliesTo?: DocumentAudience;
 }
 
 export interface MemberDocument {
@@ -1182,12 +1276,27 @@ export async function deleteDocumentType(id: string): Promise<void> {
 }
 
 /** Whose documents a request is for: the signed-in member, or a member managed by the superadmin. */
-export type MemberDocumentsOwner = { kind: "self" } | { kind: "member"; memberId: string };
+/**
+ * self: the signed-in member. staff: the signed-in staff user. member / staffUser: the
+ * superadmin managing someone else's documents.
+ */
+export type MemberDocumentsOwner =
+  | { kind: "self" }
+  | { kind: "staff"; role: StaffRole }
+  | { kind: "member"; memberId: string }
+  | { kind: "staffUser"; profileId: string };
 
 function memberDocumentsBase(owner: MemberDocumentsOwner) {
-  return owner.kind === "self"
-    ? `${apiUrl}/api/member/documents`
-    : `${apiUrl}/api/superadmin/members/${owner.memberId}/documents`;
+  switch (owner.kind) {
+    case "self":
+      return `${apiUrl}/api/member/documents`;
+    case "staff":
+      return `${apiUrl}/api/${owner.role}/my-documents`;
+    case "member":
+      return `${apiUrl}/api/superadmin/members/${owner.memberId}/documents`;
+    case "staffUser":
+      return `${apiUrl}/api/superadmin/staff/${owner.profileId}/documents`;
+  }
 }
 
 export async function listMemberDocuments(owner: MemberDocumentsOwner): Promise<MemberDocumentSlot[]> {
@@ -1236,6 +1345,32 @@ export interface MemberDirectoryEntry {
   documentsUploaded: number;
   documentsTotal: number;
   missingRequired: string[];
+}
+
+export interface StaffDirectoryEntry {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  role: StaffRole;
+  joinedAt: string;
+  documentsUploaded: number;
+  documentsTotal: number;
+  missingRequired: string[];
+}
+
+export const staffRoleLabels: Record<StaffRole, string> = {
+  superadmin: "Super admin",
+  admin: "Admin",
+  accountant: "Accountant",
+};
+
+export async function listStaffDirectory(): Promise<StaffDirectoryEntry[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/staff/directory`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load staff.");
+  return body as StaffDirectoryEntry[];
 }
 
 export async function listMemberDirectory(): Promise<MemberDirectoryEntry[]> {

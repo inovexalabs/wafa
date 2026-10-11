@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { listMeetingRecipients, MeetingRecipient } from "../lib/auth";
+import { cachedMeetingRecipients, listMeetingRecipients, MeetingRecipient } from "../lib/auth";
 
 const groupDefinitions: { key: string; label: string; roles: MeetingRecipient["role"][] }[] = [
 	{ key: "admins", label: "Admins", roles: ["superadmin", "admin"] },
@@ -10,8 +10,9 @@ const groupDefinitions: { key: string; label: string; roles: MeetingRecipient["r
 ];
 
 export function useMeetingRecipients(role: "admin" | "superadmin") {
-	const [recipients, setRecipients] = useState<MeetingRecipient[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	// The dashboards load this directory too, so it is usually cached; it still refreshes in the background.
+	const [recipients, setRecipients] = useState<MeetingRecipient[]>(() => cachedMeetingRecipients(role) ?? []);
+	const [isLoading, setIsLoading] = useState(() => !cachedMeetingRecipients(role));
 	const [error, setError] = useState("");
 
 	useEffect(() => {

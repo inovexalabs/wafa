@@ -49,6 +49,12 @@ import { MemberDocumentsController } from './member-documents/member-documents.c
 import { SuperadminMemberDocumentsController } from './member-documents/superadmin-member-documents.controller';
 import { SuperadminDocumentTypesController } from './member-documents/superadmin-document-types.controller';
 import { MemberDocumentsService } from './member-documents/member-documents.service';
+import {
+  AccountantDocumentsController,
+  AdminDocumentsController,
+  SuperadminDocumentsController,
+} from './member-documents/staff-documents.controller';
+import { SuperadminStaffDocumentsController } from './member-documents/superadmin-staff-documents.controller';
 import { MemberLedgerController } from './ledger/member-ledger.controller';
 import { AccountantLedgerController } from './ledger/accountant-ledger.controller';
 import { SuperadminLedgerController } from './ledger/superadmin-ledger.controller';
@@ -113,6 +119,10 @@ import { LandingMediaService } from './landing-media/landing-media.service';
     MemberDocumentsController,
     SuperadminMemberDocumentsController,
     SuperadminDocumentTypesController,
+    SuperadminDocumentsController,
+    AdminDocumentsController,
+    AccountantDocumentsController,
+    SuperadminStaffDocumentsController,
     MemberLedgerController,
     AccountantLedgerController,
     SuperadminLedgerController,

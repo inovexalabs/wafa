@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import SuperadminLayout from "../../../components/superadmin-layout";
+import MemberDocumentsPanel from "../../../components/member-documents-panel";
 import { getStaffProfile, StaffProfile, updateStaffProfile } from "../../../lib/auth";
 
 function initialsFor(fullName: string) {
@@ -103,6 +104,11 @@ export default function SuperadminProfilePage() {
               </button>
             </div>
           </form>
+        )}
+        {profile && (
+          <div className="mt-5">
+            <MemberDocumentsPanel owner={{ kind: "staff", role: "superadmin" }} description="Upload your citizenship and any other documents WAFA asks for." />
+          </div>
         )}
         </div>
       </main>

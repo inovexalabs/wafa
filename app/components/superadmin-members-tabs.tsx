@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const tabs = [
   ["directory", "Members", "/superadmin/members"],
+  ["staff", "Staff", "/superadmin/members/staff"],
   ["document-types", "Document types", "/superadmin/members/document-types"],
 ] as const;
 

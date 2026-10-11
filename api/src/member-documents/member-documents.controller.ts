@@ -15,6 +15,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentProfile } from '../auth/current-profile.decorator';
 import { Roles } from '../auth/roles.decorator';
 import {
+  DocumentOwner,
   MemberDocumentsService,
   maxMemberDocumentBytes,
 } from './member-documents.service';
@@ -25,11 +26,19 @@ import {
 export class MemberDocumentsController {
   constructor(private readonly documents: MemberDocumentsService) {}
 
+  private async ownerFor(profile: {
+    id: string;
+    role: string;
+  }): Promise<DocumentOwner> {
+    return {
+      kind: 'member',
+      memberId: await this.documents.memberIdFor(profile),
+    };
+  }
+
   @Get()
   async list(@CurrentProfile() profile: { id: string; role: string }) {
-    return this.documents.listForMember(
-      await this.documents.memberIdFor(profile),
-    );
+    return this.documents.listFor(await this.ownerFor(profile));
   }
 
   @Post(':typeId')
@@ -45,8 +54,13 @@ export class MemberDocumentsController {
     @Body() body: { documentNumber?: string },
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const memberId = await this.documents.memberIdFor(profile);
-    return this.documents.upload(profile, memberId, typeId, body, file);
+    return this.documents.upload(
+      profile,
+      await this.ownerFor(profile),
+      typeId,
+      body,
+      file,
+    );
   }
 
   @Delete(':typeId')
@@ -54,11 +68,7 @@ export class MemberDocumentsController {
     @CurrentProfile() profile: { id: string; role: string },
     @Param('typeId') typeId: string,
   ) {
-    return this.documents.remove(
-      profile,
-      await this.documents.memberIdFor(profile),
-      typeId,
-    );
+    return this.documents.remove(profile, await this.ownerFor(profile), typeId);
   }
 
   @Get(':typeId/file')
@@ -66,9 +76,6 @@ export class MemberDocumentsController {
     @CurrentProfile() profile: { id: string; role: string },
     @Param('typeId') typeId: string,
   ) {
-    return this.documents.fileUrl(
-      await this.documents.memberIdFor(profile),
-      typeId,
-    );
+    return this.documents.fileUrl(await this.ownerFor(profile), typeId);
   }
 }

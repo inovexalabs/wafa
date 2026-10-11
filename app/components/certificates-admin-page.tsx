@@ -5,11 +5,13 @@ import { Award, AwardIcon, CheckCircle2, Eye, Loader2, Plus, Trash2, Upload, X }
 import AdminLayout from "./admin-layout";
 import SuperadminLayout from "./superadmin-layout";
 import Modal from "./modal";
+import { linkedRecordClass, linkedRecordId, readLinkedParam, useLinkedRecord } from "./linked-record";
 import CertificateView from "./certificate-view";
 import {
   AdminCertificate,
   CertificateIssuerRole,
   CertificateRecipient,
+  cachedIssuedCertificates,
   deleteCertificate,
   issueCertificate,
   listCertificateRecipients,
@@ -314,20 +316,33 @@ const roleTone: Record<string, string> = {
 
 /** Certificate management for admins and superadmins: upload one PNG per recipient, preview, and delete. */
 export default function CertificatesAdminPage({ role }: { role: CertificateIssuerRole }) {
-  const [certificates, setCertificates] = useState<AdminCertificate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Paints instantly from the list the dashboard already loaded, then refreshes in the background.
+  const [certificates, setCertificates] = useState<AdminCertificate[]>(() => cachedIssuedCertificates(role) ?? []);
+  const [isLoading, setIsLoading] = useState(() => !cachedIssuedCertificates(role));
   const [loadError, setLoadError] = useState("");
   const [showIssueModal, setShowIssueModal] = useState(false);
-  const [previewCertificate, setPreviewCertificate] = useState<AdminCertificate | null>(null);
+  // Arriving from a dashboard row highlights that certificate and opens its preview.
+  const [linkedId] = useState(() => readLinkedParam("certificateId"));
+  const [previewCertificate, setPreviewCertificate] = useState<AdminCertificate | null>(
+    () => (linkedId && cachedIssuedCertificates(role)?.find((cert) => cert.id === linkedId)) || null,
+  );
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const focusId = useLinkedRecord("certificateId", !isLoading);
+  const linkHandled = useRef(previewCertificate !== null);
 
   useEffect(() => {
     listIssuedCertificates(role)
-      .then(setCertificates)
+      .then((data) => {
+        setCertificates(data);
+        if (linkHandled.current) return;
+        linkHandled.current = true;
+        const linked = data.find((cert) => cert.id === linkedId);
+        if (linked) setPreviewCertificate(linked);
+      })
       .catch((err) => setLoadError(err instanceof Error ? err.message : "Unable to load certificates."))
       .finally(() => setIsLoading(false));
-  }, [role]);
+  }, [role, linkedId]);
 
   async function remove(cert: AdminCertificate) {
     if (!window.confirm(`Delete "${cert.title}" for ${cert.recipientName}? They will no longer see it.`)) return;
@@ -390,7 +405,7 @@ export default function CertificatesAdminPage({ role }: { role: CertificateIssue
         ) : (
           <div className="rounded-2xl border border-line bg-white">
             {certificates.map((cert) => (
-              <div key={cert.id} className="flex items-center gap-5 p-5 border-b border-line last:border-b-0 transition-colors hover:bg-[#f8faf8] max-[560px]:gap-3 max-[560px]:p-4">
+              <div key={cert.id} id={linkedRecordId(cert.id)} className={"flex items-center gap-5 p-5 border-b border-line last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl transition-colors max-[560px]:gap-3 max-[560px]:p-4 " + (cert.id === focusId ? linkedRecordClass : "hover:bg-[#f8faf8]")}>
                 <div className="grid place-items-center w-20 h-14 rounded-xl overflow-hidden bg-[#e4f4ec] text-[#1f6752] shrink-0 max-[560px]:w-14 max-[560px]:h-11">
                   {cert.imageUrl ? <img src={cert.imageUrl} alt="" className="w-full h-full object-cover" /> : <Award size={20} />}
                 </div>

@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarClock, Clock, Receipt as ReceiptIcon, Video, MapPin, Wallet } from "lucide-react";
+import { Award, CalendarClock, ChevronRight, Clock, Receipt as ReceiptIcon, Wallet } from "lucide-react";
 import MemberLayout from "../../components/member-layout";
+import { MeetingRow, Panel, PanelGrid, StatCard, StatGrid } from "../../components/overview";
 import {
   Certificate,
   Meeting,
@@ -18,7 +19,6 @@ import {
 } from "../../lib/auth";
 
 const primaryAction = "border-0 rounded-[7px] px-[17px] py-3 text-white bg-brand cursor-pointer text-xs font-bold no-underline inline-block max-[650px]:w-full max-[650px]:text-center";
-const cardHeading = "flex justify-between";
 
 const receiptStatusStyle: Record<Receipt["status"], string> = {
   pending: "text-[#a26e36] bg-[#faecd9]",
@@ -32,10 +32,6 @@ function formatAmount(amount: number) {
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function formatTime(isoString: string) {
-  return new Date(isoString).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
 function greeting() {
@@ -109,77 +105,43 @@ function MemberWorkspace() {
           <div className="mt-[38px] p-5 rounded-[10px] border border-[#f3d6d3] bg-[#fdf3f2] text-[#ae4d44] text-sm" role="alert">{error}</div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-4 mt-[25px] max-[650px]:grid-cols-1">
-              <article className="flex gap-[14px] p-5 border border-[#e1e9e4] rounded-[10px] bg-white">
-                <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#297256] bg-[#e2f3e4]"><Wallet size={17} /></span>
-                <div>
-                  <small className="block text-[#7a8982] text-[11px]">Current balance</small>
-                  <strong className="block my-[5px] text-[25px]">{isLoading ? "…" : formatAmount(payments?.currentBalance ?? 0)}</strong>
-                  <span className="block text-[#9aa8a2] text-[10px]">{isLoading ? "" : (payments?.duePaymentsCount ?? 0) > 0 ? `${payments?.duePaymentsCount} payment${payments?.duePaymentsCount === 1 ? "" : "s"} due` : "Up to date"}</span>
-                </div>
-              </article>
-              <article className="flex gap-[14px] p-5 border border-[#e1e9e4] rounded-[10px] bg-white">
-                <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#4378a3] bg-[#e6f1f8]"><CalendarClock size={17} /></span>
-                <div>
-                  <small className="block text-[#7a8982] text-[11px]">Upcoming meetings</small>
-                  <strong className="block my-[5px] text-[25px]">{isLoading ? "…" : upcomingMeetings.length}</strong>
-                  <span className="block text-[#9aa8a2] text-[10px]">{isLoading ? "" : upcomingMeetings.length > 0 ? `Next: ${formatDate(upcomingMeetings[0].scheduled_at)}` : "None scheduled"}</span>
-                </div>
-              </article>
-              <article className="flex gap-[14px] p-5 border border-[#e1e9e4] rounded-[10px] bg-white">
-                <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#b56f36] bg-[#f9ebdc]"><Award size={17} /></span>
-                <div>
-                  <small className="block text-[#7a8982] text-[11px]">Certificates earned</small>
-                  <strong className="block my-[5px] text-[25px]">{isLoading ? "…" : certificates.length}</strong>
-                  <span className="block text-[#9aa8a2] text-[10px]">Awarded to you</span>
-                </div>
-              </article>
-            </div>
+            <StatGrid className="grid-cols-3 max-[650px]:grid-cols-1">
+              <StatCard
+                icon={Wallet}
+                tone="green"
+                label="Current balance"
+                value={isLoading ? "…" : formatAmount(payments?.currentBalance ?? 0)}
+                hint={isLoading ? "" : (payments?.duePaymentsCount ?? 0) > 0 ? `${payments?.duePaymentsCount} payment${payments?.duePaymentsCount === 1 ? "" : "s"} due` : "Up to date"}
+              />
+              <StatCard
+                icon={CalendarClock}
+                tone="blue"
+                label="Upcoming meetings"
+                value={isLoading ? "…" : upcomingMeetings.length}
+                hint={isLoading ? "" : upcomingMeetings.length > 0 ? `Next: ${formatDate(upcomingMeetings[0].scheduled_at)}` : "None scheduled"}
+              />
+              <StatCard icon={Award} tone="amber" label="Certificates earned" value={isLoading ? "…" : certificates.length} hint="Awarded to you" />
+            </StatGrid>
 
-            <div className="grid grid-cols-[1.5fr_1fr] gap-[18px] mt-5 max-[900px]:grid-cols-1">
-              <section className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white max-[500px]:px-4 max-[500px]:py-[19px]" id="meetings">
-                <div className={cardHeading}>
-                  <div>
-                    <h2 className="m-0 font-display font-bold text-[23px]">Upcoming meetings</h2>
-                    <p className="my-[6px] text-[#8a9892] text-[11px]">Stay prepared for what&apos;s next.</p>
-                  </div>
-                  <Link className="text-[#286c54] text-[11px] font-bold no-underline" href="/member/meetings">View all <span>→</span></Link>
-                </div>
-                <div className="grid">
-                  {isLoading ? (
-                    <div className="space-y-3 mt-4">
-                      {[0, 1, 2].map((i) => <div key={i} className="h-[67px] rounded-md bg-[#edf1ee] animate-pulse" />)}
-                    </div>
-                  ) : upcomingMeetings.length === 0 ? (
-                    <p className="mt-4 text-[11px] text-[#9ba7a1]">No upcoming meetings right now.</p>
-                  ) : (
-                    upcomingMeetings.map((meeting) => (
-                      <div className="flex items-center gap-3 min-h-[67px] border-b border-[#edf1ee] last:border-b-0" key={meeting.id}>
-                        <span className="grid place-items-center w-[37px] h-[37px] rounded-[9px] text-[#376b57] bg-[#e9f4e8] shrink-0">
-                          {meeting.meeting_type === "online" ? <Video size={16} /> : <MapPin size={16} />}
-                        </span>
-                        <div className="flex-1">
-                          <strong className="block text-[#30423a] text-xs">{meeting.title}</strong>
-                          <span className="block mt-1 text-[#9ba7a1] text-[10px]">{formatDate(meeting.scheduled_at)} · {formatTime(meeting.scheduled_at)}</span>
-                        </div>
-                        {meeting.meeting_url ? (
-                          <a className="text-[#286c54] text-[10px] font-bold no-underline" href={meeting.meeting_url} target="_blank" rel="noreferrer">Join →</a>
-                        ) : null}
+            <PanelGrid>
+              <div id="meetings">
+                <Panel title="Upcoming meetings" subtitle="Stay prepared for what's next." href="/member/meetings">
+                  <div className="grid">
+                    {isLoading ? (
+                      <div className="space-y-3 mt-4">
+                        {[0, 1, 2].map((i) => <div key={i} className="h-[67px] rounded-md bg-[#edf1ee] animate-pulse" />)}
                       </div>
-                    ))
-                  )}
-                </div>
-              </section>
-
-              <div className="grid gap-[18px] max-[900px]:grid-cols-2 max-[650px]:grid-cols-1">
-                <section className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white max-[500px]:px-4 max-[500px]:py-[19px]">
-                  <div className={cardHeading}>
-                    <div>
-                      <h2 className="m-0 font-display font-bold text-[23px]">Recent receipts</h2>
-                      <p className="my-[6px] text-[#8a9892] text-[11px]">Your latest submissions.</p>
-                    </div>
-                    <Link className="text-[#286c54] text-[11px] font-bold no-underline" href="/member/receipts">View all <span>→</span></Link>
+                    ) : upcomingMeetings.length === 0 ? (
+                      <p className="mt-4 text-[11px] text-[#9ba7a1]">No upcoming meetings right now.</p>
+                    ) : (
+                      upcomingMeetings.map((meeting) => <MeetingRow key={meeting.id} meeting={meeting} href={`/member/meetings?meetingId=${meeting.id}`} />)
+                    )}
                   </div>
+                </Panel>
+              </div>
+
+              <div className="flex flex-col gap-8 *:not-first:pt-8 *:not-first:border-t *:not-first:border-line">
+                <Panel title="Recent receipts" subtitle="Your latest submissions." href="/member/receipts">
                   {isLoading ? (
                     <div className="space-y-3 mt-4">
                       {[0, 1].map((i) => <div key={i} className="h-[52px] rounded-md bg-[#edf1ee] animate-pulse" />)}
@@ -188,25 +150,19 @@ function MemberWorkspace() {
                     <p className="mt-4 text-[11px] text-[#9ba7a1]">You haven&apos;t submitted any receipts yet.</p>
                   ) : (
                     recentReceipts.map((receipt) => (
-                      <div className="flex items-center gap-3 py-[13px] border-t border-[#edf1ee] first:border-t-0" key={receipt.id}>
+                      <Link className="group flex items-center gap-3 py-[13px] border-t border-[#edf1ee] first:border-t-0 no-underline text-inherit" key={receipt.id} href={`/member/receipts?receiptId=${receipt.id}`}>
                         <span className="grid place-items-center w-[33px] h-[37px] rounded-md text-[#376b57] bg-[#e9f4e8] shrink-0"><ReceiptIcon size={15} /></span>
                         <div className="flex-1">
-                          <strong className="block text-[11px]">{formatAmount(receipt.amount)}</strong>
+                          <strong className="block text-[11px] group-hover:text-brand">{formatAmount(receipt.amount)}</strong>
                           <span className="block mt-1 text-[#99a49f] text-[9px]">{formatDate(receipt.submittedAt)}</span>
                         </div>
                         <span className={"px-2 py-1 rounded text-[9px] font-bold " + receiptStatusStyle[receipt.status]}>{receipt.status}</span>
-                      </div>
+                        <ChevronRight size={14} className="shrink-0 text-[#9aa8a1] group-hover:text-brand" />
+                      </Link>
                     ))
                   )}
-                </section>
-                <section className="p-6 border border-[#e1e9e4] rounded-[10px] bg-white max-[500px]:px-4 max-[500px]:py-[19px]">
-                  <div className={cardHeading}>
-                    <div>
-                      <h2 className="m-0 font-display font-bold text-[23px]">Payment status</h2>
-                      <p className="my-[6px] text-[#8a9892] text-[11px]">Your contribution history.</p>
-                    </div>
-                    <Link className="text-[#286c54] text-[11px] font-bold no-underline" href="/member/payments">Details <span>→</span></Link>
-                  </div>
+                </Panel>
+                <Panel title="Payment status" subtitle="Your contribution history." href="/member/payments" linkLabel="Details">
                   <div className="flex items-center gap-[19px] my-[10px]">
                     <div className="flex-1">
                       <span className="block text-[#8c9993] text-[10px]">Total contributions</span>
@@ -216,9 +172,9 @@ function MemberWorkspace() {
                       <Clock size={11} /> {isLoading ? "" : (payments?.duePaymentsCount ?? 0) > 0 ? "Payment due" : "Up to date"}
                     </span>
                   </div>
-                </section>
+                </Panel>
               </div>
-            </div>
+            </PanelGrid>
           </>
         )}
       </div>

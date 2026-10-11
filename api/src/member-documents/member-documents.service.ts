@@ -10,12 +10,20 @@ import { AuditService } from '../audit/audit.service';
 
 type Profile = { id: string; role: string };
 
+/** Whose documents: a member (by members.id) or a staff user (by profiles.id). */
+export type DocumentOwner =
+  { kind: 'member'; memberId: string } | { kind: 'staff'; profileId: string };
+
+/** Who uploads a document type: everyone, members only, or staff only. */
+export type DocumentAudience = 'everyone' | 'members' | 'staff';
+
 export interface MemberDocumentType {
   id: string;
   name: string;
   description: string | null;
   isRequired: boolean;
   sortOrder: number;
+  appliesTo: DocumentAudience;
   uploadCount?: number;
 }
 
@@ -24,6 +32,20 @@ export interface SaveDocumentTypeInput {
   description?: string;
   isRequired?: boolean;
   sortOrder?: number;
+  appliesTo?: DocumentAudience;
+}
+
+export interface StaffDirectoryEntry {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  joinedAt: string;
+  documentsUploaded: number;
+  documentsTotal: number;
+  missingRequired: string[];
 }
 
 export interface MemberDocument {
@@ -46,6 +68,17 @@ type TypeRow = {
   description: string | null;
   is_required: boolean;
   sort_order: number;
+  applies_to: DocumentAudience;
+};
+
+type StaffRow = {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  role: string;
+  created_at: string;
 };
 
 type DocumentRow = {
@@ -68,6 +101,10 @@ const allowedMimeTypes = new Set([
 ]);
 export const maxMemberDocumentBytes = 10 * 1024 * 1024;
 const signedUrlTtlSeconds = 60 * 10;
+const audiences = new Set<DocumentAudience>(['everyone', 'members', 'staff']);
+const staffRoles = ['superadmin', 'admin', 'accountant'];
+const typeColumns =
+  'id, name, description, is_required, sort_order, applies_to';
 const documentColumns =
   'id, document_type_id, document_number, file_key, original_filename, mime_type, file_size, updated_at';
 
@@ -88,7 +125,7 @@ export class MemberDocumentsService {
       await Promise.all([
         client
           .from('member_document_types')
-          .select('id, name, description, is_required, sort_order')
+          .select(typeColumns)
           .order('sort_order', { ascending: true })
           .order('name', { ascending: true }),
         client.from('member_documents').select('document_type_id'),
@@ -118,8 +155,9 @@ export class MemberDocumentsService {
         description: input.description?.trim() || null,
         is_required: input.isRequired ?? false,
         sort_order: Number.isFinite(input.sortOrder) ? input.sortOrder : 0,
+        applies_to: this.cleanAudience(input.appliesTo ?? 'everyone'),
       })
-      .select('id, name, description, is_required, sort_order')
+      .select(typeColumns)
       .single();
     if (error) throw this.typeWriteError(error);
 
@@ -128,7 +166,11 @@ export class MemberDocumentsService {
       action: 'member_document_type.created',
       entityType: 'member_document_type',
       entityId: data.id,
-      newData: { name, isRequired: data.is_required },
+      newData: {
+        name,
+        isRequired: data.is_required,
+        appliesTo: data.applies_to,
+      },
     });
 
     return { ...this.mapType(data), uploadCount: 0 };
@@ -149,6 +191,8 @@ export class MemberDocumentsService {
         throw new BadRequestException('Sort order must be a number.');
       patch.sort_order = input.sortOrder;
     }
+    if (input.appliesTo !== undefined)
+      patch.applies_to = this.cleanAudience(input.appliesTo);
     if (!Object.keys(patch).length)
       throw new BadRequestException('Nothing to update.');
 
@@ -157,7 +201,7 @@ export class MemberDocumentsService {
       .from('member_document_types')
       .update(patch)
       .eq('id', id)
-      .select('id, name, description, is_required, sort_order')
+      .select(typeColumns)
       .maybeSingle();
     if (error) throw this.typeWriteError(error);
     if (!data) throw new NotFoundException('Document type not found.');
@@ -222,6 +266,63 @@ export class MemberDocumentsService {
     return { success: true };
   }
 
+  // ---------- Staff directory (superadmin) ----------
+
+  // Every superadmin, admin and accountant with how complete their documents
+  // are, mirroring the member directory.
+  async staffDirectory(): Promise<StaffDirectoryEntry[]> {
+    const client = this.supabase.getAdminClient();
+    const [
+      { data: staff, error: staffError },
+      { data: types, error: typesError },
+      { data: documents, error: documentsError },
+    ] = await Promise.all([
+      client
+        .from('profiles')
+        .select('id, user_id, full_name, email, phone, role, created_at')
+        .in('role', staffRoles)
+        .order('full_name', { ascending: true }),
+      client
+        .from('member_document_types')
+        .select('id, name, is_required')
+        .in('applies_to', ['everyone', 'staff']),
+      client
+        .from('member_documents')
+        .select('profile_id, document_type_id')
+        .not('profile_id', 'is', null),
+    ]);
+    if (staffError || typesError || documentsError)
+      throw new InternalServerErrorException('Unable to load staff.');
+
+    const uploadedByProfile = new Map<string, Set<string>>();
+    for (const row of documents ?? []) {
+      const uploaded = uploadedByProfile.get(row.profile_id) ?? new Set();
+      uploaded.add(row.document_type_id);
+      uploadedByProfile.set(row.profile_id, uploaded);
+    }
+    const allTypes = types ?? [];
+    const requiredTypes = allTypes.filter((type) => type.is_required);
+
+    return ((staff ?? []) as StaffRow[]).map((profile) => {
+      const uploaded = uploadedByProfile.get(profile.id) ?? new Set<string>();
+      return {
+        id: profile.id,
+        userId: profile.user_id,
+        fullName: profile.full_name || profile.user_id,
+        email: profile.email,
+        phone: profile.phone,
+        role: profile.role,
+        joinedAt: profile.created_at,
+        documentsUploaded: allTypes.filter((type) => uploaded.has(type.id))
+          .length,
+        documentsTotal: allTypes.length,
+        missingRequired: requiredTypes
+          .filter((type) => !uploaded.has(type.id))
+          .map((type) => type.name),
+      };
+    });
+  }
+
   // ---------- Member documents ----------
 
   async memberIdFor(profile: Profile) {
@@ -239,20 +340,22 @@ export class MemberDocumentsService {
     return data.id as string;
   }
 
-  async listForMember(memberId: string): Promise<MemberDocumentSlot[]> {
-    await this.assertMemberExists(memberId);
+  async listFor(owner: DocumentOwner): Promise<MemberDocumentSlot[]> {
+    await this.assertOwnerExists(owner);
+    const [ownerColumn, ownerId] = this.ownerKey(owner);
     const client = this.supabase.getAdminClient();
     const [{ data: types, error }, { data: documents, error: documentsError }] =
       await Promise.all([
         client
           .from('member_document_types')
-          .select('id, name, description, is_required, sort_order')
+          .select(typeColumns)
+          .in('applies_to', this.audiencesFor(owner))
           .order('sort_order', { ascending: true })
           .order('name', { ascending: true }),
         client
           .from('member_documents')
           .select(documentColumns)
-          .eq('member_id', memberId),
+          .eq(ownerColumn, ownerId),
       ]);
     if (error || documentsError)
       throw new InternalServerErrorException('Unable to load documents.');
@@ -271,7 +374,7 @@ export class MemberDocumentsService {
 
   async upload(
     actor: Profile,
-    memberId: string,
+    owner: DocumentOwner,
     typeId: string,
     input: { documentNumber?: string },
     file?: Express.Multer.File,
@@ -289,11 +392,12 @@ export class MemberDocumentsService {
         'Document number must be 100 characters or fewer.',
       );
 
-    await this.assertMemberExists(memberId);
+    await this.assertOwnerExists(owner);
+    const [ownerColumn, ownerId] = this.ownerKey(owner);
     const client = this.supabase.getAdminClient();
     const { data: type, error: typeError } = await client
       .from('member_document_types')
-      .select('id, name, description, is_required, sort_order')
+      .select(typeColumns)
       .eq('id', typeId)
       .maybeSingle();
     if (typeError)
@@ -301,16 +405,22 @@ export class MemberDocumentsService {
         'Unable to load this document type.',
       );
     if (!type) throw new NotFoundException('Document type not found.');
+    if (!this.audiencesFor(owner).includes(type.applies_to))
+      throw new BadRequestException(
+        `${type.name} is only uploaded by ${type.applies_to}.`,
+      );
 
     const { data: existing } = await client
       .from('member_documents')
       .select('file_key')
-      .eq('member_id', memberId)
+      .eq(ownerColumn, ownerId)
       .eq('document_type_id', typeId)
       .maybeSingle();
 
     const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    const fileKey = `${memberId}/${typeId}/${Date.now()}-${safeName}`;
+    // Member files keep their original `<memberId>/` prefix; staff files live under `staff/`.
+    const folder = owner.kind === 'member' ? ownerId : `staff/${ownerId}`;
+    const fileKey = `${folder}/${typeId}/${Date.now()}-${safeName}`;
     const { error: uploadError } = await client.storage
       .from(bucket)
       .upload(fileKey, file.buffer, { contentType: file.mimetype });
@@ -323,7 +433,7 @@ export class MemberDocumentsService {
       .from('member_documents')
       .upsert(
         {
-          member_id: memberId,
+          [ownerColumn]: ownerId,
           document_type_id: typeId,
           document_number: documentNumber,
           file_key: fileKey,
@@ -332,7 +442,7 @@ export class MemberDocumentsService {
           file_size: file.size,
           uploaded_by: actor.id,
         },
-        { onConflict: 'member_id,document_type_id' },
+        { onConflict: `${ownerColumn},document_type_id` },
       )
       .select(documentColumns)
       .single();
@@ -350,7 +460,7 @@ export class MemberDocumentsService {
       entityType: 'member_document',
       entityId: data.id,
       newData: {
-        memberId,
+        ...this.ownerAuditFields(owner),
         documentType: type.name,
         fileName: file.originalname,
       },
@@ -359,12 +469,13 @@ export class MemberDocumentsService {
     return { type: this.mapType(type), document: this.mapDocument(data) };
   }
 
-  async remove(actor: Profile, memberId: string, typeId: string) {
+  async remove(actor: Profile, owner: DocumentOwner, typeId: string) {
+    const [ownerColumn, ownerId] = this.ownerKey(owner);
     const client = this.supabase.getAdminClient();
     const { data, error } = await client
       .from('member_documents')
       .delete()
-      .eq('member_id', memberId)
+      .eq(ownerColumn, ownerId)
       .eq('document_type_id', typeId)
       .select('id, file_key, original_filename')
       .maybeSingle();
@@ -378,7 +489,7 @@ export class MemberDocumentsService {
       entityType: 'member_document',
       entityId: data.id,
       oldData: {
-        memberId,
+        ...this.ownerAuditFields(owner),
         documentTypeId: typeId,
         fileName: data.original_filename,
       },
@@ -387,12 +498,13 @@ export class MemberDocumentsService {
     return { success: true };
   }
 
-  async fileUrl(memberId: string, typeId: string) {
+  async fileUrl(owner: DocumentOwner, typeId: string) {
+    const [ownerColumn, ownerId] = this.ownerKey(owner);
     const client = this.supabase.getAdminClient();
     const { data, error } = await client
       .from('member_documents')
       .select('file_key, original_filename')
-      .eq('member_id', memberId)
+      .eq(ownerColumn, ownerId)
       .eq('document_type_id', typeId)
       .maybeSingle();
     if (error)
@@ -411,16 +523,52 @@ export class MemberDocumentsService {
 
   // ---------- Helpers ----------
 
-  private async assertMemberExists(memberId: string) {
-    const { data, error } = await this.supabase
-      .getAdminClient()
+  private ownerKey(owner: DocumentOwner): ['member_id' | 'profile_id', string] {
+    return owner.kind === 'member'
+      ? ['member_id', owner.memberId]
+      : ['profile_id', owner.profileId];
+  }
+
+  private ownerAuditFields(owner: DocumentOwner) {
+    return owner.kind === 'member'
+      ? { memberId: owner.memberId }
+      : { profileId: owner.profileId };
+  }
+
+  private audiencesFor(owner: DocumentOwner): DocumentAudience[] {
+    return ['everyone', owner.kind === 'member' ? 'members' : 'staff'];
+  }
+
+  private async assertOwnerExists(owner: DocumentOwner) {
+    const client = this.supabase.getAdminClient();
+    if (owner.kind === 'staff') {
+      const { data, error } = await client
+        .from('profiles')
+        .select('id')
+        .eq('id', owner.profileId)
+        .in('role', staffRoles)
+        .maybeSingle();
+      if (error)
+        throw new InternalServerErrorException('Unable to load this user.');
+      if (!data) throw new NotFoundException('Staff user not found.');
+      return;
+    }
+    const { data, error } = await client
       .from('members')
       .select('id')
-      .eq('id', memberId)
+      .eq('id', owner.memberId)
       .maybeSingle();
     if (error)
       throw new InternalServerErrorException('Unable to load this member.');
     if (!data) throw new NotFoundException('Member not found.');
+  }
+
+  private cleanAudience(value: string): DocumentAudience {
+    if (!audiences.has(value as DocumentAudience))
+      throw new BadRequestException(
+        'Applies to must be everyone, members, or staff.',
+      );
+    return value as DocumentAudience;
   }
 
   private async removeFiles(fileKeys: string[]) {
@@ -455,6 +603,7 @@ export class MemberDocumentsService {
       description: row.description,
       isRequired: row.is_required,
       sortOrder: row.sort_order,
+      appliesTo: row.applies_to,
     };
   }
 
