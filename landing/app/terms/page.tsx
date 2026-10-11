@@ -5,6 +5,8 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Terms of Service",
+  description:
+    "The terms that govern WAFA Group membership, savings and loan obligations, and use of the WAFA member workspace.",
   path: "/terms",
 });
 

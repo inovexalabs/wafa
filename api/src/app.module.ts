@@ -80,6 +80,8 @@ import { SuperadminPublicDocumentsController } from './public-documents/superadm
 import { PublicDocumentsService } from './public-documents/public-documents.service';
 import { SuperadminLandingMediaController } from './landing-media/superadmin-landing-media.controller';
 import { LandingMediaService } from './landing-media/landing-media.service';
+import { PublicContactController } from './contact/public-contact.controller';
+import { ContactService } from './contact/contact.service';
 
 @Module({
   imports: [
@@ -140,6 +142,7 @@ import { LandingMediaService } from './landing-media/landing-media.service';
     PublicDocumentsController,
     SuperadminPublicDocumentsController,
     SuperadminLandingMediaController,
+    PublicContactController,
   ],
   providers: [
     AuthService,
@@ -165,6 +168,7 @@ import { LandingMediaService } from './landing-media/landing-media.service';
     CareerService,
     PublicDocumentsService,
     LandingMediaService,
+    ContactService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

@@ -9,6 +9,16 @@ export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 export type JsonLdNode = Record<string, unknown>;
 
+// Served by app/opengraph-image.tsx. The root layout gets it automatically,
+// but a child segment that defines its own openGraph object drops the
+// inherited file-based image, so pageMetadata points at it explicitly.
+export const OG_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "WAFA Group — We Are For All",
+};
+
 // Child pages must set their own canonical and Open Graph URL; otherwise they
 // inherit the root layout's "/" and read as duplicates of the homepage.
 export function pageMetadata({
@@ -31,13 +41,13 @@ export function pageMetadata({
       siteName: "WAFA Group",
       title: fullTitle,
       ...(description ? { description } : {}),
-      images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "WAFA Group" }],
+      images: [OG_IMAGE],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: fullTitle,
       ...(description ? { description } : {}),
-      images: ["/icon-512.png"],
+      images: [OG_IMAGE.url],
     },
   };
 }

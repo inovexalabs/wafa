@@ -60,7 +60,7 @@ export default function Contact({ contact }: { contact: LandingContact }) {
           <div className="rounded-2xl border border-line bg-cream p-7">
             <p className="font-display text-lg font-bold text-ink">Send us a message</p>
             <p className="mt-1 text-xs text-muted">
-              This opens your email app with your message pre-filled to {contact.email}.
+              Fields marked * are required. We&apos;ll reply to the email you provide.
             </p>
             <div className="mt-6">
               <ContactForm email={contact.email} />

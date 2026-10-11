@@ -94,7 +94,7 @@ export default function Footer({
   socialLinks?: LandingSocialLink[];
 }) {
   return (
-    <footer className="border-t border-line bg-cream-soft px-6 pb-8 pt-16">
+    <footer className="border-t border-line bg-cream-soft px-6 pb-28 pt-16 lg:pb-8">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-3">

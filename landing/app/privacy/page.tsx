@@ -5,6 +5,8 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy",
+  description:
+    "How WAFA Group collects, stores and protects member information, who can access it, and how to request corrections or removal.",
   path: "/privacy",
 });
 

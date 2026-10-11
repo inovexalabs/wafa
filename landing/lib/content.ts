@@ -1,3 +1,5 @@
+import { API_URL } from '@/lib/site';
+
 export type LandingHero = {
   eyebrow: string;
   headline: [string, string, string];
@@ -220,8 +222,6 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
       'This is placeholder terms of service text. Replace this with your reviewed terms before publishing the site — it should explain membership eligibility, savings and loan obligations, and the rules members agree to by using the WAFA workspace.',
   },
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 export async function getLandingContent(): Promise<LandingContent> {
   try {

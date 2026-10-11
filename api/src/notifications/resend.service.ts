@@ -25,15 +25,17 @@ export class ResendService {
     subject: string,
     html: string,
     text: string,
+    replyTo?: string,
   ): Promise<string | null> {
     if (!this.client) return null;
+    const effectiveReplyTo = replyTo ?? this.replyTo;
     const { data, error } = await this.client.emails.send({
       from: this.from,
       to,
       subject,
       html,
       text,
-      ...(this.replyTo ? { replyTo: this.replyTo } : {}),
+      ...(effectiveReplyTo ? { replyTo: effectiveReplyTo } : {}),
     });
     if (error) throw new Error(error.message);
     return data?.id ?? null;

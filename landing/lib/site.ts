@@ -6,6 +6,9 @@ export const APP_URL =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
 
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
 export type NavLink =
   | { label: string; href: string }
   | { label: string; children: { label: string; href: string }[] };

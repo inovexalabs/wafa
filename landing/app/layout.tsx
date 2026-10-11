@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import Navbar from "@/components/navbar";
 import ScrollProgress from "@/components/scroll-progress";
 import SectionLinks from "@/components/section-links";
+import StickyMobileCta from "@/components/sticky-mobile-cta";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -48,13 +50,13 @@ export const metadata: Metadata = {
     siteName: "WAFA Group",
     title,
     description,
-    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "WAFA Group" }],
+    // Images come from app/opengraph-image.tsx; setting `images` here would
+    // override that file-based image.
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title,
     description,
-    images: ["/icon-512.png"],
   },
   robots: {
     index: true,
@@ -83,6 +85,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Navbar />
         <div className="grain-overlay" aria-hidden="true" />
         {children}
+        <StickyMobileCta />
+        {/* Cookieless page-view analytics, so no consent banner is required. */}
+        <Analytics />
       </body>
     </html>
   );
