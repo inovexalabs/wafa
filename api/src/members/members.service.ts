@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { fetchAllRows } from '../supabase-paging';
 import { joinedAtFromDate } from './joined-at.util';
 
 type Profile = { id: string; role: string };
@@ -52,10 +53,15 @@ export class MembersService {
         .from('member_document_types')
         .select('id, name, is_required')
         .in('applies_to', ['everyone', 'members']),
-      client
-        .from('member_documents')
-        .select('member_id, document_type_id')
-        .not('member_id', 'is', null),
+      fetchAllRows<{ member_id: string; document_type_id: string }>(
+        (from, to) =>
+          client
+            .from('member_documents')
+            .select('member_id, document_type_id')
+            .not('member_id', 'is', null)
+            .order('id')
+            .range(from, to),
+      ),
     ]);
     if (membersError || typesError || documentsError)
       throw new InternalServerErrorException('Unable to load members.');

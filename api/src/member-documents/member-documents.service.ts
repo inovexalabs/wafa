@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { fetchAllRows } from '../supabase-paging';
 
 type Profile = { id: string; role: string };
 
@@ -128,7 +129,13 @@ export class MemberDocumentsService {
           .select(typeColumns)
           .order('sort_order', { ascending: true })
           .order('name', { ascending: true }),
-        client.from('member_documents').select('document_type_id'),
+        fetchAllRows<{ document_type_id: string }>((from, to) =>
+          client
+            .from('member_documents')
+            .select('document_type_id')
+            .order('id')
+            .range(from, to),
+        ),
       ]);
     if (error || uploadsError)
       throw new InternalServerErrorException('Unable to load document types.');

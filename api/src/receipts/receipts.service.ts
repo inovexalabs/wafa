@@ -379,6 +379,22 @@ export class ReceiptsService {
     let ledgerEntryId: string | null = null;
     let monthlyDepositId: string | null = null;
     let shareContributionId: string | null = null;
+    // Undo the rows posted below if a later step fails, so a retried approval
+    // doesn't leave an orphaned credit in ledger_entries.
+    const rollback = async () => {
+      if (monthlyDepositId)
+        await client
+          .from('monthly_deposits')
+          .delete()
+          .eq('id', monthlyDepositId);
+      if (shareContributionId)
+        await client
+          .from('share_contributions')
+          .delete()
+          .eq('id', shareContributionId);
+      if (ledgerEntryId)
+        await client.from('ledger_entries').delete().eq('id', ledgerEntryId);
+    };
     if (status === 'approved') {
       const { data: ledgerEntry, error: ledgerEntryError } = await client
         .from('ledger_entries')
@@ -414,7 +430,14 @@ export class ReceiptsService {
           })
           .select('id')
           .single();
-        if (depositError) throw new BadRequestException(depositError.message);
+        if (depositError) {
+          await rollback();
+          throw new BadRequestException(
+            depositError.code === '23505'
+              ? 'A monthly deposit for this month is already recorded for this member. Change the payment type or date before approving.'
+              : depositError.message,
+          );
+        }
         monthlyDepositId = deposit.id as string;
       } else if (existing.payment_type === 'share_contribution') {
         const { data: contribution, error: contributionError } = await client
@@ -428,8 +451,10 @@ export class ReceiptsService {
           })
           .select('id')
           .single();
-        if (contributionError)
+        if (contributionError) {
+          await rollback();
           throw new BadRequestException(contributionError.message);
+        }
         shareContributionId = contribution.id as string;
       }
     }
@@ -444,9 +469,16 @@ export class ReceiptsService {
         ledger_entry_id: ledgerEntryId,
       })
       .eq('id', receiptId)
+      // Two reviewers (or a double click) racing past the pending check above
+      // must not both post this receipt to the ledger.
+      .eq('status', 'pending')
       .select(reviewReceiptColumns)
-      .single();
-    if (error) throw new BadRequestException(error.message);
+      .maybeSingle();
+    if (error || !data) {
+      await rollback();
+      if (error) throw new BadRequestException(error.message);
+      throw new BadRequestException('This receipt has already been reviewed.');
+    }
 
     await this.audit.log({
       actor: { userId: profile.id },

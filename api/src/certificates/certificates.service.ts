@@ -169,10 +169,15 @@ export class CertificatesService {
 
     try {
       const origin = process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim();
+      // Each role views its own certificates at a different app route;
+      // /admin/certificates is the admin's issuing page, not their own list.
       const certificatesPath =
-        recipient.role === 'member'
-          ? '/member/certificates'
-          : '/admin/certificates';
+        {
+          member: '/member/certificates',
+          accountant: '/accountant/certificates',
+          admin: '/admin/my-certificates',
+          superadmin: '/superadmin/my-certificates',
+        }[recipient.role as RecipientRole] ?? '/';
       await this.notifications.notifyRecipients([recipient.id], {
         type: 'system',
         title: `New certificate: ${data.title}`,

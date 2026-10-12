@@ -44,7 +44,10 @@ async function bootstrap() {
 
   const allowedOrigins = (
     process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000'
-  ).split(',');
+  )
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
 
   app.enableCors({
     origin: allowedOrigins,
@@ -62,8 +65,20 @@ async function bootstrap() {
       next();
       return;
     }
-    const origin = request.headers.origin ?? request.headers.referer;
-    if (!origin || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+    const source = request.headers.origin ?? request.headers.referer;
+    if (!source) {
+      next();
+      return;
+    }
+    // Compare exact origins: a prefix match would let
+    // https://wafa.example.evil.com through for https://wafa.example.
+    let origin: string | null = null;
+    try {
+      origin = new URL(source).origin;
+    } catch {
+      origin = null;
+    }
+    if (origin && allowedOrigins.includes(origin)) {
       next();
       return;
     }

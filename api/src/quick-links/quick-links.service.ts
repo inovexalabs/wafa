@@ -8,6 +8,7 @@ import {
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { fetchAllRows } from '../supabase-paging';
 
 type Profile = { id: string; role: string };
 
@@ -61,7 +62,16 @@ export class QuickLinksService {
         .from('quick_links')
         .select('id, title, url, description, created_by, created_at')
         .order('created_at', { ascending: false }),
-      client.from('quick_link_recipients').select('link_id, profile_id'),
+      // Paged: a truncated list would make a privately shared link look
+      // shared with everyone.
+      fetchAllRows<{ link_id: string; profile_id: string }>((from, to) =>
+        client
+          .from('quick_link_recipients')
+          .select('link_id, profile_id')
+          .order('link_id')
+          .order('profile_id')
+          .range(from, to),
+      ),
     ]);
     if (linksError || sharesError) {
       this.logger.error(

@@ -51,18 +51,38 @@ const emptyEntryForm: EntryFormState = {
   notes: "",
 };
 
+// Saving replaces the whole month's row, so start from what is already recorded
+// (e.g. a deposit posted by receipt approval) instead of blanks that save as 0.
+function formForMonth(entries: LedgerEntry[], bsMonth: number): EntryFormState {
+  const entry = entries.find((row) => row.bsMonth === bsMonth);
+  if (!entry) return { ...emptyEntryForm, bsMonth };
+  return {
+    bsMonth,
+    bsDay: entry.bsDay ?? "",
+    shareValue: entry.shareValue,
+    monthlyDeposit: entry.monthlyDeposit,
+    wafaKosh: entry.wafaKosh,
+    additionalDeposit: entry.additionalDeposit,
+    interest: entry.interest,
+    fine: entry.fine,
+    notes: entry.notes ?? "",
+  };
+}
+
 function EntryForm({
   role,
   memberId,
   bsYear,
+  entries,
   onSaved,
 }: {
   role: LedgerStaffRole;
   memberId: string;
   bsYear: number;
+  entries: LedgerEntry[];
   onSaved: () => void;
 }) {
-  const [form, setForm] = useState(emptyEntryForm);
+  const [form, setForm] = useState(() => formForMonth(entries, 1));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,7 +105,6 @@ function EntryForm({
         fine: form.fine === "" ? 0 : Number(form.fine),
         notes: form.notes || undefined,
       });
-      setForm(emptyEntryForm);
       onSaved();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to save this ledger row.");
@@ -98,7 +117,7 @@ function EntryForm({
     <form onSubmit={submit} className="p-5 border border-[#e1e9e4] rounded-[10px] bg-white grid grid-cols-4 gap-3 max-[700px]:grid-cols-2">
       <label className="text-[#53665c] text-[11px] font-bold">
         Month ({bsYear})
-        <select className={fieldInput} value={form.bsMonth} onChange={(e) => setForm({ ...form, bsMonth: Number(e.target.value) })}>
+        <select className={fieldInput} value={form.bsMonth} onChange={(e) => setForm(formForMonth(entries, Number(e.target.value)))}>
           {bsMonthNames.map((name, index) => (
             <option key={name} value={index + 1}>{name}</option>
           ))}
@@ -204,6 +223,9 @@ export default function LedgerTable({ role }: { role: Role }) {
 
   useEffect(() => {
     if (isStaff && !memberId) return;
+    // Switching member/year quickly must not let an older, slower response
+    // overwrite the newer one (the forms below would then save to the wrong member).
+    let stale = false;
     setIsLoading(true);
     setLoadError("");
     const summaryPromise = isStaff ? getLedgerSummary(role as LedgerStaffRole, memberId) : getMyLedgerSummary();
@@ -212,11 +234,19 @@ export default function LedgerTable({ role }: { role: Role }) {
       : listMyLedgerEntries(bsYear);
     Promise.all([summaryPromise, entriesPromise])
       .then(([summaryData, entriesData]) => {
+        if (stale) return;
         setSummary(summaryData);
         setEntries(entriesData);
       })
-      .catch((error) => setLoadError(error instanceof Error ? error.message : "Unable to load the ledger."))
-      .finally(() => setIsLoading(false));
+      .catch((error) => {
+        if (!stale) setLoadError(error instanceof Error ? error.message : "Unable to load the ledger.");
+      })
+      .finally(() => {
+        if (!stale) setIsLoading(false);
+      });
+    return () => {
+      stale = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, memberId, bsYear, refreshKey]);
 
@@ -396,7 +426,7 @@ export default function LedgerTable({ role }: { role: Role }) {
             <div className="grid grid-cols-2 gap-5 max-[900px]:grid-cols-1">
               <div>
                 <h2 className="font-display font-bold text-lg mb-3">Add / update a month</h2>
-                <EntryForm role={role as LedgerStaffRole} memberId={memberId} bsYear={bsYear} onSaved={refresh} />
+                <EntryForm role={role as LedgerStaffRole} memberId={memberId} bsYear={bsYear} entries={entries} onSaved={refresh} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-lg mb-3">Balance settings</h2>

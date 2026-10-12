@@ -9,6 +9,7 @@ import { SupabaseService } from '../supabase.service';
 import { ZoomService } from '../zoom/zoom.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuditService } from '../audit/audit.service';
+import { fetchAllRows } from '../supabase-paging';
 
 type MeetingInput = {
   title: string;
@@ -98,11 +99,21 @@ export class MeetingsService {
       .order('scheduled_at', { ascending: true });
     if (error)
       throw new InternalServerErrorException('Unable to load meetings.');
-    if (profile.role !== 'member') return meetings ?? [];
+    // Admins manage every meeting. Members and accountants are recipients, so
+    // a meeting shared with specific people is hidden from everyone else.
+    if (profile.role === 'superadmin' || profile.role === 'admin')
+      return meetings ?? [];
 
-    const { data: shares, error: sharesError } = await client
-      .from('meeting_notifications')
-      .select('meeting_id, profile_id');
+    const { data: shares, error: sharesError } = await fetchAllRows<{
+      meeting_id: string;
+      profile_id: string;
+    }>((from, to) =>
+      client
+        .from('meeting_notifications')
+        .select('meeting_id, profile_id')
+        .order('id')
+        .range(from, to),
+    );
     if (sharesError)
       throw new InternalServerErrorException(
         'Unable to load meeting visibility.',
@@ -211,7 +222,7 @@ export class MeetingsService {
           message: `${data.title} is scheduled for ${new Date(data.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}. The join link will be sent when the meeting starts. You can check all your scheduled meetings anytime in the WAFA app or website.`,
           referenceType: 'meeting',
           referenceId: data.id,
-          secondaryUrl: process.env.FRONTEND_ORIGIN,
+          secondaryUrl: process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim(),
           secondaryLabel: 'View scheduled meetings',
         },
       );
@@ -252,6 +263,16 @@ export class MeetingsService {
 
     for (const meeting of dueMeetings) {
       if (!meeting.meeting_url) continue;
+      // Claim the meeting before sending so an overlapping sweep (a slow run,
+      // or a second API instance) can't send the join link twice.
+      const { data: claimed } = await client
+        .from('meetings')
+        .update({ join_link_notified_at: nowIso })
+        .eq('id', meeting.id)
+        .is('join_link_notified_at', null)
+        .select('id')
+        .maybeSingle();
+      if (!claimed) continue;
       const recipientIds = await this.sharedRecipientIds(meeting.id);
       try {
         await this.notifications.notifyRecipients(
@@ -264,17 +285,13 @@ export class MeetingsService {
             referenceId: meeting.id,
             actionUrl: meeting.meeting_url,
             actionLabel: 'Join meeting',
-            secondaryUrl: process.env.FRONTEND_ORIGIN,
+            secondaryUrl: process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim(),
             secondaryLabel: 'Open WAFA app',
           },
         );
       } catch {
         // Notification delivery is best-effort and should never block the sweep.
       }
-      await client
-        .from('meetings')
-        .update({ join_link_notified_at: nowIso })
-        .eq('id', meeting.id);
     }
   }
 

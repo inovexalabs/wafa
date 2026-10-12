@@ -30,7 +30,9 @@ type NotifyInput = {
 };
 
 const BRAND_COLOR = '#1f6752';
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
+// FRONTEND_ORIGIN may list several comma-separated origins; the first is the app.
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_ORIGIN?.split(',')[0]?.trim() || 'http://localhost:3000';
 
 function escapeHtml(value: string) {
   return value.replace(
@@ -240,38 +242,40 @@ export class NotificationsService {
       const emailByProfile = new Map(
         recipients.map((recipient) => [recipient.id, recipient.email]),
       );
-      await Promise.all(
-        created.map(async (notification) => {
-          const email = emailByProfile.get(notification.profile_id);
-          if (!email) return;
-          try {
-            const providerMessageId = await this.resend.send(
-              email,
-              input.title,
-              emailHtml(input),
-              emailText(input),
-            );
-            await client.from('notification_deliveries').insert({
-              notification_id: notification.id,
-              channel: 'email',
-              status: 'sent',
-              sent_at: new Date().toISOString(),
-              provider_message_id: providerMessageId,
-            });
-          } catch (sendError) {
-            await client.from('notification_deliveries').insert({
-              notification_id: notification.id,
-              channel: 'email',
-              status: 'failed',
-              failed_at: new Date().toISOString(),
-              error_message:
-                sendError instanceof Error
-                  ? sendError.message
-                  : 'Unknown error',
-            });
-          }
-        }),
+      const outgoing = created.flatMap((notification) => {
+        const email = emailByProfile.get(notification.profile_id);
+        return email ? [{ notification, email }] : [];
+      });
+      const html = emailHtml(input);
+      const text = emailText(input);
+      const results = await this.resend.sendBatch(
+        outgoing.map(({ email }) => ({
+          to: email,
+          subject: input.title,
+          html,
+          text,
+        })),
       );
+      const deliveries = outgoing.map(({ notification }, index) => {
+        const result = results[index];
+        return 'error' in result
+          ? {
+              notification_id: notification.id,
+              channel: 'email' as const,
+              status: 'failed' as const,
+              failed_at: new Date().toISOString(),
+              error_message: result.error,
+            }
+          : {
+              notification_id: notification.id,
+              channel: 'email' as const,
+              status: 'sent' as const,
+              sent_at: new Date().toISOString(),
+              provider_message_id: result.id,
+            };
+      });
+      if (deliveries.length)
+        await client.from('notification_deliveries').insert(deliveries);
     }
 
     return { sentTo: created.length };

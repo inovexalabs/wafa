@@ -7,6 +7,7 @@ import {
 import NepaliDate from 'nepali-date-converter';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { fetchAllRows } from '../supabase-paging';
 
 type Profile = { id: string; role: string };
 
@@ -80,6 +81,28 @@ function adDateFor(bsYear: number, bsMonth: number, bsDay?: number | null) {
   } catch {
     return null;
   }
+}
+
+function isoDate({
+  year,
+  month,
+  date,
+}: {
+  year: number;
+  month: number;
+  date: number;
+}) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+}
+
+// AD date range [start, end) covered by a BS month.
+function adRangeForBsMonth(bsYear: number, bsMonth: number) {
+  const start = new NepaliDate(bsYear, bsMonth - 1, 1).getAD();
+  const next =
+    bsMonth === 12
+      ? new NepaliDate(bsYear + 1, 0, 1).getAD()
+      : new NepaliDate(bsYear, bsMonth, 1).getAD();
+  return { start: isoDate(start), end: isoDate(next) };
 }
 
 function serializeEntry(row: LedgerEntryRow) {
@@ -365,14 +388,22 @@ export class LedgerService {
       { data: settings, error: settingsError },
       { count: memberCount, error: memberCountError },
     ] = await Promise.all([
-      client
-        .from('savings_ledger_entries')
-        .select(
-          'member_id, bs_year, share_value, monthly_deposit, wafa_kosh, additional_deposit, interest, fine, total',
-        ),
-      client
-        .from('member_ledger_settings')
-        .select('member_id, opening_balance, available_balance'),
+      fetchAllRows((from, to) =>
+        client
+          .from('savings_ledger_entries')
+          .select(
+            'id, member_id, bs_year, share_value, monthly_deposit, wafa_kosh, additional_deposit, interest, fine, total',
+          )
+          .order('id')
+          .range(from, to),
+      ),
+      fetchAllRows((from, to) =>
+        client
+          .from('member_ledger_settings')
+          .select('member_id, opening_balance, available_balance')
+          .order('member_id')
+          .range(from, to),
+      ),
       client
         .from('members')
         .select('id', { count: 'exact', head: true })
@@ -441,7 +472,8 @@ export class LedgerService {
     ]);
     let availableBalanceTotal = 0;
     for (const id of memberIds) {
-      const actual = (openingByMember.get(id) ?? 0) + (perMemberTotal.get(id) ?? 0);
+      const actual =
+        (openingByMember.get(id) ?? 0) + (perMemberTotal.get(id) ?? 0);
       availableBalanceTotal += overrideByMember.get(id) ?? actual;
     }
 
@@ -460,9 +492,32 @@ export class LedgerService {
    * Called from other flows (e.g. receipt approval) when a monthly deposit
    * or share contribution is recorded, so the ledger row for that BS month
    * stays in sync without the accountant re-entering it by hand.
+   *
+   * The column is set to the sum of every deposit/contribution recorded in
+   * that BS month, so a second payment in the same month adds to the first
+   * instead of replacing it.
    */
   async syncAutoEntry(input: AutoSyncInput) {
     const client = this.supabase.getAdminClient();
+    const { start, end } = adRangeForBsMonth(input.bsYear, input.bsMonth);
+    const [sourceTable, dateColumn] =
+      input.field === 'monthly_deposit'
+        ? ['monthly_deposits', 'payment_date']
+        : ['share_contributions', 'contribution_date'];
+    const { data: sources, error: sourcesError } = await client
+      .from(sourceTable)
+      .select('amount')
+      .eq('member_id', input.memberId)
+      .gte(dateColumn, start)
+      .lt(dateColumn, end);
+    if (sourcesError) return;
+    const recorded = (sources ?? []).reduce(
+      (sum, row: { amount: string | number }) => sum + toNumber(row.amount),
+      0,
+    );
+    // Fall back to the triggering payment if the range lookup found nothing.
+    const amount = recorded > 0 ? recorded : input.amount;
+
     const { data: existing, error: fetchError } = await client
       .from('savings_ledger_entries')
       .select('id, monthly_deposit_id, share_contribution_id')
@@ -486,7 +541,7 @@ export class LedgerService {
           input.bsMonth,
           input.bsDay,
         ),
-        [columnField]: input.amount,
+        [columnField]: amount,
         monthly_deposit_id: input.monthlyDepositId ?? null,
         share_contribution_id: input.shareContributionId ?? null,
         source: 'auto',
@@ -497,7 +552,7 @@ export class LedgerService {
     await client
       .from('savings_ledger_entries')
       .update({
-        [columnField]: input.amount,
+        [columnField]: amount,
         monthly_deposit_id:
           input.monthlyDepositId ?? existing.monthly_deposit_id,
         share_contribution_id:

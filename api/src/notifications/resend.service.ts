@@ -40,4 +40,38 @@ export class ResendService {
     if (error) throw new Error(error.message);
     return data?.id ?? null;
   }
+
+  /**
+   * Sends many emails through Resend's batch endpoint (100 per request).
+   * Firing one request per email trips Resend's per-second rate limit as
+   * soon as an announcement reaches more than a handful of people.
+   * Results line up with `messages`: a provider id, or the error for that chunk.
+   */
+  async sendBatch(
+    messages: { to: string; subject: string; html: string; text: string }[],
+  ): Promise<({ id: string | null } | { error: string })[]> {
+    if (!this.client) return messages.map(() => ({ id: null }));
+    const results: ({ id: string | null } | { error: string })[] = [];
+    for (let start = 0; start < messages.length; start += 100) {
+      const chunk = messages.slice(start, start + 100);
+      try {
+        const { data, error } = await this.client.batch.send(
+          chunk.map((message) => ({
+            from: this.from,
+            ...message,
+            ...(this.replyTo ? { replyTo: this.replyTo } : {}),
+          })),
+        );
+        if (error) throw new Error(error.message);
+        chunk.forEach((_, index) =>
+          results.push({ id: data?.data[index]?.id ?? null }),
+        );
+      } catch (sendError) {
+        const message =
+          sendError instanceof Error ? sendError.message : 'Unknown error';
+        chunk.forEach(() => results.push({ error: message }));
+      }
+    }
+    return results;
+  }
 }
