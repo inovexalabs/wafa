@@ -411,4 +411,41 @@ describe('Transport and rate limiting (e2e)', () => {
       await login('203.0.113.8').expect(401);
     });
   });
+
+  describe('with CLIENT_IP_HEADER (Cloudflare in front, as on Render)', () => {
+    let app: INestApplication;
+    beforeEach(async () => {
+      process.env.CLIENT_IP_HEADER = 'CF-Connecting-IP';
+      app = await createApp(new FakeSupabase({ ...PROFILES }), { throttle: true });
+    });
+    afterEach(async () => {
+      delete process.env.CLIENT_IP_HEADER;
+      await app.close();
+    });
+
+    // Every request arrives from the same load balancer, with whatever
+    // X-Forwarded-For the client chose; only the edge header identifies it.
+    const login = (clientIp: string | undefined, forwardedFor: string) => {
+      const req = request(app.getHttpServer())
+        .post('/api/auth/login')
+        .set('X-Forwarded-For', forwardedFor);
+      if (clientIp) req.set('CF-Connecting-IP', clientIp);
+      return req.send({ userId: 'nobody', password: 'wrong' });
+    };
+
+    it('budgets per real client, ignoring a spoofed X-Forwarded-For', async () => {
+      for (let i = 0; i < 5; i++) await login('45.64.163.229', `198.51.100.${i}, 10.30.224.5`).expect(401);
+      await login('45.64.163.229', '198.51.100.99, 10.30.224.5').expect(429);
+    });
+
+    it('does not lump different clients behind one load balancer together', async () => {
+      for (let i = 0; i < 5; i++) await login('45.64.163.229', '10.30.224.5').expect(401);
+      await login('45.64.163.230', '10.30.224.5').expect(401);
+    });
+
+    it('ignores a header value that is not an IP address', async () => {
+      for (let i = 0; i < 5; i++) await login(`not-an-ip-${i}`, '203.0.113.7').expect(401);
+      await login('also-not-an-ip', '203.0.113.7').expect(429);
+    });
+  });
 });

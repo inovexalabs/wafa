@@ -1,3 +1,4 @@
+import { isIP } from 'node:net';
 import type { INestApplication } from '@nestjs/common';
 import helmet from 'helmet';
 import type { NextFunction, Request, Response } from 'express';
@@ -30,6 +31,16 @@ function trustProxyHops() {
 }
 
 /**
+ * Header set by the edge proxy with the real client IP, e.g. `cf-connecting-ip`
+ * when Cloudflare sits in front (as it does on Render, where every request
+ * otherwise appears to come from an internal load balancer). Only set this
+ * when that proxy always overwrites the header, or clients could spoof it.
+ */
+function clientIpHeader() {
+  return process.env.CLIENT_IP_HEADER?.trim().toLowerCase() || null;
+}
+
+/**
  * Security middleware and request handling shared by main.ts and the e2e
  * tests, so the tests exercise the real configuration.
  */
@@ -42,6 +53,19 @@ export function configureApp(
   // from client-supplied headers (prevents IP spoofing in audit logs and rate
   // limits, and keeps secure-cookie/HTTPS detection correct behind the proxy).
   app.getHttpAdapter().getInstance().set('trust proxy', trustProxyHops());
+
+  // Rate limiting and audit logs both key on req.ip, so resolve it once here.
+  const ipHeader = clientIpHeader();
+  if (ipHeader) {
+    app.use((request: Request, _response: Response, next: NextFunction) => {
+      const value = request.headers[ipHeader];
+      const ip = (Array.isArray(value) ? value[0] : value)?.split(',')[0].trim();
+      if (ip && isIP(ip)) {
+        Object.defineProperty(request, 'ip', { value: ip, configurable: true });
+      }
+      next();
+    });
+  }
 
   // Force HTTPS in production. The hosting proxy terminates TLS and reports
   // the original scheme in X-Forwarded-Proto (read via trust proxy above).
