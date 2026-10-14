@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { cleanOptionalHttpUrl } from '../safe-url';
 
 type Profile = { id: string; role: string };
 
@@ -268,6 +269,15 @@ export class LandingService {
       throw new BadRequestException('Invalid landing page content.');
 
     const merged = mergeContent(content);
+    // These render as hrefs / image sources on the public site.
+    merged.socialLinks = merged.socialLinks.map((link) => ({
+      ...link,
+      url: cleanOptionalHttpUrl(link?.url, `${link?.platform || 'Social'} link`) ?? '',
+    }));
+    merged.about.leaderMessages = merged.about.leaderMessages.map((leader) => ({
+      ...leader,
+      photoUrl: cleanOptionalHttpUrl(leader?.photoUrl, 'Leader photo URL') ?? '',
+    }));
     const { error } = await this.supabase
       .getAdminClient()
       .from('landing_content')
@@ -282,8 +292,9 @@ export class LandingService {
     await this.audit.log({
       actor: { userId: profile.id },
       action: 'landing.updated',
+      // entity_id is a uuid column; the singleton row's id (1) isn't one, and
+      // passing it made every landing.updated entry fail to insert.
       entityType: 'landing_content',
-      entityId: '1',
     });
 
     return merged;

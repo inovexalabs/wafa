@@ -9,6 +9,7 @@ import {
 import { SupabaseService } from '../supabase.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuditService } from '../audit/audit.service';
+import { verifiedMimeType } from '../file-signature';
 
 type Profile = { id: string; role: string };
 type RecipientRole = 'superadmin' | 'admin' | 'accountant' | 'member';
@@ -105,7 +106,8 @@ export class CertificatesService {
     if (input.title.trim().length > 200)
       throw new BadRequestException('Title must be 200 characters or fewer.');
     if (!file) throw new BadRequestException('A certificate PNG is required.');
-    if (!allowedMimeTypes.has(file.mimetype))
+    const mimeType = verifiedMimeType(file, allowedMimeTypes);
+    if (!mimeType)
       throw new BadRequestException('Only PNG certificates are accepted.');
     if (file.size > maxCertificateBytes)
       throw new BadRequestException(
@@ -127,7 +129,7 @@ export class CertificatesService {
     const fileKey = `${recipient.id}/${Date.now()}-${safeName}`;
     const { error: uploadError } = await client.storage
       .from(bucket)
-      .upload(fileKey, file.buffer, { contentType: file.mimetype });
+      .upload(fileKey, file.buffer, { contentType: mimeType });
     if (uploadError) {
       this.logger.error(`upload: ${uploadError.message}`, uploadError);
       throw new InternalServerErrorException(
@@ -143,7 +145,7 @@ export class CertificatesService {
         description: input.description?.trim() || null,
         file_key: fileKey,
         original_filename: file.originalname,
-        mime_type: file.mimetype,
+        mime_type: mimeType,
         file_size: file.size,
         issued_by: profile.id,
       })

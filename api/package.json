@@ -17,8 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:superadmin": "node -r ts-node/register scripts/seed-superadmin.ts"
+    "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
+    "seed:superadmin": "node -r ts-node/register scripts/seed-superadmin.ts",
+    "verify:rls": "node -r ts-node/register scripts/verify-rls.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

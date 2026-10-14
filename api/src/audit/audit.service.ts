@@ -4,6 +4,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
+import { currentRequestMeta } from './request-meta';
 
 export type AuditActor = { userId?: string | null; memberId?: string | null };
 
@@ -35,6 +36,7 @@ export class AuditService {
   constructor(private readonly supabase: SupabaseService) {}
 
   async log(entry: AuditEntry) {
+    const meta = currentRequestMeta();
     try {
       const { error } = await this.supabase
         .getAdminClient()
@@ -47,8 +49,8 @@ export class AuditService {
           entity_id: entry.entityId ?? null,
           old_data: entry.oldData ?? null,
           new_data: entry.newData ?? null,
-          ip_address: entry.ipAddress || null,
-          user_agent: entry.userAgent ?? null,
+          ip_address: entry.ipAddress || meta?.ipAddress || null,
+          user_agent: entry.userAgent ?? meta?.userAgent ?? null,
         });
       if (error)
         this.logger.error(

@@ -24,6 +24,11 @@ interface CreateUserInput {
   joinedAt?: string;
 }
 
+function maskIdentifier(value: string) {
+  const trimmed = value.trim();
+  return `${trimmed.slice(0, 2)}*** (${trimmed.length} chars)`;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -100,14 +105,21 @@ export class AuthService {
     return { user, profile };
   }
   async login(userId: string, password: string, meta?: RequestMeta) {
-    if (!userId || !password)
+    if (
+      typeof userId !== 'string' ||
+      typeof password !== 'string' ||
+      !userId.trim() ||
+      !password
+    )
       throw new BadRequestException('User ID and password are required.');
     const profile = await this.getProfile(userId);
     if (!profile) {
       await this.audit.log({
         action: 'auth.login_failed',
         entityType: 'auth',
-        newData: { attemptedUserId: userId },
+        // An unknown "user ID" is often a password typed into the wrong box,
+        // so keep only enough to spot a pattern, never the full value.
+        newData: { attemptedUserId: maskIdentifier(userId) },
         ipAddress: meta?.ipAddress,
         userAgent: meta?.userAgent,
       });

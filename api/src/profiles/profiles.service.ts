@@ -62,7 +62,11 @@ export class ProfilesService {
       action: 'profile.updated',
       entityType: 'profile',
       entityId: profile.id,
-      newData: input,
+      // Only what was applied, never the raw request body.
+      newData: {
+        ...(fullName !== undefined ? { fullName } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+      },
     });
 
     return this.getOwn(profile);

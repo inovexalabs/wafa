@@ -208,7 +208,13 @@ export class MembersService {
       action: 'member.profile_updated',
       entityType: 'member',
       entityId: member.id,
-      newData: input,
+      // Only what was applied, never the raw request body.
+      newData: {
+        ...(fullName !== undefined ? { fullName } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+        ...(input.address !== undefined ? { address: input.address } : {}),
+        ...(input.occupation !== undefined ? { occupation: input.occupation } : {}),
+      },
     });
 
     return this.getOwnProfile(profile);

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { verifiedMimeType } from '../file-signature';
 
 type Profile = { id: string; role: string };
 
@@ -20,6 +21,21 @@ const allowedMimeTypes = new Set([
   'image/png',
   'image/jpeg',
 ]);
+// Public links are minted per click, so they only need to outlive the redirect.
+const publicLinkTtlSeconds = 60;
+const adminLinkTtlSeconds = 60 * 10;
+
+type DocumentRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  file_key: string;
+  original_filename: string;
+  mime_type: string;
+  file_size: number;
+  sort_order: number;
+  is_published: boolean;
+};
 
 export interface PublicDocument {
   id: string;
@@ -47,6 +63,9 @@ export class PublicDocumentsService {
     private readonly audit: AuditService,
   ) {}
 
+  // The bucket is private so unpublished files can't be fetched by guessing
+  // their key. Public visitors get an API path that checks is_published and
+  // redirects to a short-lived signed URL (see publishedFileUrl).
   async listPublished(): Promise<PublicDocument[]> {
     const { data, error } = await this.supabase
       .getAdminClient()
@@ -55,7 +74,7 @@ export class PublicDocumentsService {
       .eq('is_published', true)
       .order('sort_order', { ascending: true });
     if (error) throw new InternalServerErrorException('Unable to load documents.');
-    return (data ?? []).map((row) => this.map(row));
+    return (data ?? []).map((row) => this.map(row, `/api/public/documents/${row.id}/file`));
   }
 
   async listAll(): Promise<PublicDocument[]> {
@@ -65,7 +84,34 @@ export class PublicDocumentsService {
       .select('*')
       .order('sort_order', { ascending: true });
     if (error) throw new InternalServerErrorException('Unable to load documents.');
-    return (data ?? []).map((row) => this.map(row));
+    return Promise.all((data ?? []).map((row) => this.mapWithSignedUrl(row)));
+  }
+
+  async publishedFileUrl(id: string) {
+    const client = this.supabase.getAdminClient();
+    const { data, error } = await client
+      .from('public_documents')
+      .select('file_key')
+      .eq('id', id)
+      .eq('is_published', true)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException('Unable to load the document.');
+    if (!data) throw new NotFoundException('Document not found.');
+    const url = await this.signedUrl(data.file_key, publicLinkTtlSeconds);
+    if (!url) throw new InternalServerErrorException('Unable to open this document.');
+    return url;
+  }
+
+  private async signedUrl(fileKey: string, ttlSeconds: number) {
+    const { data, error } = await this.supabase
+      .getAdminClient()
+      .storage.from(bucket)
+      .createSignedUrl(fileKey, ttlSeconds);
+    return error ? null : data.signedUrl;
+  }
+
+  private async mapWithSignedUrl(row: DocumentRow) {
+    return this.map(row, (await this.signedUrl(row.file_key, adminLinkTtlSeconds)) ?? '');
   }
 
   async upload(
@@ -74,7 +120,8 @@ export class PublicDocumentsService {
     file?: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('A document file is required.');
-    if (!allowedMimeTypes.has(file.mimetype)) {
+    const mimeType = verifiedMimeType(file, allowedMimeTypes);
+    if (!mimeType) {
       throw new BadRequestException('Only PDF, Word, Excel, PNG, or JPG files are accepted.');
     }
     if (file.size > maxFileSizeBytes) throw new BadRequestException('The file must be 25 MB or smaller.');
@@ -86,9 +133,9 @@ export class PublicDocumentsService {
 
     const { error: uploadError } = await client.storage
       .from(bucket)
-      .upload(fileKey, file.buffer, { contentType: file.mimetype });
+      .upload(fileKey, file.buffer, { contentType: mimeType });
     if (uploadError) {
-      throw new InternalServerErrorException(`Unable to upload the document: ${uploadError.message}`);
+      throw new InternalServerErrorException('Unable to upload the document.');
     }
 
     const { data, error } = await client
@@ -98,7 +145,7 @@ export class PublicDocumentsService {
         description: meta.description?.trim() || null,
         file_key: fileKey,
         original_filename: file.originalname,
-        mime_type: file.mimetype,
+        mime_type: mimeType,
         file_size: file.size,
         sort_order: meta.sortOrder ?? 0,
         is_published: meta.isPublished ?? true,
@@ -120,7 +167,7 @@ export class PublicDocumentsService {
       newData: { title: meta.title },
     });
 
-    return this.map(data);
+    return this.mapWithSignedUrl(data);
   }
 
   async update(profile: Profile, id: string, input: Partial<SaveDocumentMetaInput>) {
@@ -151,7 +198,7 @@ export class PublicDocumentsService {
       newData: patch,
     });
 
-    return this.map(data);
+    return this.mapWithSignedUrl(data);
   }
 
   async remove(profile: Profile, id: string) {
@@ -179,23 +226,12 @@ export class PublicDocumentsService {
     return { success: true };
   }
 
-  private map(row: {
-    id: string;
-    title: string;
-    description: string | null;
-    file_key: string;
-    original_filename: string;
-    mime_type: string;
-    file_size: number;
-    sort_order: number;
-    is_published: boolean;
-  }): PublicDocument {
-    const { data } = this.supabase.getAdminClient().storage.from(bucket).getPublicUrl(row.file_key);
+  private map(row: DocumentRow, fileUrl: string): PublicDocument {
     return {
       id: row.id,
       title: row.title,
       description: row.description,
-      fileUrl: data.publicUrl,
+      fileUrl,
       originalFilename: row.original_filename,
       mimeType: row.mime_type,
       fileSize: row.file_size,

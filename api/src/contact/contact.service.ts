@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { LandingService } from '../landing/landing.service';
 import { ResendService } from '../notifications/resend.service';
+import { verifyCaptcha } from './turnstile';
 
 export type ContactMessageInput = {
   name?: unknown;
@@ -14,6 +15,8 @@ export type ContactMessageInput = {
   message?: unknown;
   // Honeypot: hidden from people, filled in by naive bots.
   website?: unknown;
+  // Cloudflare Turnstile token, required when TURNSTILE_SECRET_KEY is set.
+  captchaToken?: unknown;
 };
 
 type ContactField = 'name' | 'email' | 'phone' | 'message';
@@ -46,7 +49,7 @@ export class ContactService {
     private readonly resend: ResendService,
   ) {}
 
-  async submit(input: ContactMessageInput) {
+  async submit(input: ContactMessageInput, remoteIp?: string | null) {
     // Pretend success so bots don't learn to skip the honeypot.
     if (asText(input?.website)) return { ok: true };
 
@@ -73,13 +76,19 @@ export class ContactService {
         fields,
       });
 
+    if (!(await verifyCaptcha(input?.captchaToken, remoteIp)))
+      throw new BadRequestException(
+        'The verification check failed or expired. Please try again.',
+      );
+
     if (!this.resend.hasCredentials())
       throw new ServiceUnavailableException(
         'Messages cannot be sent right now. Please email or call us instead.',
       );
 
     const { contact } = await this.landing.get();
-    const subject = `Website enquiry from ${name}`;
+    // Collapse whitespace so a name can't smuggle line breaks into the header.
+    const subject = `Website enquiry from ${name.replace(/\s+/g, ' ')}`;
     const rows: [string, string][] = [
       ['Name', name],
       ['Email', email],

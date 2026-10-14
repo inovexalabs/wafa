@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { cleanOptionalHttpUrl } from '../safe-url';
 
 type Profile = { id: string; role: string };
 export type LandingPersonKind = 'team' | 'board';
@@ -79,7 +80,7 @@ export class LandingPeopleService {
         kind: input.kind,
         name: input.name.trim(),
         title: input.title?.trim() || null,
-        photo_url: input.photoUrl?.trim() || null,
+        photo_url: cleanOptionalHttpUrl(input.photoUrl, 'Photo URL'),
         bio: input.bio?.trim() || null,
         sort_order: input.sortOrder ?? 0,
         is_published: input.isPublished ?? true,
@@ -110,7 +111,7 @@ export class LandingPeopleService {
       patch.name = input.name.trim();
     }
     if (input.title !== undefined) patch.title = input.title?.trim() || null;
-    if (input.photoUrl !== undefined) patch.photo_url = input.photoUrl?.trim() || null;
+    if (input.photoUrl !== undefined) patch.photo_url = cleanOptionalHttpUrl(input.photoUrl, 'Photo URL');
     if (input.bio !== undefined) patch.bio = input.bio?.trim() || null;
     if (input.sortOrder !== undefined) patch.sort_order = input.sortOrder;
     if (input.isPublished !== undefined) patch.is_published = input.isPublished;

@@ -1,7 +1,9 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { LandingPeopleService } from './landing-people.service';
 import type { LandingPersonKind } from './landing-people.service';
+import { Public } from '../auth/public.decorator';
 
+@Public()
 @Controller('public/landing-people')
 export class PublicLandingPeopleController {
   constructor(private readonly landingPeople: LandingPeopleService) {}

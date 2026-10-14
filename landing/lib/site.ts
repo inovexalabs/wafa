@@ -9,6 +9,10 @@ export const SITE_URL =
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+// Cloudflare Turnstile site key for the contact form captcha. Unset = no captcha
+// widget (the API only requires a token when TURNSTILE_SECRET_KEY is set).
+export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+
 export type NavLink =
   | { label: string; href: string }
   | { label: string; children: { label: string; href: string }[] };

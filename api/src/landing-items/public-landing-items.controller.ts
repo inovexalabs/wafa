@@ -1,9 +1,11 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { LandingItemsService } from './landing-items.service';
 import type { LandingItemKind } from './landing-items.service';
+import { Public } from '../auth/public.decorator';
 
 const validKinds = new Set(['partner', 'investment', 'gallery']);
 
+@Public()
 @Controller('public/landing-items')
 export class PublicLandingItemsController {
   constructor(private readonly landingItems: LandingItemsService) {}

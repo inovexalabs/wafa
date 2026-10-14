@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { cleanOptionalHttpUrl } from '../safe-url';
 
 type Profile = { id: string; role: string };
 export type LandingItemKind = 'partner' | 'investment' | 'gallery';
@@ -78,8 +79,8 @@ export class LandingItemsService {
         kind: input.kind,
         title: input.title?.trim() || null,
         description: input.description?.trim() || null,
-        image_url: input.imageUrl?.trim() || null,
-        link_url: input.linkUrl?.trim() || null,
+        image_url: cleanOptionalHttpUrl(input.imageUrl, 'Image URL'),
+        link_url: cleanOptionalHttpUrl(input.linkUrl, 'Link URL'),
         sort_order: input.sortOrder ?? 0,
         is_published: input.isPublished ?? true,
       })
@@ -106,8 +107,8 @@ export class LandingItemsService {
     }
     if (input.title !== undefined) patch.title = input.title?.trim() || null;
     if (input.description !== undefined) patch.description = input.description?.trim() || null;
-    if (input.imageUrl !== undefined) patch.image_url = input.imageUrl?.trim() || null;
-    if (input.linkUrl !== undefined) patch.link_url = input.linkUrl?.trim() || null;
+    if (input.imageUrl !== undefined) patch.image_url = cleanOptionalHttpUrl(input.imageUrl, 'Image URL');
+    if (input.linkUrl !== undefined) patch.link_url = cleanOptionalHttpUrl(input.linkUrl, 'Link URL');
     if (input.sortOrder !== undefined) patch.sort_order = input.sortOrder;
     if (input.isPublished !== undefined) patch.is_published = input.isPublished;
 

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { cleanOptionalHttpUrl } from '../safe-url';
 
 type Profile = { id: string; role: string };
 
@@ -72,7 +73,7 @@ export class CareerService {
         location: input.location?.trim() || null,
         employment_type: input.employmentType?.trim() || null,
         apply_email: input.applyEmail?.trim() || null,
-        apply_url: input.applyUrl?.trim() || null,
+        apply_url: cleanOptionalHttpUrl(input.applyUrl, 'Apply URL'),
         is_open: input.isOpen ?? true,
         posted_at: input.postedAt ?? new Date().toISOString(),
       })
@@ -101,7 +102,7 @@ export class CareerService {
     if (input.location !== undefined) patch.location = input.location?.trim() || null;
     if (input.employmentType !== undefined) patch.employment_type = input.employmentType?.trim() || null;
     if (input.applyEmail !== undefined) patch.apply_email = input.applyEmail?.trim() || null;
-    if (input.applyUrl !== undefined) patch.apply_url = input.applyUrl?.trim() || null;
+    if (input.applyUrl !== undefined) patch.apply_url = cleanOptionalHttpUrl(input.applyUrl, 'Apply URL');
     if (input.isOpen !== undefined) patch.is_open = input.isOpen;
     if (input.postedAt !== undefined) patch.posted_at = input.postedAt;
 

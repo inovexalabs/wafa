@@ -9,6 +9,7 @@ import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { verifiedMimeType } from '../file-signature';
 
 type Profile = { id: string; role: string };
 type PaymentType =
@@ -162,7 +163,8 @@ export class ReceiptsService {
     file?: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('A receipt file is required.');
-    if (!allowedMimeTypes.has(file.mimetype))
+    const mimeType = verifiedMimeType(file, allowedMimeTypes);
+    if (!mimeType)
       throw new BadRequestException(
         'Only PNG, JPG, WEBP, or PDF files are accepted.',
       );
@@ -174,7 +176,11 @@ export class ReceiptsService {
       throw new BadRequestException('Enter a valid amount greater than zero.');
     if (!input.paymentDate)
       throw new BadRequestException('Payment date is required.');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.paymentDate))
+      throw new BadRequestException('Enter a valid payment date.');
     const paymentType: PaymentType = input.paymentType ?? 'other';
+    if (!paymentTypes.has(paymentType))
+      throw new BadRequestException('Choose a valid payment type.');
 
     const memberId = await this.memberIdFor(profile);
     const client = this.supabase.getAdminClient();
@@ -183,11 +189,11 @@ export class ReceiptsService {
 
     const { error: uploadError } = await client.storage
       .from(bucket)
-      .upload(fileKey, file.buffer, { contentType: file.mimetype });
+      .upload(fileKey, file.buffer, { contentType: mimeType });
     if (uploadError) {
       console.error('Receipt upload failed:', uploadError);
       throw new InternalServerErrorException(
-        `Unable to upload the receipt file: ${uploadError.message}`,
+        'Unable to upload the receipt file.',
       );
     }
 

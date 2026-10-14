@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { AuthGuard } from './auth/auth.guard';
 import { SupabaseService } from './supabase.service';
 import { AdminMeetingsController } from './meetings/admin-meetings.controller';
 import { SuperadminMeetingsController } from './meetings/superadmin-meetings.controller';
@@ -169,7 +170,10 @@ import { ContactService } from './contact/contact.service';
     PublicDocumentsService,
     LandingMediaService,
     ContactService,
+    // Throttle first so unauthenticated floods are cut off before they cost a
+    // Supabase token check, then require a session on every non-@Public route.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })
 export class AppModule {}

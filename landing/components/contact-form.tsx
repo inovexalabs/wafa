@@ -1,9 +1,28 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2, Send } from "lucide-react";
-import { API_URL } from "@/lib/site";
+import { API_URL, TURNSTILE_SITE_KEY } from "@/lib/site";
+
+type Turnstile = {
+  render: (
+    container: HTMLElement,
+    options: {
+      sitekey: string;
+      callback: (token: string) => void;
+      "expired-callback": () => void;
+      "error-callback": () => void;
+    },
+  ) => string;
+  reset: (widgetId: string) => void;
+};
+declare global {
+  interface Window {
+    turnstile?: Turnstile;
+  }
+}
 
 type Field = "name" | "email" | "phone" | "message";
 type Values = Record<Field, string>;
@@ -52,6 +71,25 @@ export default function ContactForm({ email }: { email: string }) {
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const captchaRef = useRef<HTMLDivElement>(null);
+  const captchaWidgetId = useRef<string | null>(null);
+
+  function renderCaptcha() {
+    if (!window.turnstile || !captchaRef.current || captchaWidgetId.current) return;
+    captchaWidgetId.current = window.turnstile.render(captchaRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: setCaptchaToken,
+      "expired-callback": () => setCaptchaToken(""),
+      "error-callback": () => setCaptchaToken(""),
+    });
+  }
+
+  // Tokens are single-use, so every attempt that reaches the API needs a new one.
+  function resetCaptcha() {
+    setCaptchaToken("");
+    if (window.turnstile && captchaWidgetId.current) window.turnstile.reset(captchaWidgetId.current);
+  }
 
   function update(field: Field, value: string) {
     const next = { ...values, [field]: value };
@@ -72,18 +110,23 @@ export default function ContactForm({ email }: { email: string }) {
       if (first) document.getElementById(`contact-${first}`)?.focus();
       return;
     }
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setFormError("Please complete the verification check below.");
+      return;
+    }
 
     setSubmitting(true);
     try {
       const response = await fetch(`${API_URL}/api/public/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, website: honeypot }),
+        body: JSON.stringify({ ...values, website: honeypot, captchaToken }),
       });
       if (response.ok) {
         router.push("/thank-you");
         return;
       }
+      resetCaptcha();
       const body = (await response.json().catch(() => null)) as
         | { message?: string | string[]; fields?: Errors }
         | null;
@@ -95,6 +138,7 @@ export default function ContactForm({ email }: { email: string }) {
         setFormError(message ?? "Your message could not be sent. Please try again.");
       }
     } catch {
+      resetCaptcha();
       setFormError("We couldn't reach the server. Check your connection and try again.");
     } finally {
       setSubmitting(false);
@@ -200,6 +244,17 @@ export default function ContactForm({ email }: { email: string }) {
           onChange={(event) => setHoneypot(event.target.value)}
         />
       </div>
+
+      {TURNSTILE_SITE_KEY && (
+        <>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+            strategy="afterInteractive"
+            onReady={renderCaptcha}
+          />
+          <div ref={captchaRef} />
+        </>
+      )}
 
       <button
         type="submit"

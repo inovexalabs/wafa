@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 import { CurrentAccessToken } from './current-access-token.decorator';
 import { Roles } from './roles.decorator';
+import { Public } from './public.decorator';
 import { requestMeta } from '../audit/request-meta';
 
 const accessCookie = 'wafa_access_token';
@@ -78,6 +79,7 @@ export class AuthController {
       : undefined;
   }
 
+  @Public()
   @Post('login')
   @HttpCode(200)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -95,6 +97,7 @@ export class AuthController {
     return { user: session.user };
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(200)
   async refresh(
@@ -112,6 +115,7 @@ export class AuthController {
     return { user: session.user };
   }
 
+  @Public()
   @Post('logout')
   @HttpCode(204)
   async logout(

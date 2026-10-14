@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
+import { cleanOptionalHttpUrl } from '../safe-url';
 
 type Profile = { id: string; role: string };
 export type NewsCategory = 'news' | 'notice';
@@ -105,7 +106,7 @@ export class NewsService {
         title: input.title.trim(),
         slug,
         body: input.body.trim(),
-        cover_image_url: input.coverImageUrl?.trim() || null,
+        cover_image_url: cleanOptionalHttpUrl(input.coverImageUrl, 'Cover image URL'),
         is_published: input.isPublished ?? true,
         published_at: input.publishedAt ?? new Date().toISOString(),
         author_id: profile.id,
@@ -144,7 +145,7 @@ export class NewsService {
       if (!input.body.trim()) throw new BadRequestException('Body is required.');
       patch.body = input.body.trim();
     }
-    if (input.coverImageUrl !== undefined) patch.cover_image_url = input.coverImageUrl?.trim() || null;
+    if (input.coverImageUrl !== undefined) patch.cover_image_url = cleanOptionalHttpUrl(input.coverImageUrl, 'Cover image URL');
     if (input.isPublished !== undefined) patch.is_published = input.isPublished;
     if (input.publishedAt !== undefined) patch.published_at = input.publishedAt;
 

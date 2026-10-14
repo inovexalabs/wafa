@@ -8,6 +8,7 @@ import {
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
 import { fetchAllRows } from '../supabase-paging';
+import { verifiedMimeType } from '../file-signature';
 
 type Profile = { id: string; role: string };
 
@@ -387,7 +388,8 @@ export class MemberDocumentsService {
     file?: Express.Multer.File,
   ): Promise<MemberDocumentSlot> {
     if (!file) throw new BadRequestException('A document file is required.');
-    if (!allowedMimeTypes.has(file.mimetype))
+    const mimeType = verifiedMimeType(file, allowedMimeTypes);
+    if (!mimeType)
       throw new BadRequestException(
         'Only PNG, JPG, WEBP, or PDF files are accepted.',
       );
@@ -430,7 +432,7 @@ export class MemberDocumentsService {
     const fileKey = `${folder}/${typeId}/${Date.now()}-${safeName}`;
     const { error: uploadError } = await client.storage
       .from(bucket)
-      .upload(fileKey, file.buffer, { contentType: file.mimetype });
+      .upload(fileKey, file.buffer, { contentType: mimeType });
     if (uploadError) {
       this.logger.error(`upload: ${uploadError.message}`, uploadError);
       throw new InternalServerErrorException('Unable to upload this document.');
@@ -445,7 +447,7 @@ export class MemberDocumentsService {
           document_number: documentNumber,
           file_key: fileKey,
           original_filename: file.originalname,
-          mime_type: file.mimetype,
+          mime_type: mimeType,
           file_size: file.size,
           uploaded_by: actor.id,
         },

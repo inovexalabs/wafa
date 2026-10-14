@@ -375,7 +375,9 @@ export async function getPublicDocuments(): Promise<PublicDocument[]> {
       next: { revalidate: 60 },
     });
     if (!response.ok) return [];
-    return (await response.json()) as PublicDocument[];
+    const documents = (await response.json()) as PublicDocument[];
+    // fileUrl is an API path that redirects to a short-lived signed link.
+    return documents.map((doc) => ({ ...doc, fileUrl: new URL(doc.fileUrl, API_URL).toString() }));
   } catch {
     return [];
   }
