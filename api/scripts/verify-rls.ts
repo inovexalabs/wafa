@@ -31,6 +31,13 @@ const TABLES = [
 ];
 const PRIVATE_BUCKETS = ['receipts', 'member-documents', 'certificates', 'landing-documents'];
 const NEVER = '00000000-0000-0000-0000-000000000000';
+// Tables whose key isn't a uuid `id`: [column, a value no row can have].
+// The probe must be a valid query or Postgres errors before the permission check.
+const PROBE_KEYS: Record<string, [string, string | number]> = {
+  landing_content: ['id', -1],
+  member_ledger_settings: ['member_id', NEVER],
+  quick_link_recipients: ['link_id', NEVER],
+};
 const PERMISSION_DENIED = '42501';
 
 let failures = 0;
@@ -51,7 +58,8 @@ async function checkTables(label: string, client: SupabaseClient) {
     else warn(`${table}: read returned 0 rows without "permission denied" (grants still present?)`);
 
     // Matches nothing, so it can't change data whatever the outcome.
-    const write = await client.from(table).delete().eq('id', NEVER);
+    const [column, value] = PROBE_KEYS[table] ?? ['id', NEVER];
+    const write = await client.from(table).delete().eq(column, value);
     if (write.error?.code === PERMISSION_DENIED) pass(`${table}: write denied`);
     else if (write.error) warn(`${table}: write probe error ${write.error.code} ${write.error.message}`);
     else warn(`${table}: write not refused outright (grants still present; RLS untested)`);
@@ -109,9 +117,18 @@ async function main() {
   await checkTables('anon', anon);
   await checkStorage('anon', anon, samples);
 
-  const email = process.env.RLS_TEST_EMAIL;
+  const login = process.env.RLS_TEST_EMAIL?.trim();
   const password = process.env.RLS_TEST_PASSWORD;
-  if (email && password) {
+  if (login && password) {
+    // Accept a WAFA user ID too, resolving it to the email the way the API's
+    // login does (Supabase itself only signs in by email).
+    let email = login;
+    if (!login.includes('@')) {
+      const admin = createClient(url!, serviceRoleKey!, options);
+      const { data } = await admin.from('profiles').select('email').eq('user_id', login).maybeSingle();
+      if (!data?.email) throw new Error(`No profile with user ID "${login}".`);
+      email = data.email as string;
+    }
     const user = createClient(url!, anonKey!, options);
     const { error } = await user.auth.signInWithPassword({ email, password });
     if (error) throw new Error(`Could not sign in as ${email}: ${error.message}`);
