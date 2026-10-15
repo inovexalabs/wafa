@@ -3,8 +3,13 @@ import { PILLAR } from "@/lib/clusters";
 export const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+// Canonical URLs, the sitemap and robots.txt are all built from this. When
+// NEXT_PUBLIC_SITE_URL isn't set, fall back to the production domain Vercel
+// exposes to the build, so production never advertises a localhost URL.
+const vercelProductionHost = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (vercelProductionHost ? `https://${vercelProductionHost}` : "http://localhost:3003");
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -35,6 +40,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Services", href: PILLAR.path },
   { label: "How it works", href: "/#how-it-works" },
   { label: "News & Notices", href: "/#news" },
+  { label: "Blog", href: "/blog" },
   { label: "Documents", href: "/#documents" },
   { label: "Contact", href: "/#contact" },
 ];

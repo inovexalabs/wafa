@@ -333,6 +333,47 @@ export async function getNewsPosts(category?: "news" | "notice"): Promise<NewsPo
   }
 }
 
+export type BlogPostSummary = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
+  tags: string[];
+  readingMinutes: number;
+  publishedAt: string;
+  updatedAt: string;
+};
+
+export type BlogPost = BlogPostSummary & { body: string };
+
+export async function getBlogPosts(tag?: string): Promise<BlogPostSummary[]> {
+  try {
+    const query = tag ? `?tag=${encodeURIComponent(tag)}` : "";
+    const response = await fetch(`${API_URL}/api/public/blog${query}`, {
+      next: { revalidate: 60, tags: ["blog"] },
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as BlogPostSummary[];
+  } catch {
+    return [];
+  }
+}
+
+// null = not found (or unpublished); the page turns that into a 404.
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  try {
+    const response = await fetch(`${API_URL}/api/public/blog/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60, tags: ["blog"] },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as BlogPost;
+  } catch {
+    return null;
+  }
+}
+
 export type CareerOpening = {
   id: string;
   title: string;

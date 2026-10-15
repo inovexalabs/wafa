@@ -1083,6 +1083,68 @@ export async function deleteNewsPost(id: string): Promise<void> {
   if (!response.ok) throw new Error(body.message ?? "Unable to delete this post.");
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  /** As saved; empty means the public site generates one from the body. */
+  excerpt: string;
+  body: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
+  tags: string[];
+  readingMinutes: number;
+  isPublished: boolean;
+  publishedAt: string;
+  updatedAt: string;
+}
+export interface SaveBlogPostInput {
+  title: string;
+  slug?: string;
+  excerpt?: string;
+  body: string;
+  coverImageUrl?: string;
+  authorName?: string;
+  tags?: string[];
+  isPublished?: boolean;
+  publishedAt?: string;
+}
+
+export async function listBlogPosts(): Promise<BlogPost[]> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/blog`);
+  const body = await response.json().catch(() => []);
+  if (!response.ok) throw new Error(body.message ?? "Unable to load blog posts.");
+  return body as BlogPost[];
+}
+
+export async function createBlogPost(input: SaveBlogPostInput): Promise<BlogPost> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/blog`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to create this post.");
+  return body as BlogPost;
+}
+
+export async function updateBlogPost(id: string, input: Partial<SaveBlogPostInput>): Promise<BlogPost> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/blog/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to update this post.");
+  return body as BlogPost;
+}
+
+export async function deleteBlogPost(id: string): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/superadmin/blog/${id}`, { method: "DELETE" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message ?? "Unable to delete this post.");
+}
+
 export interface CareerOpening {
   id: string;
   title: string;

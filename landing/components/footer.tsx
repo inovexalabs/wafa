@@ -60,6 +60,7 @@ const FOOTER_LINKS = [
   { href: "/#about", label: "About" },
   { href: "/#board", label: "Board & Direction" },
   { href: "/#news", label: "News & Notices" },
+  { href: "/blog", label: "Blog" },
   { href: "/#documents", label: "Documents" },
   { href: "/#faq", label: "FAQs" },
   { href: "/#contact", label: "Contact" },

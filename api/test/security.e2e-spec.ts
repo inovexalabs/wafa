@@ -35,6 +35,8 @@ const EXPECTED_PUBLIC = [
   'POST /api/auth/login',
   'POST /api/auth/refresh',
   'POST /api/auth/logout',
+  'GET /api/public/blog',
+  'GET /api/public/blog/:slug',
   'GET /api/public/career',
   'GET /api/public/landing',
   'GET /api/public/landing-items',
@@ -361,10 +363,53 @@ describe('Security (e2e)', () => {
     it.each([
       ['/api/superadmin/landing-items', 'landing_items', { kind: 'partner', title: 'X', linkUrl: 'javascript:alert(1)' }],
       ['/api/superadmin/career', 'career_openings', { title: 'Job', applyUrl: 'data:text/html,<script>alert(1)</script>' }],
+      ['/api/superadmin/blog', 'blog_posts', { title: 'Post', body: 'Hello', coverImageUrl: 'javascript:alert(1)' }],
     ])('%s rejects script URLs and writes nothing', async (url, table, body) => {
       const res = await http().post(url).set('Authorization', 'Bearer tok-superadmin').send(body).expect(400);
       expect(String((res.body as { message: string }).message)).toMatch(/http/i);
       expect(fake.on(table).some((q) => q.calls.some(([m]) => m === 'insert'))).toBe(false);
+    });
+  });
+
+  describe('blog', () => {
+    const published = (table: string) =>
+      fake.on(table).every(
+        (q) =>
+          q.calls.some(([m, a]) => m === 'eq' && a[0] === 'is_published' && a[1] === true) &&
+          q.calls.some(([m, a]) => m === 'lte' && a[0] === 'published_at'),
+      );
+
+    it('public routes only ever query published, already-dated posts', async () => {
+      await http().get('/api/public/blog');
+      await http().get('/api/public/blog/some-slug').expect(404);
+      await http().get('/api/public/blog?tag=savings');
+      expect(fake.on('blog_posts').length).toBe(3);
+      expect(published('blog_posts')).toBe(true);
+    });
+
+    it('rejects a tag filter with odd characters instead of passing it through', async () => {
+      await http().get('/api/public/blog?tag=%27%3B--').expect(400);
+    });
+
+    it('new posts are drafts unless explicitly published', async () => {
+      await http().post('/api/superadmin/blog').set('Authorization', 'Bearer tok-superadmin').send({ title: 'Draft', body: 'Text' });
+      const insert = fake.on('blog_posts').find((q) => q.calls.some(([m]) => m === 'insert'))!;
+      const row = insert.calls.find(([m]) => m === 'insert')![1][0] as Record<string, unknown>;
+      expect(row.is_published).toBe(false);
+      expect(row.author_id).toBe(PROFILES['tok-superadmin'].id);
+    });
+
+    it.each([
+      [{ title: '', body: 'x' }, /title/i],
+      [{ title: 'x', body: '' }, /body/i],
+      [{ title: 'x', body: 'y', tags: ['ok', '<script>'] }, /tags/i],
+      [{ title: 'x', body: 'y', tags: Array.from({ length: 11 }, (_, i) => 't' + i) }, /at most/i],
+      [{ title: 'x', body: 'y', publishedAt: 'not a date' }, /date/i],
+      [{ title: 'x'.repeat(201), body: 'y' }, /200/],
+    ])('rejects invalid input %#', async (body, message) => {
+      const res = await http().post('/api/superadmin/blog').set('Authorization', 'Bearer tok-superadmin').send(body).expect(400);
+      expect(String((res.body as { message: string }).message)).toMatch(message);
+      expect(fake.on('blog_posts').some((q) => q.calls.some(([m]) => m === 'insert'))).toBe(false);
     });
   });
 

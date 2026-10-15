@@ -7,6 +7,7 @@ import {
 import { SupabaseService } from '../supabase.service';
 import { AuditService } from '../audit/audit.service';
 import { cleanOptionalHttpUrl } from '../safe-url';
+import { slugify } from '../slug';
 
 type Profile = { id: string; role: string };
 export type NewsCategory = 'news' | 'notice';
@@ -33,15 +34,6 @@ export interface SaveNewsPostInput {
 }
 
 const validCategories = new Set(['news', 'notice']);
-
-function slugify(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 200);
-}
 
 @Injectable()
 export class NewsService {

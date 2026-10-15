@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, Briefcase, CalendarClock, ChevronDown, ChevronRight, ClipboardList, FileText, Globe2, Handshake, IdCard, Images, LayoutDashboard, Link2, LogOut, Landmark, Newspaper, Receipt, UserCircle, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BadgeCheck, BookOpenCheck, Briefcase, CalendarClock, ChevronDown, ChevronRight, ClipboardList, FileText, Globe2, Handshake, IdCard, Images, LayoutDashboard, Link2, LogOut, Landmark, Newspaper, NotebookPen, Receipt, UserCircle, Users } from "lucide-react";
 import Dashboard from "./dashboard";
 import MobileNav from "./mobile-nav";
 import NotificationBell from "./notification-bell";
@@ -32,6 +32,7 @@ type SuperadminLayoutProps = {
     | "landing-investments"
     | "landing-career"
     | "landing-news"
+    | "landing-blog"
     | "landing-documents"
     | "profile";
   children: ReactNode;
@@ -69,6 +70,7 @@ const links = [
   ["landing-investments", "Investments & projects", "/superadmin/landing/investments", Briefcase],
   ["landing-career", "Career", "/superadmin/landing/career", Briefcase],
   ["landing-news", "News & notices", "/superadmin/landing/news", Newspaper],
+  ["landing-blog", "Blog", "/superadmin/landing/blog", NotebookPen],
   ["landing-documents", "Public documents", "/superadmin/landing/documents", FileText],
   ["profile", "My profile", "/superadmin/profile", UserCircle],
 ] as const;
@@ -232,7 +234,7 @@ export default function SuperadminLayout({ active, children }: SuperadminLayoutP
           tabs={[["overview", "Home"], ["members", "Members"], ["meetings", "Meetings"], ["receipts", "Receipts"]]}
         groups={[
           ["Workspace", ["ledger", "ledger-totals", "certificates", "my-certificates", "audit", "links"]],
-          ["Public site", ["landing", "landing-team", "landing-board", "landing-gallery", "landing-partners", "landing-investments", "landing-career", "landing-news", "landing-documents"]],
+          ["Public site", ["landing", "landing-team", "landing-board", "landing-gallery", "landing-partners", "landing-investments", "landing-career", "landing-news", "landing-blog", "landing-documents"]],
         ]}
           profileKey="profile"
           fullName={fullName}

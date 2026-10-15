@@ -73,6 +73,9 @@ import { LandingItemsService } from './landing-items/landing-items.service';
 import { PublicNewsController } from './news/public-news.controller';
 import { SuperadminNewsController } from './news/superadmin-news.controller';
 import { NewsService } from './news/news.service';
+import { PublicBlogController } from './blog/public-blog.controller';
+import { SuperadminBlogController } from './blog/superadmin-blog.controller';
+import { BlogService } from './blog/blog.service';
 import { PublicCareerController } from './career/public-career.controller';
 import { SuperadminCareerController } from './career/superadmin-career.controller';
 import { CareerService } from './career/career.service';
@@ -138,6 +141,8 @@ import { ContactService } from './contact/contact.service';
     SuperadminLandingItemsController,
     PublicNewsController,
     SuperadminNewsController,
+    PublicBlogController,
+    SuperadminBlogController,
     PublicCareerController,
     SuperadminCareerController,
     PublicDocumentsController,
@@ -166,6 +171,7 @@ import { ContactService } from './contact/contact.service';
     LandingPeopleService,
     LandingItemsService,
     NewsService,
+    BlogService,
     CareerService,
     PublicDocumentsService,
     LandingMediaService,

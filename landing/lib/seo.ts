@@ -25,29 +25,36 @@ export function pageMetadata({
   title,
   description,
   path,
+  image,
+  article,
 }: {
   title: string;
   description?: string;
   path: string;
+  /** Page-specific share image (e.g. a blog cover); defaults to the site OG image. */
+  image?: string | null;
+  /** Marks the page as an article for Open Graph (blog posts). */
+  article?: { publishedTime: string; modifiedTime?: string; authors?: string[]; tags?: string[] };
 }): Metadata {
   const fullTitle = `${title} | WAFA Group`;
+  const shareImage = image ? { url: image, alt: title } : OG_IMAGE;
   return {
     title,
     ...(description ? { description } : {}),
     alternates: { canonical: path },
     openGraph: {
-      type: "website",
+      ...(article ? { type: "article" as const, ...article } : { type: "website" as const }),
       url: path,
       siteName: "WAFA Group",
       title: fullTitle,
       ...(description ? { description } : {}),
-      images: [OG_IMAGE],
+      images: [shareImage],
     },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       ...(description ? { description } : {}),
-      images: [OG_IMAGE.url],
+      images: [shareImage.url],
     },
   };
 }
