@@ -202,6 +202,24 @@ describe('Security (e2e)', () => {
       }
     });
 
+    it('no GET route crashes with an unhandled error for an allowed role', async () => {
+      // An unhandled exception (e.g. a dependency that was never injected)
+      // surfaces as a bare "Internal server error"; handled failures carry
+      // their own message.
+      const crashed: string[] = [];
+      for (const route of protectedRoutes.filter((r) => r.verb === 'get')) {
+        const role = route.roles![0];
+        const res = await http().get(route.url).set('Authorization', `Bearer ${tokenFor(role)}`);
+        if (res.status === 500 && (res.body as { message?: string }).message === 'Internal server error')
+          crashed.push(`${role} ${route.template}`);
+      }
+      expect(crashed).toEqual([]);
+    });
+
+    it.each(['superadmin', 'admin', 'accountant'] as const)('%s can load their own documents', async (role) => {
+      await http().get(`/api/${role}/my-documents`).set('Authorization', `Bearer ${tokenFor(role)}`).expect(200);
+    });
+
     it('a role change takes effect on the next request with the same token', async () => {
       const local = new FakeSupabase({ ...PROFILES });
       const localApp = await createApp(local);

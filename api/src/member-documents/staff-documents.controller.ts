@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Injectable,
   Param,
   Post,
   UploadedFile,
@@ -30,6 +31,10 @@ const ownerFor = (profile: StaffProfile): DocumentOwner => ({
 // Staff upload their own documents from their profile, against the same
 // document types as members. Each role gets its own route prefix below
 // (`my-documents`, since `superadmin/documents` is the public website files).
+// @Injectable() makes TypeScript emit the constructor's parameter types here;
+// the subclasses inherit them. Without it Nest injected nothing and every
+// my-documents route crashed with a 500.
+@Injectable()
 abstract class StaffDocumentsController {
   constructor(private readonly documents: MemberDocumentsService) {}
 
